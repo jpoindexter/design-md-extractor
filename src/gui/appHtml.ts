@@ -387,6 +387,89 @@ export function renderAppHtml(): string {
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 10px;
       }
+      .visual-token-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+      }
+      .visual-token-grid + .muted {
+        margin-top: 14px;
+      }
+      .visual-token-card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        padding: 10px;
+        min-width: 0;
+      }
+      .visual-token-card h4 {
+        margin: 0 0 6px;
+        font-size: 12px;
+      }
+      .token-demo {
+        border: 1px solid rgba(0, 0, 0, 0.16);
+        min-height: 86px;
+        background:
+          linear-gradient(45deg, rgba(0, 0, 0, 0.035) 25%, transparent 25%),
+          linear-gradient(-45deg, rgba(0, 0, 0, 0.035) 25%, transparent 25%),
+          #f8f9f8;
+        background-size: 14px 14px;
+        overflow: hidden;
+      }
+      .padding-demo {
+        max-height: 150px;
+      }
+      .padding-demo-inner {
+        min-height: 38px;
+        border: 1px solid rgba(0, 0, 0, 0.24);
+        border-radius: 5px;
+        background: #fff;
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .radius-demo {
+        height: 86px;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        background: #f7f8fb;
+      }
+      .shadow-demo {
+        height: 86px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
+        background: #fff;
+      }
+      .surface-demo {
+        min-height: 92px;
+        border: 1px solid rgba(0, 0, 0, 0.14);
+        border-radius: 8px;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .surface-demo strong,
+      .surface-demo code {
+        display: block;
+      }
+      .token-code {
+        display: block;
+        margin-top: 7px;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 11px;
+        overflow-wrap: anywhere;
+      }
+      .token-confidence {
+        display: inline-flex;
+        margin-top: 7px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 2px 7px;
+        color: var(--muted);
+        font-size: 10px;
+      }
       .guidelines {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -420,6 +503,51 @@ export function renderAppHtml(): string {
         color: var(--muted);
         font-size: 12px;
         text-align: right;
+      }
+      .component-specimen-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 10px;
+      }
+      .component-specimen {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        padding: 10px;
+        min-width: 0;
+      }
+      .component-specimen-stage {
+        min-height: 132px;
+        border: 1px dashed rgba(0, 0, 0, 0.18);
+        border-radius: 8px;
+        background: #f8f9f8;
+        display: grid;
+        place-items: center;
+        padding: 14px;
+        overflow: hidden;
+      }
+      .component-specimen-object {
+        max-width: 100%;
+        overflow: hidden;
+      }
+      .component-specimen-object.is-card,
+      .component-specimen-object.is-navigation {
+        display: grid;
+        align-content: start;
+        gap: 8px;
+      }
+      .component-specimen-title {
+        display: block;
+        margin-top: 8px;
+        font-size: 12px;
+      }
+      .component-specimen-meta {
+        margin-top: 4px;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 10px;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
       }
       .component-preview {
         border: 1px solid var(--line);
@@ -808,22 +936,14 @@ export function renderAppHtml(): string {
               </section>
               <section class="panel">
                 <h3>Spacing, Radius, Shadows</h3>
-                <div class="tri-grid">
-                  <div>
-                    <p class="muted">Spacing</p>
-                    <table class="dense-table"><tbody id="spacing-body"></tbody></table>
-                  </div>
-                  <div>
-                    <p class="muted">Radius</p>
-                    <table class="dense-table"><tbody id="radii-body"></tbody></table>
-                  </div>
-                  <div>
-                    <p class="muted">Shadows</p>
-                    <table class="dense-table"><tbody id="shadows-body"></tbody></table>
-                  </div>
-                </div>
+                <p class="muted">Spacing</p>
+                <div id="spacing-body" class="visual-token-grid"></div>
+                <p class="muted">Radius</p>
+                <div id="radii-body" class="visual-token-grid"></div>
+                <p class="muted">Shadows</p>
+                <div id="shadows-body" class="visual-token-grid"></div>
                 <p class="muted">Surfaces</p>
-                <table class="dense-table"><tbody id="surfaces-body"></tbody></table>
+                <div id="surfaces-body" class="visual-token-grid"></div>
               </section>
               <section class="panel">
                 <h3>Guidelines</h3>
@@ -1023,23 +1143,82 @@ export function renderAppHtml(): string {
         return value;
       }
 
+      function cssTokenValue(input, fallback) {
+        return safeCssValue(input, fallback)
+          .replace(/3\\.35544e\\+07px/g, '999px')
+          .replace(/calc\\([^)]*\\)/g, fallback);
+      }
+
+      function isTransparentColor(value) {
+        const normalized = String(value || '').trim().toLowerCase();
+        return !normalized || normalized === 'transparent' || normalized === 'rgba(0, 0, 0, 0)' || normalized === '#00000000';
+      }
+
+      function visibleComponentBackground(component, tokenData) {
+        const styles = component && component.styles ? component.styles : {};
+        if (styles.backgroundColor && !isTransparentColor(styles.backgroundColor)) {
+          return cssTokenValue(styles.backgroundColor, '#ffffff');
+        }
+        const surface = normalizeList(tokenData && tokenData.surfaces).find((item) => item.value && !isTransparentColor(item.value));
+        return surface ? safeColorValue(surface.value) : '#ffffff';
+      }
+
+      function visibleComponentBorder(component) {
+        const styles = component && component.styles ? component.styles : {};
+        const border = String(styles.border || '').trim();
+        if (border && !/^0(?:px)?\\s+/i.test(border) && !border.includes('transparent')) {
+          return cssTokenValue(border, '1px solid rgba(0,0,0,0.18)');
+        }
+        return '1px solid rgba(0,0,0,0.18)';
+      }
+
+      function readableComponentText(component, background) {
+        const styles = component && component.styles ? component.styles : {};
+        const color = cssTokenValue(styles.color, '');
+        if (color && Math.abs(colorLuminance(color) - colorLuminance(background)) >= 0.32) {
+          return color;
+        }
+        return contrastTextColor(background);
+      }
+
       function styleForComponent(component) {
         const styles = component && component.styles ? component.styles : {};
         const bounds = component && component.bounds ? component.bounds : {};
         const minWidth = bounds.width ? Math.min(Math.max(Number(bounds.width), 36), 220) + 'px' : '36px';
         const minHeight = bounds.height ? Math.min(Math.max(Number(bounds.height), 28), 72) + 'px' : '28px';
         return [
-          'color:' + safeCssValue(styles.color, 'inherit'),
-          'background:' + safeCssValue(styles.backgroundColor, 'transparent'),
-          'border:' + safeCssValue(styles.border, '1px solid currentColor'),
-          'border-radius:' + safeCssValue(styles.borderRadius, '0px'),
-          'padding:' + safeCssValue(styles.padding, '8px 12px'),
-          'font-family:' + safeCssValue(styles.fontFamily, 'inherit'),
-          'font-size:' + safeCssValue(styles.fontSize, '13px'),
-          'font-weight:' + safeCssValue(styles.fontWeight, '500'),
-          'box-shadow:' + safeCssValue(styles.boxShadow, 'none'),
+          'color:' + cssTokenValue(styles.color, 'inherit'),
+          'background:' + cssTokenValue(styles.backgroundColor, 'transparent'),
+          'border:' + cssTokenValue(styles.border, '1px solid currentColor'),
+          'border-radius:' + cssTokenValue(styles.borderRadius, '0px'),
+          'padding:' + cssTokenValue(styles.padding, '8px 12px'),
+          'font-family:' + cssTokenValue(styles.fontFamily, 'inherit'),
+          'font-size:' + cssTokenValue(styles.fontSize, '13px'),
+          'font-weight:' + cssTokenValue(styles.fontWeight, '500'),
+          'box-shadow:' + cssTokenValue(styles.boxShadow, 'none'),
           'min-width:' + minWidth,
           'min-height:' + minHeight,
+        ].join(';');
+      }
+
+      function specimenStyleForComponent(component, tokenData) {
+        const styles = component && component.styles ? component.styles : {};
+        const bounds = component && component.bounds ? component.bounds : {};
+        const width = bounds.width ? Math.min(Math.max(Number(bounds.width), 120), 340) + 'px' : '180px';
+        const height = bounds.height ? Math.min(Math.max(Number(bounds.height), 70), 190) + 'px' : '100px';
+        const background = visibleComponentBackground(component, tokenData);
+        return [
+          'color:' + readableComponentText(component, background),
+          'background:' + background,
+          'border:' + visibleComponentBorder(component),
+          'border-radius:' + cssTokenValue(styles.borderRadius, '0px'),
+          'padding:' + cssTokenValue(styles.padding, '16px'),
+          'font-family:' + cssTokenValue(styles.fontFamily, 'inherit'),
+          'font-size:' + cssTokenValue(styles.fontSize, '13px'),
+          'font-weight:' + cssTokenValue(styles.fontWeight, '500'),
+          'box-shadow:' + cssTokenValue(styles.boxShadow, 'none'),
+          'width:' + width,
+          'min-height:' + height,
         ].join(';');
       }
 
@@ -1113,6 +1292,19 @@ export function renderAppHtml(): string {
         const px = numericPx(fontSize);
         if (!px || !Number.isFinite(px)) return '18px';
         return Math.max(12, Math.min(px, 74)) + 'px';
+      }
+
+      function clampPaddingValue(value) {
+        return String(value || '')
+          .split(/\\s+/)
+          .filter(Boolean)
+          .slice(0, 4)
+          .map((part) => {
+            const match = part.match(/^([\\d.]+)px$/);
+            if (!match) return part;
+            return Math.min(Number.parseFloat(match[1]), 48) + 'px';
+          })
+          .join(' ') || '0px';
       }
 
       function toneLabel(colors) {
@@ -1688,37 +1880,107 @@ export function renderAppHtml(): string {
           .join('');
       }
 
-      function renderDensityTable(id, rows, emptyText) {
-        renderRows(
-          id,
-          rows,
-          (item) => [
-            '<tr>',
-            '<td>' + escapeHtml(item.name || 'token') + '</td>',
-            '<td>' + escapeHtml(item.value || '') + '</td>',
-            '<td>' + escapeHtml(item.confidence || 'low') + '</td>',
-            '</tr>',
-          ].join(''),
-          emptyText
-        );
+      function renderSpacingTokens(rows) {
+        const target = document.getElementById('spacing-body');
+        if (!target) return;
+        if (!rows.length) {
+          target.innerHTML = '<p class="muted">No spacing tokens found.</p>';
+          return;
+        }
+        target.innerHTML = rows
+          .map((item) => {
+            const value = cssTokenValue(item.value, '0px');
+            const previewPadding = clampPaddingValue(value);
+            return [
+              '<article class="visual-token-card">',
+              '<h4>' + escapeHtml(item.name || 'Padding') + '</h4>',
+              '<div class="token-demo padding-demo" style="padding:' + escapeHtml(previewPadding) + '">',
+              '<div class="padding-demo-inner">content</div>',
+              '</div>',
+              '<code class="token-code">padding: ' + escapeHtml(value) + '</code>',
+              '<span class="token-confidence">' + escapeHtml(item.confidence || 'low') + '</span>',
+              '</article>',
+            ].join('');
+          })
+          .join('');
       }
 
-      function renderSurfaces(rows) {
-        renderRows(
-          'surfaces-body',
-          rows,
-          (surface) => [
-            '<tr>',
-            '<td>' + escapeHtml(surface.name || ('Surface ' + surface.level)) + '</td>',
-            '<td>' + escapeHtml(surface.value || '') + '</td>',
-            '<td>' + escapeHtml(surface.confidence || 'low') + '</td>',
-            '</tr>',
-          ].join(''),
-          'No surface tokens found.'
-        );
+      function renderRadiusTokens(rows) {
+        const target = document.getElementById('radii-body');
+        if (!target) return;
+        if (!rows.length) {
+          target.innerHTML = '<p class="muted">No radius tokens found.</p>';
+          return;
+        }
+        target.innerHTML = rows
+          .map((item) => {
+            const value = cssTokenValue(item.value, '0px');
+            return [
+              '<article class="visual-token-card">',
+              '<h4>' + escapeHtml(item.name || 'Radius') + '</h4>',
+              '<div class="radius-demo" style="border-radius:' + escapeHtml(value) + '"></div>',
+              '<code class="token-code">border-radius: ' + escapeHtml(value) + '</code>',
+              '<span class="token-confidence">' + escapeHtml(item.confidence || 'low') + '</span>',
+              '</article>',
+            ].join('');
+          })
+          .join('');
       }
 
-      function renderComponents(components) {
+      function renderShadowTokens(rows) {
+        const target = document.getElementById('shadows-body');
+        if (!target) return;
+        if (!rows.length) {
+          target.innerHTML = [
+            '<article class="visual-token-card">',
+            '<h4>No shadow tokens found</h4>',
+            '<div class="shadow-demo"></div>',
+            '<code class="token-code">box-shadow: none</code>',
+            '</article>',
+          ].join('');
+          return;
+        }
+        target.innerHTML = rows
+          .map((item) => {
+            const value = cssTokenValue(item.value, 'none');
+            return [
+              '<article class="visual-token-card">',
+              '<h4>' + escapeHtml(item.name || 'Shadow') + '</h4>',
+              '<div class="shadow-demo" style="box-shadow:' + escapeHtml(value) + '"></div>',
+              '<code class="token-code">box-shadow: ' + escapeHtml(value) + '</code>',
+              '<span class="token-confidence">' + escapeHtml(item.confidence || 'low') + '</span>',
+              '</article>',
+            ].join('');
+          })
+          .join('');
+      }
+
+      function renderSurfaceTokens(rows) {
+        const target = document.getElementById('surfaces-body');
+        if (!target) return;
+        if (!rows.length) {
+          target.innerHTML = '<p class="muted">No surface tokens found.</p>';
+          return;
+        }
+        target.innerHTML = rows
+          .map((surface) => {
+            const value = safeColorValue(surface.value || '#ffffff');
+            const text = contrastTextColor(value);
+            return [
+              '<article class="visual-token-card">',
+              '<div class="surface-demo" style="background:' + escapeHtml(value) + '; color:' + escapeHtml(text) + '">',
+              '<strong>' + escapeHtml(surface.name || ('Surface ' + surface.level)) + '</strong>',
+              '<code>' + escapeHtml(value) + '</code>',
+              '</div>',
+              '<code class="token-code">' + escapeHtml(surface.purpose || 'surface') + '</code>',
+              '<span class="token-confidence">' + escapeHtml(surface.confidence || 'low') + '</span>',
+              '</article>',
+            ].join('');
+          })
+          .join('');
+      }
+
+      function renderComponents(components, tokenData) {
         const target = document.getElementById('components');
         if (!target) return;
         if (!components.length) {
@@ -1735,10 +1997,16 @@ export function renderAppHtml(): string {
               styles.boxShadow && styles.boxShadow !== 'none' ? 'shadow' : '',
             ].filter(Boolean).join(' · ');
             return [
-              '<div class="component-row">',
-              '<div><strong>' + escapeHtml(component.name || 'Component') + '</strong><div class="muted">' + escapeHtml(component.textSample || component.role || 'ui') + '</div><div class="muted">' + escapeHtml(meta || component.selector || '') + '</div></div>',
-              '<span>' + escapeHtml(String(component.count || 0)) + ' samples<br>' + escapeHtml(component.confidence || 'low') + '</span>',
+              '<article class="component-specimen">',
+              '<div class="component-specimen-stage">',
+              '<div class="component-specimen-object is-' + escapeHtml(component.kind || 'component') + '" style="' + escapeHtml(specimenStyleForComponent(component, tokenData)) + '">',
+              '<strong>' + escapeHtml(component.name || 'Component') + '</strong>',
+              '<span>' + escapeHtml(String(component.textSample || component.role || 'component').slice(0, 90)) + '</span>',
               '</div>',
+              '</div>',
+              '<strong class="component-specimen-title">' + escapeHtml(component.name || 'Component') + ' · ' + escapeHtml(String(component.count || 0)) + ' samples · ' + escapeHtml(component.confidence || 'low') + '</strong>',
+              '<div class="component-specimen-meta">' + escapeHtml(meta || component.selector || '') + '</div>',
+              '</article>',
             ].join('');
           })
           .join('');
@@ -1758,16 +2026,16 @@ export function renderAppHtml(): string {
         const sampleComponents = normalizeList(tokenData.components)
           .filter((component) => {
             const label = String(component.textSample || component.name || '').trim();
-            return component.styles && label.length > 2 && (component.kind === 'button' || component.kind === 'input' || component.kind === 'badge');
+            return component.styles && label.length > 2;
           })
-          .slice(0, 5);
+          .slice(0, 4);
         const sampleHtml = sampleComponents.length
           ? [
               '<div class="component-samples">',
               sampleComponents
                 .map((component) => {
-                  const label = String(component.textSample || component.name || component.kind || 'Component').trim().slice(0, 42);
-                  return '<button class="sample-component" type="button" style="' + escapeHtml(styleForComponent(component)) + '">' + escapeHtml(label || 'Component') + '</button>';
+                  const label = String(component.textSample || component.name || component.kind || 'Component').trim().slice(0, 70);
+                  return '<div class="sample-component component-specimen-object is-' + escapeHtml(component.kind || 'component') + '" style="' + escapeHtml(specimenStyleForComponent(component, tokenData)) + '"><strong>' + escapeHtml(component.name || 'Component') + '</strong><span>' + escapeHtml(label || 'Component') + '</span></div>';
                 })
                 .join(''),
               '</div>',
@@ -1856,12 +2124,12 @@ export function renderAppHtml(): string {
           renderTypeScale(tokenData.typography);
           renderTypography(tokenData.typography);
           renderFontCards(tokenData.typography);
-          renderDensityTable('spacing-body', tokenData.spacing, 'No spacing tokens found.');
-          renderDensityTable('radii-body', tokenData.radii, 'No radius tokens found.');
-          renderDensityTable('shadows-body', tokenData.shadows, 'No shadow tokens found.');
-          renderSurfaces(tokenData.surfaces);
+          renderSpacingTokens(tokenData.spacing);
+          renderRadiusTokens(tokenData.radii);
+          renderShadowTokens(tokenData.shadows);
+          renderSurfaceTokens(tokenData.surfaces);
           renderComponentPreview(tokenData);
-          renderComponents(tokenData.components);
+          renderComponents(tokenData.components, tokenData);
 
           setList(
             'pages',
