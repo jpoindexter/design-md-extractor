@@ -9,11 +9,28 @@ import { writeArtifacts } from '../io/writeArtifacts.js';
 import { withBrowser } from './browserSession.js';
 import { newLoadedPage } from './pageLoader.js';
 
+function urlSlug(input: string): string {
+  const parsed = new URL(input);
+  if (parsed.protocol === 'file:') {
+    const segments = parsed.pathname.split('/').filter(Boolean);
+    const name = segments.at(-1) ?? 'local-file';
+    return name.replace(/[^a-zA-Z0-9.-]+/g, '-').toLowerCase();
+  }
+
+  const host = parsed.hostname.replace(/^www\./, '');
+  const pathSlug = parsed.pathname.replace(/\/+/g, '-').replace(/^-|-$/g, '');
+  const base = pathSlug.length > 0 ? `${host}-${pathSlug}` : host;
+  return base.replace(/[^a-zA-Z0-9.-]+/g, '-').toLowerCase();
+}
+
 export async function runExtraction(config: ExtractConfig): Promise<void> {
-  const urls = [config.url, ...config.pages];
+  const urls = Array.from(new Set([config.url, ...config.pages]));
   const screenshots: Array<{ viewport: string; url: string; path: string }> = [];
   const rawPages: Array<RawPageEvidence & { viewport: string }> = [];
-  const pages: Array<{ url: string; status: 'success' | 'failed'; error?: string }> = [];
+  const pageResults = new Map<string, { success: boolean; errors: string[] }>();
+  for (const url of urls) {
+    pageResults.set(url, { success: false, errors: [] });
+  }
   const screenshotDir = join(config.outDir, 'screenshots');
   await mkdir(screenshotDir, { recursive: true });
 
@@ -26,18 +43,20 @@ export async function runExtraction(config: ExtractConfig): Promise<void> {
             viewport: viewport.name,
             maxComponents: config.maxComponents,
           });
-          const screenshotPath = join('screenshots', `${viewport.name}-home.png`);
+          const screenshotPath = join('screenshots', `${urlSlug(url)}-${viewport.name}.png`);
           await page.screenshot({ path: join(config.outDir, screenshotPath), fullPage: false });
           screenshots.push({ viewport: viewport.name, url, path: screenshotPath });
           rawPages.push({ ...raw, viewport: viewport.name });
           await page.close();
-          pages.push({ url, status: 'success' });
+          const result = pageResults.get(url);
+          if (result) {
+            result.success = true;
+          }
         } catch (error) {
-          pages.push({
-            url,
-            status: 'failed',
-            error: error instanceof Error ? error.message : String(error),
-          });
+          const result = pageResults.get(url);
+          if (result) {
+            result.errors.push(error instanceof Error ? error.message : String(error));
+          }
         }
       }
     }
@@ -46,6 +65,18 @@ export async function runExtraction(config: ExtractConfig): Promise<void> {
   if (rawPages.length === 0) {
     throw new Error(`No pages loaded successfully for ${config.url}`);
   }
+
+  const pages: Array<{ url: string; status: 'success' | 'failed'; error?: string }> = urls.map((url) => {
+    const result = pageResults.get(url);
+    if (result?.success) {
+      return { url, status: 'success' };
+    }
+    return {
+      url,
+      status: 'failed',
+      error: result?.errors.join(' | ') || 'Failed to load page across all viewports.',
+    };
+  });
 
   const evidence = normalizeEvidence({
     primaryUrl: config.url,

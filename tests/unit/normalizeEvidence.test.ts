@@ -16,6 +16,9 @@ describe('normalizeEvidence', () => {
             { value: '#ffffff', property: 'backgroundColor', selector: 'body' },
             { value: '#ffffff', property: 'backgroundColor', selector: 'main' },
             { value: '#ff5900', property: 'backgroundColor', selector: 'a.button' },
+            { value: '#000000', property: 'color', selector: 'body' },
+            { value: '#000000', property: 'color', selector: 'h1' },
+            { value: '#000000', property: 'color', selector: 'p' },
           ],
           typography: [
             {
@@ -36,6 +39,13 @@ describe('normalizeEvidence', () => {
               styles: { backgroundColor: '#ff5900', color: '#ffffff', borderRadius: '8px' },
               bounds: { width: 120, height: 40 },
             },
+            {
+              kind: 'button',
+              selector: 'a.button',
+              textSample: 'Get started',
+              styles: { backgroundColor: '#ff5900', color: '#ffffff', borderRadius: '8px' },
+              bounds: { width: 120, height: 40 },
+            },
           ],
         },
       ],
@@ -44,5 +54,8 @@ describe('normalizeEvidence', () => {
     expect(evidence.tokens.colors[0]?.value).toBe('#ffffff');
     expect(evidence.tokens.typography[0]?.role).toBe('heading');
     expect(evidence.components[0]?.name).toBe('Button');
+    expect(evidence.components).toHaveLength(1);
+    expect(evidence.components[0]?.count).toBe(2);
+    expect(evidence.surfaces[0]?.value).toBe('#ffffff');
   });
 });

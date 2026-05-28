@@ -16,13 +16,21 @@ describe('runExtraction', () => {
         url: fixtureUrl,
         outDir,
         pages: [],
-        viewports: [defaultViewports[0]],
+        viewports: defaultViewports,
         maxComponents: 20,
         preview: true,
         timeoutMs: 30000,
       });
 
-      await expect(readFile(join(outDir, 'evidence.json'), 'utf8')).resolves.toContain('"primaryUrl"');
+      const evidenceJson = await readFile(join(outDir, 'evidence.json'), 'utf8');
+      const evidence = JSON.parse(evidenceJson) as {
+        source: { pages: Array<{ url: string; status: string }> };
+        screenshots: Array<{ path: string }>;
+      };
+
+      expect(evidence.source.pages).toHaveLength(1);
+      expect(evidence.source.pages[0]?.status).toBe('success');
+      expect(evidence.screenshots).toHaveLength(3);
       await expect(readFile(join(outDir, 'DESIGN.md'), 'utf8')).resolves.toContain('# Design System:');
       await expect(readFile(join(outDir, 'preview.html'), 'utf8')).resolves.toContain('Design MD Preview');
     } finally {
