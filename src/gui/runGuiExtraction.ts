@@ -115,7 +115,11 @@ export function summarizeEvidence(runId: string, evidenceJson: unknown): GuiRunR
       name: component.name,
       kind: component.kind,
       role: component.role,
+      textSample: component.textSample,
+      selector: component.selector,
       count: component.count,
+      styles: component.styles,
+      bounds: component.bounds,
       confidence: component.confidence,
     })),
     screenshots: evidence.screenshots.map((screenshot) => ({

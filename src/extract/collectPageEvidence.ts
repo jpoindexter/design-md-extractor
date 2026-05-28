@@ -125,15 +125,56 @@ export async function collectPageEvidence(
       return 'text';
     }
 
-    function componentKind(element: Element): string | null {
+    function hasVisiblePaint(style: CSSStyleDeclaration): boolean {
+      return (
+        normalizeColor(style.backgroundColor) !== 'transparent' ||
+        normalizeColor(style.borderColor) !== 'transparent' ||
+        style.boxShadow !== 'none'
+      );
+    }
+
+    function hasButtonShape(style: CSSStyleDeclaration, rect: DOMRect): boolean {
+      return (
+        rect.width >= 24 &&
+        rect.height >= 18 &&
+        (numericPx(style.paddingLeft) + numericPx(style.paddingRight) > 8 || numericPx(style.borderRadius) > 0) &&
+        hasVisiblePaint(style)
+      );
+    }
+
+    function hasCardShape(element: Element, style: CSSStyleDeclaration, rect: DOMRect): boolean {
+      if (element === document.body || element === document.documentElement) return false;
+      return (
+        rect.width >= 120 &&
+        rect.height >= 60 &&
+        hasVisiblePaint(style) &&
+        (numericPx(style.borderRadius) > 0 || style.boxShadow !== 'none' || normalizeColor(style.borderColor) !== 'transparent')
+      );
+    }
+
+    function numericPx(value: string): number {
+      const match = value.match(/([\\d.]+)/);
+      return match ? Number.parseFloat(match[1]) : 0;
+    }
+
+    function componentKind(element: Element, style: CSSStyleDeclaration, rect: DOMRect): string | null {
       const tag = element.tagName.toLowerCase();
       const classText = element.className.toString().toLowerCase();
-      if (tag === 'button' || element.getAttribute('role') === 'button' || classText.includes('button')) {
+      if (
+        tag === 'button' ||
+        element.getAttribute('role') === 'button' ||
+        classText.includes('button') ||
+        classText.includes('btn') ||
+        (tag === 'a' && hasButtonShape(style, rect))
+      ) {
         return 'button';
       }
       if (['input', 'textarea', 'select'].includes(tag)) return 'input';
-      if (classText.includes('card')) return 'card';
-      if (tag === 'nav') return 'navigation';
+      if (tag === 'nav' || tag === 'header' || classText.includes('nav')) return 'navigation';
+      if (classText.includes('badge') || classText.includes('pill')) return 'badge';
+      if (classText.includes('card') || classText.includes('tile') || classText.includes('panel') || hasCardShape(element, style, rect)) {
+        return 'card';
+      }
       return null;
     }
 
@@ -163,9 +204,9 @@ export async function collectPageEvidence(
         letterSpacing: style.letterSpacing,
       });
 
-      const kind = componentKind(element);
+      const rect = element.getBoundingClientRect();
+      const kind = componentKind(element, style, rect);
       if (kind && components.length < maxComponents) {
-        const rect = element.getBoundingClientRect();
         components.push({
           kind,
           selector,

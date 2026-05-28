@@ -48,7 +48,17 @@ export type GuiRunResult = {
       confidence: string;
     }>;
     warnings: Array<{ code: string; message: string; severity: 'info' | 'warning' | 'error' }>;
-    components: Array<{ name: string; kind: string; role: string; count: number; confidence: string }>;
+    components: Array<{
+      name: string;
+      kind: string;
+      role: string;
+      textSample?: string;
+      selector?: string;
+      count: number;
+      styles?: Record<string, string>;
+      bounds?: { width: number; height: number };
+      confidence: string;
+    }>;
     screenshots: Array<{ viewport: string; url: string; path: string; href: string }>;
   };
 };

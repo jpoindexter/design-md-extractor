@@ -25,6 +25,35 @@ function componentName(kind: string): string {
     .join(' ');
 }
 
+function isUsefulTokenValue(value: string | undefined, rejected: string[]): value is string {
+  if (!value) return false;
+  const normalized = value.trim().toLowerCase();
+  return normalized.length > 0 && !rejected.includes(normalized);
+}
+
+function styleTokensFromComponents(
+  components: Array<{ styles: Record<string, string> }>,
+  property: string,
+  label: string,
+  rejected: string[],
+): Array<{ name: string; value: string; confidence: 'high' | 'medium' | 'low' }> {
+  const counts = new Map<string, number>();
+  for (const component of components) {
+    const value = component.styles[property];
+    if (!isUsefulTokenValue(value, rejected)) continue;
+    counts.set(value, (counts.get(value) ?? 0) + 1);
+  }
+
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 12)
+    .map(([value, count], index) => ({
+      name: `${label} ${index + 1}`,
+      value,
+      confidence: confidenceFromFrequency(count),
+    }));
+}
+
 export function normalizeEvidence(input: NormalizeInput): Evidence {
   const colorCounts = new Map<string, { frequency: number; backgroundCount: number; properties: Set<string>; selectors: Set<string> }>();
 
@@ -175,6 +204,10 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
       confidence: confidenceFromFrequency(component.count),
     }));
 
+  const spacing = styleTokensFromComponents(components, 'padding', 'Padding', ['0px', '0px 0px', '0px 0px 0px 0px']);
+  const radii = styleTokensFromComponents(components, 'borderRadius', 'Radius', ['0px', '0px 0px', '0px 0px 0px 0px']);
+  const shadows = styleTokensFromComponents(components, 'boxShadow', 'Shadow', ['none']);
+
   const surfaceCandidates = Array.from(colorCounts.entries())
     .filter(([, data]) => data.backgroundCount > 0)
     .sort((a, b) => {
@@ -219,9 +252,9 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
     tokens: {
       colors,
       typography,
-      spacing: [],
-      radii: [],
-      shadows: [],
+      spacing,
+      radii,
+      shadows,
     },
     surfaces,
     components,

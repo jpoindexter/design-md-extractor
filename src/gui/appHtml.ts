@@ -25,25 +25,28 @@ export function renderAppHtml(): string {
         margin: 0;
         color: var(--ink);
         background: var(--canvas);
-        font-family: "Aptos", "IBM Plex Sans", "Helvetica Neue", sans-serif;
+        font-family: "Helvetica Neue", Arial, sans-serif;
         letter-spacing: 0;
       }
       button, input, select { font: inherit; color: inherit; }
       .shell {
         min-height: 100vh;
         display: grid;
-        grid-template-columns: 300px minmax(0, 1fr);
+        grid-template-rows: auto minmax(0, 1fr);
       }
       .side {
-        border-right: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
         background: var(--paper);
-        padding: 24px 20px 22px;
+        padding: 14px 28px;
         position: sticky;
         top: 0;
-        height: 100vh;
-        overflow: auto;
+        z-index: 20;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) minmax(210px, 280px);
+        gap: 18px;
+        align-items: end;
       }
-      .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
+      .brand { display: flex; align-items: center; gap: 10px; margin: 0 8px 3px 0; min-width: 220px; }
       .mark {
         width: 28px;
         height: 28px;
@@ -67,7 +70,12 @@ export function renderAppHtml(): string {
         font-size: 12px;
         line-height: 1.45;
       }
-      form { display: grid; gap: 12px; }
+      form {
+        display: grid;
+        grid-template-columns: minmax(280px, 1.4fr) minmax(190px, 0.72fr) minmax(180px, 0.68fr) 150px;
+        gap: 10px;
+        align-items: end;
+      }
       label {
         display: grid;
         gap: 6px;
@@ -75,7 +83,7 @@ export function renderAppHtml(): string {
         font-size: 11px;
         font-weight: 680;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0;
       }
       input, select {
         width: 100%;
@@ -104,7 +112,7 @@ export function renderAppHtml(): string {
       .run:hover { background: #2f473b; }
       .run:disabled { opacity: 0.6; cursor: wait; }
       .status {
-        margin-top: 16px;
+        margin: 0;
         min-height: 44px;
         border: 1px solid var(--line);
         border-radius: 7px;
@@ -115,7 +123,7 @@ export function renderAppHtml(): string {
         padding: 11px;
       }
       main {
-        padding: 22px 20px;
+        padding: 28px 40px 40px;
         overflow: auto;
       }
       .empty {
@@ -168,15 +176,15 @@ export function renderAppHtml(): string {
         font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
+        letter-spacing: 0;
         padding: 8px 10px;
       }
       .workspace {
         display: grid;
-        grid-template-columns: minmax(0, 760px) minmax(350px, 1fr);
+        grid-template-columns: minmax(0, 720px) minmax(520px, 1fr);
         gap: 16px;
         align-items: start;
-        max-width: 1280px;
+        max-width: none;
       }
       .reference { display: grid; gap: 14px; }
       .panel {
@@ -188,7 +196,7 @@ export function renderAppHtml(): string {
       .panel h3 {
         margin: 0 0 11px;
         font-size: 11px;
-        letter-spacing: 0.08em;
+        letter-spacing: 0;
         text-transform: uppercase;
         color: var(--muted);
       }
@@ -246,7 +254,7 @@ export function renderAppHtml(): string {
         color: var(--muted);
         font-size: 10px;
         text-transform: uppercase;
-        letter-spacing: 0.06em;
+        letter-spacing: 0;
       }
       .profile-card p {
         margin: 0;
@@ -284,7 +292,7 @@ export function renderAppHtml(): string {
         color: var(--muted);
         font-size: 10px;
         text-transform: uppercase;
-        letter-spacing: 0.06em;
+        letter-spacing: 0;
       }
       .category .muted {
         margin: 0;
@@ -388,7 +396,7 @@ export function renderAppHtml(): string {
         margin: 0 0 7px;
         font-size: 11px;
         text-transform: uppercase;
-        letter-spacing: 0.06em;
+        letter-spacing: 0;
       }
       .guidelines ul {
         margin: 0;
@@ -451,7 +459,7 @@ export function renderAppHtml(): string {
         color: var(--muted);
         margin-bottom: 4px;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
+        letter-spacing: 0;
       }
       .preview-metric span {
         display: block;
@@ -471,6 +479,40 @@ export function renderAppHtml(): string {
         padding: 8px 12px;
         cursor: default;
       }
+      .component-samples {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        margin-top: 12px;
+      }
+      .sample-component {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .component-style-grid {
+        margin-top: 12px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .style-chip {
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.72);
+        padding: 8px;
+        font-size: 11px;
+        overflow-wrap: anywhere;
+      }
+      .style-chip strong {
+        display: block;
+        margin-bottom: 3px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0;
+      }
       .split-list {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -487,23 +529,66 @@ export function renderAppHtml(): string {
       .mono-list li + li { margin-top: 4px; }
       .export-pane {
         position: sticky;
-        top: 10px;
-        max-height: calc(100vh - 32px);
-        overflow: auto;
+        top: 92px;
+        max-height: calc(100vh - 118px);
+        overflow: hidden;
         border-color: var(--line-strong);
         background: var(--rail);
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .export-pane h3 {
+        padding: 14px 18px 0;
       }
       .tabs {
         display: flex;
         flex-wrap: wrap;
-        gap: 6px;
-        margin-bottom: 10px;
+        gap: 18px;
+        margin: 0;
+        padding: 0 18px;
+        border-bottom: 1px solid var(--line);
+      }
+      .export-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 18px;
+        border-bottom: 1px solid var(--line);
+      }
+      .mode-tabs {
+        display: flex;
+        gap: 16px;
+      }
+      .mode-btn,
+      .copy-btn {
+        border: 1px solid transparent;
+        background: transparent;
+        min-height: 30px;
+        font-size: 12px;
+        color: var(--muted);
+        cursor: pointer;
+      }
+      .mode-btn.active {
+        color: var(--ink);
+        border-bottom-color: var(--ink);
+      }
+      .copy-btn {
+        border-color: var(--line);
+        border-radius: 6px;
+        background: #fff;
+        color: var(--ink);
+        padding: 0 10px;
+        font-weight: 680;
       }
       .downloads {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 7px;
-        margin: 0 0 10px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+        padding: 0 18px 10px;
+        margin: 0;
+        border-bottom: 1px solid var(--line);
       }
       .download-btn {
         border: 1px solid var(--line);
@@ -516,23 +601,32 @@ export function renderAppHtml(): string {
         cursor: pointer;
       }
       .tab {
-        border: 1px solid var(--line);
-        background: #fff;
+        border: 0;
+        border-bottom: 1px solid transparent;
+        background: transparent;
         color: var(--muted);
-        border-radius: 7px;
-        min-height: 30px;
-        padding: 0 9px;
-        font-size: 11px;
-        font-weight: 680;
+        border-radius: 0;
+        min-height: 42px;
+        padding: 0;
+        font-size: 13px;
+        font-weight: 620;
         cursor: pointer;
       }
       .tab.active {
-        border-color: #98a39b;
+        border-color: var(--ink);
         color: var(--ink);
-        background: #fff;
+        background: transparent;
       }
-      .tab-panel { display: none; }
-      .tab-panel.active { display: block; }
+      .tab-panel {
+        display: none;
+        min-height: 0;
+        flex: 1;
+        padding: 12px 18px 18px;
+      }
+      .tab-panel.active {
+        display: flex;
+        flex-direction: column;
+      }
       .export-note {
         margin: 0 0 8px;
         color: var(--muted);
@@ -551,7 +645,9 @@ export function renderAppHtml(): string {
         font-size: 12px;
         line-height: 1.45;
         font-family: var(--mono);
-        max-height: 320px;
+        min-height: 0;
+        max-height: none;
+        flex: 1;
         overflow: auto;
         white-space: pre-wrap;
       }
@@ -565,13 +661,16 @@ export function renderAppHtml(): string {
         font-size: 11px;
         line-height: 1.5;
         padding: 10px;
-        max-height: 520px;
+        min-height: 0;
+        max-height: none;
+        flex: 1;
         overflow: auto;
         white-space: pre;
       }
       .error { color: var(--error); }
       .hint {
-        margin: 0 0 8px;
+        margin: 0;
+        padding: 10px 18px 8px;
         color: var(--muted);
         font-size: 11px;
       }
@@ -579,24 +678,30 @@ export function renderAppHtml(): string {
         .workspace { grid-template-columns: minmax(0, 1fr); }
         .export-pane {
           position: static;
-          max-height: none;
           order: -1;
+          height: 720px;
+          max-height: calc(100vh - 24px);
         }
       }
       @media (max-width: 960px) {
-        .shell { grid-template-columns: 1fr; }
         .side {
-          border-right: 0;
-          border-bottom: 1px solid var(--line);
           position: static;
-          height: auto;
+          grid-template-columns: 1fr;
         }
+        .brand { min-width: 0; }
+        form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .result-head { display: grid; }
         .actions { justify-content: flex-start; }
       }
       @media (max-width: 760px) {
         main { padding: 12px; }
         .result-head h2 { font-size: 34px; }
+        form { grid-template-columns: minmax(0, 1fr); }
+        .side { padding: 16px 12px; }
+        .export-pane {
+          height: 620px;
+          max-height: calc(100vh - 24px);
+        }
         .guidelines,
         .category-grid,
         .font-cards,
@@ -766,6 +871,13 @@ export function renderAppHtml(): string {
                 <button class="tab" type="button" data-tab="json">JSON Tokens</button>
                 <button class="tab" type="button" data-tab="prompt">AI Prompt</button>
               </div>
+              <div class="export-actions">
+                <div class="mode-tabs" aria-label="Preview length">
+                  <button class="mode-btn" type="button" data-mode="compact">Compact</button>
+                  <button class="mode-btn active" type="button" data-mode="extended">Extended</button>
+                </div>
+                <button id="copy-active" class="copy-btn" type="button">Copy</button>
+              </div>
               <p class="hint">Download and use with your selected assistant.</p>
               <div class="downloads">
                 <button id="download-design" class="download-btn" type="button">Download DESIGN.md</button>
@@ -809,8 +921,12 @@ export function renderAppHtml(): string {
       const downloadJson = document.getElementById('download-json');
       const downloadPrompt = document.getElementById('download-prompt');
       const downloadBundle = document.getElementById('download-bundle');
+      const copyActive = document.getElementById('copy-active');
+      const modeButtons = Array.from(document.querySelectorAll('.mode-btn'));
       const aiTargetStorageKey = 'design-md-extractor.aiTarget';
       let latestExportData = null;
+      let activeExportTab = 'design';
+      let exportMode = 'extended';
 
       if (aiTarget) {
         try {
@@ -838,12 +954,33 @@ export function renderAppHtml(): string {
       tabs.forEach((tabButton) => {
         tabButton.addEventListener('click', () => {
           const tab = tabButton.getAttribute('data-tab');
+          activeExportTab = tab || 'design';
           tabs.forEach((button) => button.classList.toggle('active', button === tabButton));
           Array.from(document.querySelectorAll('.tab-panel')).forEach((panel) => {
             panel.classList.toggle('active', panel.id === 'tab-' + tab);
           });
         });
       });
+
+      modeButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          exportMode = button.getAttribute('data-mode') || 'extended';
+          modeButtons.forEach((modeButton) => modeButton.classList.toggle('active', modeButton === button));
+          updateDesignPreview();
+        });
+      });
+
+      if (copyActive) {
+        copyActive.addEventListener('click', async () => {
+          const activePanel = document.querySelector('.tab-panel.active pre');
+          if (!activePanel) return;
+          await navigator.clipboard.writeText(activePanel.textContent || '');
+          copyActive.textContent = 'Copied';
+          window.setTimeout(() => {
+            copyActive.textContent = 'Copy';
+          }, 1200);
+        });
+      }
 
       function escapeHtml(value) {
         return String(value ?? '')
@@ -877,6 +1014,33 @@ export function renderAppHtml(): string {
         if (!value) return '#d9ddd7';
         if (/^[#a-zA-Z0-9(),.%\\s+-]+$/.test(value)) return value;
         return '#d9ddd7';
+      }
+
+      function safeCssValue(input, fallback) {
+        const value = String(input ?? '').trim();
+        if (!value) return fallback;
+        if (/[;{}<>]/.test(value)) return fallback;
+        return value;
+      }
+
+      function styleForComponent(component) {
+        const styles = component && component.styles ? component.styles : {};
+        const bounds = component && component.bounds ? component.bounds : {};
+        const minWidth = bounds.width ? Math.min(Math.max(Number(bounds.width), 36), 220) + 'px' : '36px';
+        const minHeight = bounds.height ? Math.min(Math.max(Number(bounds.height), 28), 72) + 'px' : '28px';
+        return [
+          'color:' + safeCssValue(styles.color, 'inherit'),
+          'background:' + safeCssValue(styles.backgroundColor, 'transparent'),
+          'border:' + safeCssValue(styles.border, '1px solid currentColor'),
+          'border-radius:' + safeCssValue(styles.borderRadius, '0px'),
+          'padding:' + safeCssValue(styles.padding, '8px 12px'),
+          'font-family:' + safeCssValue(styles.fontFamily, 'inherit'),
+          'font-size:' + safeCssValue(styles.fontSize, '13px'),
+          'font-weight:' + safeCssValue(styles.fontWeight, '500'),
+          'box-shadow:' + safeCssValue(styles.boxShadow, 'none'),
+          'min-width:' + minWidth,
+          'min-height:' + minHeight,
+        ].join(';');
       }
 
       function colorToRgb(value) {
@@ -1131,6 +1295,15 @@ export function renderAppHtml(): string {
         return lines.join('\\n');
       }
 
+      function updateDesignPreview() {
+        const target = document.getElementById('design-excerpt');
+        if (!target || !latestExportData) return;
+        target.textContent =
+          exportMode === 'compact'
+            ? latestExportData.designExcerpt
+            : latestExportData.designMd || latestExportData.designExcerpt;
+      }
+
       function buildAiPrompt(target, exportData) {
         const site = exportData && exportData.url ? exportData.url : '';
         const thesis = exportData && exportData.thesis ? exportData.thesis : '';
@@ -1365,7 +1538,11 @@ export function renderAppHtml(): string {
             name: item.name,
             kind: item.kind,
             role: item.role,
+            textSample: item.textSample || '',
+            selector: item.selector || '',
             count: item.count,
+            styles: item.styles || {},
+            bounds: item.bounds || null,
             confidence: item.confidence,
           })),
         };
@@ -1549,12 +1726,21 @@ export function renderAppHtml(): string {
           return;
         }
         target.innerHTML = components
-          .map((component) => [
-            '<div class="component-row">',
-            '<div><strong>' + escapeHtml(component.name || 'Component') + '</strong><div class="muted">' + escapeHtml(component.role || 'ui') + '</div></div>',
-            '<span>' + escapeHtml(String(component.count || 0)) + ' samples<br>' + escapeHtml(component.confidence || 'low') + '</span>',
-            '</div>',
-          ].join(''))
+          .map((component) => {
+            const styles = component.styles || {};
+            const meta = [
+              styles.border ? 'border ' + styles.border : '',
+              styles.borderRadius ? 'radius ' + styles.borderRadius : '',
+              styles.padding ? 'padding ' + styles.padding : '',
+              styles.boxShadow && styles.boxShadow !== 'none' ? 'shadow' : '',
+            ].filter(Boolean).join(' · ');
+            return [
+              '<div class="component-row">',
+              '<div><strong>' + escapeHtml(component.name || 'Component') + '</strong><div class="muted">' + escapeHtml(component.textSample || component.role || 'ui') + '</div><div class="muted">' + escapeHtml(meta || component.selector || '') + '</div></div>',
+              '<span>' + escapeHtml(String(component.count || 0)) + ' samples<br>' + escapeHtml(component.confidence || 'low') + '</span>',
+              '</div>',
+            ].join('');
+          })
           .join('');
       }
 
@@ -1562,17 +1748,39 @@ export function renderAppHtml(): string {
         const target = document.getElementById('component-preview');
         if (!target) return;
         const surface = tokenData.surfaces[0] ? safeColorValue(tokenData.surfaces[0].value) : '#ffffff';
-        const accent = safeColorValue(
-          (tokenData.colors.find((color) => colorSaturation(color.value) >= 0.42) || tokenData.colors[0] || { value: '#3a5446' }).value
-        );
         const textColor = pickReadableTextColor(tokenData.colors, surface);
-        const accentText = contrastTextColor(accent);
         const previewLift = colorLuminance(surface) > 0.56 ? '#ffffff' : 'rgba(255,255,255,0.1)';
         const headlineFont = tokenData.typography[0] ? tokenData.typography[0].fontFamily : 'sans-serif';
         const bodyFont = tokenData.typography[1] ? tokenData.typography[1].fontFamily : headlineFont;
         const metricA = tokenData.components[0] ? tokenData.components[0].name : 'Signal';
         const metricB = tokenData.components[1] ? tokenData.components[1].name : 'Coverage';
         const metricC = tokenData.components[2] ? tokenData.components[2].name : 'Density';
+        const sampleComponents = normalizeList(tokenData.components)
+          .filter((component) => {
+            const label = String(component.textSample || component.name || '').trim();
+            return component.styles && label.length > 2 && (component.kind === 'button' || component.kind === 'input' || component.kind === 'badge');
+          })
+          .slice(0, 5);
+        const sampleHtml = sampleComponents.length
+          ? [
+              '<div class="component-samples">',
+              sampleComponents
+                .map((component) => {
+                  const label = String(component.textSample || component.name || component.kind || 'Component').trim().slice(0, 42);
+                  return '<button class="sample-component" type="button" style="' + escapeHtml(styleForComponent(component)) + '">' + escapeHtml(label || 'Component') + '</button>';
+                })
+                .join(''),
+              '</div>',
+            ].join('')
+          : '';
+        const firstStyled = sampleComponents[0] || tokenData.components.find((component) => component.styles) || null;
+        const firstStyles = firstStyled && firstStyled.styles ? firstStyled.styles : {};
+        const styleGrid = [
+          ['Font', firstStyles.fontFamily || bodyFont],
+          ['Border', firstStyles.border || 'none detected'],
+          ['Radius', firstStyles.borderRadius || 'none detected'],
+          ['Shadow', firstStyles.boxShadow || 'none detected'],
+        ];
 
         target.innerHTML = [
           '<div class="component-preview" style="background:' + escapeHtml(surface) + '; color:' + escapeHtml(textColor) + '; font-family:' + escapeHtml(bodyFont) + '">',
@@ -1580,14 +1788,14 @@ export function renderAppHtml(): string {
           '<h4 style="font-family:' + escapeHtml(headlineFont) + '">STYLE SIGNAL</h4>',
           '<p>Previewing how extracted tokens feel when applied to UI blocks.</p>',
           '</div>',
+          sampleHtml,
           '<div class="preview-metrics">',
           '<div class="preview-metric"><strong>' + escapeHtml(metricA) + '</strong><span>Active</span></div>',
           '<div class="preview-metric"><strong>' + escapeHtml(metricB) + '</strong><span>' + escapeHtml(String(tokenData.colors.length)) + ' tokens</span></div>',
           '<div class="preview-metric"><strong>' + escapeHtml(metricC) + '</strong><span>' + escapeHtml(String(tokenData.typography.length)) + ' styles</span></div>',
           '</div>',
-          '<div class="preview-actions">',
-          '<button style="background:' + escapeHtml(accent) + '; color:' + escapeHtml(accentText) + '">Primary Action</button>',
-          '<button style="background:transparent; border:1px solid currentColor; color:' + escapeHtml(textColor) + '">Secondary</button>',
+          '<div class="component-style-grid">',
+          styleGrid.map(([label, value]) => '<div class="style-chip"><strong>' + escapeHtml(label) + '</strong>' + escapeHtml(value) + '</div>').join(''),
           '</div>',
           '</div>',
         ].join('');
@@ -1697,13 +1905,14 @@ export function renderAppHtml(): string {
             aiTarget: selectedAiTarget,
             thesis,
             designMd,
+            designExcerpt,
             cssVars,
             tailwindTheme,
             jsonTokens,
             aiPrompt,
           };
 
-          document.getElementById('design-excerpt').textContent = designExcerpt;
+          updateDesignPreview();
           document.getElementById('css-vars').textContent = cssVars;
           document.getElementById('tailwind-theme').textContent = tailwindTheme;
           document.getElementById('json-tokens').textContent = jsonTokens;
