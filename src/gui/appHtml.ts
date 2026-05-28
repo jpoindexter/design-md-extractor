@@ -7,109 +7,126 @@ export function renderAppHtml(): string {
     <title>Design MD Extractor</title>
     <style>
       :root {
-        --ink: #111412;
-        --muted: #68706b;
-        --line: #d9ddd7;
-        --canvas: #f4f5f1;
+        --ink: #141715;
+        --muted: #656b66;
+        --line: #d4d9d4;
+        --line-strong: #c1c7c1;
+        --canvas: #ecefed;
+        --paper: #f6f7f6;
         --panel: #ffffff;
-        --panel-soft: #eef1ec;
-        --accent: #176b52;
-        --accent-2: #1f3f7a;
+        --rail: #f0f2f0;
+        --accent: #1b2f24;
+        --accent-soft: #3a5446;
         --error: #9f1239;
+        --mono: "JetBrains Mono", "SFMono-Regular", Menlo, monospace;
       }
       * { box-sizing: border-box; }
       body {
         margin: 0;
         color: var(--ink);
-        background:
-          linear-gradient(180deg, rgba(23,107,82,0.06), transparent 22%),
-          linear-gradient(130deg, rgba(31,63,122,0.06), transparent 34%),
-          var(--canvas);
-        font-family: "IBM Plex Sans", "Aptos", "Helvetica Neue", sans-serif;
+        background: var(--canvas);
+        font-family: "Aptos", "IBM Plex Sans", "Helvetica Neue", sans-serif;
+        letter-spacing: 0;
       }
-      button, input, select { font: inherit; }
+      button, input, select { font: inherit; color: inherit; }
       .shell {
         min-height: 100vh;
         display: grid;
-        grid-template-columns: 350px minmax(0, 1fr);
+        grid-template-columns: 300px minmax(0, 1fr);
       }
       .side {
         border-right: 1px solid var(--line);
-        background: rgba(255,255,255,0.78);
-        backdrop-filter: blur(14px);
-        padding: 22px;
+        background: var(--paper);
+        padding: 24px 20px 22px;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow: auto;
       }
       .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
       .mark {
         width: 28px;
         height: 28px;
-        border: 2px solid var(--ink);
+        border: 1.5px solid var(--ink);
         border-radius: 7px;
         display: grid;
         place-items: center;
+        background: #fff;
       }
       .mark::before {
         content: "";
-        width: 12px;
-        height: 12px;
-        border-radius: 3px;
-        background: var(--accent);
+        width: 11px;
+        height: 11px;
+        border-radius: 2px;
+        background: var(--accent-soft);
       }
-      h1 { margin: 0; font-size: 18px; line-height: 1.2; }
+      h1 { margin: 0; font-size: 19px; line-height: 1.2; }
       .lede {
         margin: 6px 0 0;
         color: var(--muted);
-        font-size: 13px;
+        font-size: 12px;
         line-height: 1.45;
       }
-      form { display: grid; gap: 13px; }
+      form { display: grid; gap: 12px; }
       label {
         display: grid;
-        gap: 7px;
+        gap: 6px;
         color: var(--muted);
-        font-size: 12px;
-        font-weight: 640;
+        font-size: 11px;
+        font-weight: 680;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
       }
       input, select {
         width: 100%;
-        min-height: 42px;
+        min-height: 40px;
         border: 1px solid var(--line);
-        border-radius: 8px;
+        border-radius: 7px;
         background: #fff;
         color: var(--ink);
-        padding: 9px 11px;
+        padding: 9px 10px;
+        font-size: 13px;
+      }
+      input:focus-visible, select:focus-visible {
+        outline: 2px solid rgba(58, 84, 70, 0.25);
+        outline-offset: 1px;
       }
       .run {
         border: 0;
-        min-height: 44px;
-        border-radius: 8px;
-        background: var(--accent);
+        min-height: 42px;
+        border-radius: 7px;
+        background: var(--accent-soft);
         color: #fff;
-        font-weight: 750;
+        font-weight: 710;
         cursor: pointer;
+        transition: background 120ms ease-in-out;
       }
-      .run:disabled { opacity: 0.56; cursor: wait; }
+      .run:hover { background: #2f473b; }
+      .run:disabled { opacity: 0.6; cursor: wait; }
       .status {
         margin-top: 16px;
         min-height: 44px;
         border: 1px solid var(--line);
-        border-radius: 8px;
-        background: var(--panel-soft);
+        border-radius: 7px;
+        background: #eef1ef;
         color: var(--muted);
-        font-size: 13px;
-        line-height: 1.4;
-        padding: 12px;
+        font-size: 12px;
+        line-height: 1.45;
+        padding: 11px;
       }
-      main { padding: 18px; overflow: auto; }
+      main {
+        padding: 22px 20px;
+        overflow: auto;
+      }
       .empty {
-        min-height: calc(100vh - 36px);
+        min-height: calc(100vh - 44px);
         border: 1px solid var(--line);
-        border-radius: 8px;
-        background: rgba(255,255,255,0.78);
+        border-radius: 10px;
+        background: var(--panel);
         color: var(--muted);
         display: grid;
         place-items: center;
-        padding: 30px;
+        padding: 34px;
         text-align: center;
       }
       .result { display: none; gap: 14px; }
@@ -119,55 +136,77 @@ export function renderAppHtml(): string {
         gap: 14px;
         justify-content: space-between;
         align-items: flex-start;
+        padding: 0 2px;
       }
-      .result-head h2 { margin: 0; font-size: 25px; }
-      .result-head p { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
-      .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+      .crumb {
+        margin: 0 0 8px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .result-head h2 {
+        margin: 0;
+        font-size: 46px;
+        line-height: 0.95;
+        font-weight: 520;
+      }
+      #result-meta {
+        margin: 10px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+      }
       .actions a {
         text-decoration: none;
         border: 1px solid var(--line);
-        border-radius: 8px;
+        border-radius: 7px;
         background: #fff;
         color: var(--ink);
-        font-size: 13px;
+        font-size: 11px;
         font-weight: 700;
-        padding: 9px 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 8px 10px;
       }
       .workspace {
         display: grid;
-        grid-template-columns: minmax(0, 1.58fr) minmax(320px, 1fr);
-        gap: 14px;
+        grid-template-columns: minmax(0, 760px) minmax(350px, 1fr);
+        gap: 16px;
         align-items: start;
+        max-width: 1280px;
       }
-      .reference { display: grid; gap: 12px; }
+      .reference { display: grid; gap: 14px; }
       .panel {
         border: 1px solid var(--line);
-        border-radius: 8px;
-        background: rgba(255,255,255,0.9);
+        border-radius: 10px;
+        background: var(--panel);
         padding: 14px;
       }
       .panel h3 {
-        margin: 0 0 10px;
-        font-size: 12px;
-        letter-spacing: 0.06em;
+        margin: 0 0 11px;
+        font-size: 11px;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
         color: var(--muted);
       }
       .hero-figure {
         margin: 0;
         border: 1px solid var(--line);
-        border-radius: 8px;
+        border-radius: 10px;
         overflow: hidden;
         background: #fff;
       }
       .hero-figure img {
         width: 100%;
-        aspect-ratio: 16 / 10;
+        aspect-ratio: 16 / 9;
         object-fit: cover;
         display: block;
       }
       .hero-meta {
-        padding: 9px 11px;
+        padding: 10px 11px;
         border-top: 1px solid var(--line);
         color: var(--muted);
         font-size: 12px;
@@ -175,7 +214,7 @@ export function renderAppHtml(): string {
       .thumb-strip {
         margin-top: 10px;
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(126px, 1fr));
         gap: 8px;
       }
       .thumb-strip a {
@@ -190,7 +229,7 @@ export function renderAppHtml(): string {
         object-fit: cover;
         display: block;
       }
-      .thesis { margin: 0; font-size: 14px; line-height: 1.5; }
+      .thesis { margin: 0; font-size: 14px; line-height: 1.55; }
       .profile-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -205,16 +244,17 @@ export function renderAppHtml(): string {
       .profile-card h4 {
         margin: 0 0 6px;
         color: var(--muted);
-        font-size: 11px;
+        font-size: 10px;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.06em;
       }
       .profile-card p {
         margin: 0;
-        font-size: 13px;
+        font-size: 12px;
         line-height: 1.45;
       }
       .token-pills {
+        margin-top: 8px;
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
@@ -222,7 +262,7 @@ export function renderAppHtml(): string {
       .token-pill {
         border: 1px solid var(--line);
         border-radius: 999px;
-        background: var(--panel-soft);
+        background: #f2f4f2;
         color: var(--ink);
         font-size: 11px;
         padding: 4px 8px;
@@ -237,19 +277,22 @@ export function renderAppHtml(): string {
         border: 1px solid var(--line);
         border-radius: 8px;
         background: #fff;
-        padding: 8px;
+        padding: 9px;
       }
       .category h4 {
         margin: 0 0 6px;
         color: var(--muted);
-        font-size: 11px;
+        font-size: 10px;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.06em;
       }
-      .category .muted { margin: 0; }
+      .category .muted {
+        margin: 0;
+        font-size: 11px;
+      }
       .swatch-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
         gap: 8px;
       }
       .swatch-item {
@@ -258,10 +301,15 @@ export function renderAppHtml(): string {
         overflow: hidden;
         background: #fff;
       }
-      .swatch-chip { height: 44px; border-bottom: 1px solid var(--line); }
-      .swatch-meta { padding: 8px 9px; display: grid; gap: 3px; }
+      .swatch-chip { height: 56px; border-bottom: 1px solid var(--line); }
+      .swatch-meta { padding: 8px 9px 9px; display: grid; gap: 3px; }
       .swatch-meta strong { font-size: 12px; }
-      .swatch-meta code { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+      .swatch-meta code {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--muted);
+        overflow-wrap: anywhere;
+      }
       .dense-table {
         width: 100%;
         border-collapse: collapse;
@@ -295,10 +343,14 @@ export function renderAppHtml(): string {
       .scale-row .meta {
         color: var(--muted);
         font-size: 11px;
+        font-family: var(--mono);
       }
       .scale-row .sample {
-        margin: 4px 0 0;
-        line-height: 1.1;
+        margin: 6px 0 0;
+        line-height: 1.06;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       .font-cards {
         margin-top: 10px;
@@ -333,10 +385,10 @@ export function renderAppHtml(): string {
         gap: 10px;
       }
       .guidelines h4 {
-        margin: 0 0 6px;
-        font-size: 12px;
+        margin: 0 0 7px;
+        font-size: 11px;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.06em;
       }
       .guidelines ul {
         margin: 0;
@@ -356,7 +408,11 @@ export function renderAppHtml(): string {
       }
       .component-row:last-child { border-bottom: 0; padding-bottom: 0; }
       .component-row strong { font-size: 13px; }
-      .component-row span { color: var(--muted); font-size: 12px; text-align: right; }
+      .component-row span {
+        color: var(--muted);
+        font-size: 12px;
+        text-align: right;
+      }
       .component-preview {
         border: 1px solid var(--line);
         border-radius: 8px;
@@ -370,8 +426,8 @@ export function renderAppHtml(): string {
       }
       .preview-banner h4 {
         margin: 0;
-        font-size: 26px;
-        line-height: 1.05;
+        font-size: 25px;
+        line-height: 1;
       }
       .preview-banner p {
         margin: 8px 0 0;
@@ -384,21 +440,23 @@ export function renderAppHtml(): string {
         gap: 8px;
       }
       .preview-metric {
-        border: 1px solid rgba(0,0,0,0.1);
+        border: 1px solid rgba(0, 0, 0, 0.12);
         border-radius: 6px;
         padding: 8px;
-        background: rgba(255,255,255,0.8);
+        background: rgba(255, 255, 255, 0.72);
       }
       .preview-metric strong {
         display: block;
-        font-size: 11px;
+        font-size: 10px;
         color: var(--muted);
         margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
       }
       .preview-metric span {
         display: block;
         font-size: 13px;
-        font-weight: 650;
+        font-weight: 660;
       }
       .preview-actions {
         margin-top: 10px;
@@ -424,18 +482,21 @@ export function renderAppHtml(): string {
         color: var(--muted);
         font-size: 12px;
         line-height: 1.45;
+        overflow-wrap: anywhere;
       }
       .mono-list li + li { margin-top: 4px; }
       .export-pane {
         position: sticky;
         top: 10px;
-        max-height: calc(100vh - 28px);
+        max-height: calc(100vh - 32px);
         overflow: auto;
+        border-color: var(--line-strong);
+        background: var(--rail);
       }
       .tabs {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 7px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
         margin-bottom: 10px;
       }
       .downloads {
@@ -446,40 +507,50 @@ export function renderAppHtml(): string {
       }
       .download-btn {
         border: 1px solid var(--line);
-        border-radius: 8px;
+        border-radius: 7px;
         background: #fff;
         color: var(--ink);
-        min-height: 34px;
-        font-size: 12px;
-        font-weight: 680;
+        min-height: 32px;
+        font-size: 11px;
+        font-weight: 700;
         cursor: pointer;
       }
       .tab {
         border: 1px solid var(--line);
         background: #fff;
-        color: var(--ink);
-        border-radius: 8px;
-        min-height: 34px;
-        font-size: 12px;
+        color: var(--muted);
+        border-radius: 7px;
+        min-height: 30px;
+        padding: 0 9px;
+        font-size: 11px;
         font-weight: 680;
         cursor: pointer;
       }
       .tab.active {
-        border-color: var(--accent-2);
-        color: var(--accent-2);
-        background: rgba(31,63,122,0.06);
+        border-color: #98a39b;
+        color: var(--ink);
+        background: #fff;
       }
       .tab-panel { display: none; }
       .tab-panel.active { display: block; }
-      .export-note { margin: 0 0 8px; color: var(--muted); font-size: 12px; }
+      .export-note {
+        margin: 0 0 8px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .export-note a {
+        color: var(--accent);
+        font-weight: 670;
+      }
       .excerpt {
         margin: 0;
         border: 1px solid var(--line);
         border-radius: 8px;
-        background: var(--panel-soft);
+        background: #fff;
         padding: 10px;
         font-size: 12px;
         line-height: 1.45;
+        font-family: var(--mono);
         max-height: 320px;
         overflow: auto;
         white-space: pre-wrap;
@@ -488,10 +559,11 @@ export function renderAppHtml(): string {
         margin: 0;
         border: 1px solid var(--line);
         border-radius: 8px;
-        background: #0f141b;
-        color: #d8e0ec;
-        font-size: 12px;
-        line-height: 1.45;
+        background: #f8f9f8;
+        color: #1f2722;
+        font-family: var(--mono);
+        font-size: 11px;
+        line-height: 1.5;
         padding: 10px;
         max-height: 520px;
         overflow: auto;
@@ -503,33 +575,38 @@ export function renderAppHtml(): string {
         color: var(--muted);
         font-size: 11px;
       }
-      @media (max-width: 1180px) {
+      @media (max-width: 1220px) {
         .workspace { grid-template-columns: minmax(0, 1fr); }
         .export-pane {
           position: static;
           max-height: none;
+          order: -1;
         }
       }
-      @media (max-width: 860px) {
+      @media (max-width: 960px) {
         .shell { grid-template-columns: 1fr; }
-        .side { border-right: 0; border-bottom: 1px solid var(--line); }
+        .side {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+          position: static;
+          height: auto;
+        }
         .result-head { display: grid; }
         .actions { justify-content: flex-start; }
       }
-      @media (max-width: 680px) {
+      @media (max-width: 760px) {
+        main { padding: 12px; }
+        .result-head h2 { font-size: 34px; }
         .guidelines,
         .category-grid,
         .font-cards,
         .split-list,
-        .tri-grid {
-          grid-template-columns: minmax(0, 1fr);
-        }
+        .tri-grid,
         .profile-grid,
-        .preview-metrics {
+        .preview-metrics,
+        .downloads {
           grid-template-columns: minmax(0, 1fr);
         }
-        .tabs { grid-template-columns: minmax(0, 1fr); }
-        .downloads { grid-template-columns: minmax(0, 1fr); }
       }
     </style>
   </head>
@@ -579,6 +656,7 @@ export function renderAppHtml(): string {
         <div id="result" class="result">
           <div class="result-head">
             <div>
+              <p id="result-crumb" class="crumb">/ Styles / Style extraction</p>
               <h2 id="result-title">Style extraction</h2>
               <p id="result-meta"></p>
             </div>
@@ -846,6 +924,31 @@ export function renderAppHtml(): string {
       function numericPx(value) {
         const match = String(value || '').match(/([\\d.]+)/);
         return match ? Number.parseFloat(match[1]) : 0;
+      }
+
+      function contrastTextColor(background) {
+        return colorLuminance(background) > 0.62 ? '#141715' : '#f4f6f4';
+      }
+
+      function pickReadableTextColor(colors, background) {
+        const bgLum = colorLuminance(background);
+        const ranked = normalizeList(colors)
+          .map((color) => safeColorValue(color && color.value ? color.value : ''))
+          .filter(Boolean)
+          .map((value) => ({
+            value,
+            delta: Math.abs(colorLuminance(value) - bgLum),
+            saturation: colorSaturation(value),
+          }))
+          .sort((a, b) => b.delta - a.delta || a.saturation - b.saturation);
+        const readable = ranked.find((item) => item.delta >= 0.34);
+        return readable ? readable.value : contrastTextColor(background);
+      }
+
+      function clampSpecimenSize(fontSize) {
+        const px = numericPx(fontSize);
+        if (!px || !Number.isFinite(px)) return '18px';
+        return Math.max(12, Math.min(px, 74)) + 'px';
       }
 
       function toneLabel(colors) {
@@ -1373,7 +1476,7 @@ export function renderAppHtml(): string {
           .map((item) => [
             '<article class="scale-row">',
             '<div class="meta">' + escapeHtml((item.role || 'text') + ' · ' + (item.fontSize || '16px') + ' / ' + (item.fontWeight || '400')) + '</div>',
-            '<p class="sample" style="font-family:' + escapeHtml(item.fontFamily || 'sans-serif') + '; font-size:' + escapeHtml(item.fontSize || '16px') + '; font-weight:' + escapeHtml(item.fontWeight || '400') + '; letter-spacing:' + escapeHtml(item.letterSpacing || 'normal') + '">THE QUICK BROWN FOX JUMPS</p>',
+            '<p class="sample" style="font-family:' + escapeHtml(item.fontFamily || 'sans-serif') + '; font-size:' + escapeHtml(clampSpecimenSize(item.fontSize || '16px')) + '; font-weight:' + escapeHtml(item.fontWeight || '400') + '; letter-spacing:' + escapeHtml(item.letterSpacing || 'normal') + '">THE QUICK BROWN FOX JUMPS</p>',
             '</article>',
           ].join(''))
           .join('');
@@ -1458,9 +1561,13 @@ export function renderAppHtml(): string {
       function renderComponentPreview(tokenData) {
         const target = document.getElementById('component-preview');
         if (!target) return;
-        const bgColor = tokenData.surfaces[0] ? tokenData.surfaces[0].value : '#ffffff';
-        const textColor = tokenData.colors.find((color) => colorSaturation(color.value) < 0.2)?.value || '#111111';
-        const accent = tokenData.colors.find((color) => colorSaturation(color.value) >= 0.42)?.value || '#176b52';
+        const surface = tokenData.surfaces[0] ? safeColorValue(tokenData.surfaces[0].value) : '#ffffff';
+        const accent = safeColorValue(
+          (tokenData.colors.find((color) => colorSaturation(color.value) >= 0.42) || tokenData.colors[0] || { value: '#3a5446' }).value
+        );
+        const textColor = pickReadableTextColor(tokenData.colors, surface);
+        const accentText = contrastTextColor(accent);
+        const previewLift = colorLuminance(surface) > 0.56 ? '#ffffff' : 'rgba(255,255,255,0.1)';
         const headlineFont = tokenData.typography[0] ? tokenData.typography[0].fontFamily : 'sans-serif';
         const bodyFont = tokenData.typography[1] ? tokenData.typography[1].fontFamily : headlineFont;
         const metricA = tokenData.components[0] ? tokenData.components[0].name : 'Signal';
@@ -1468,8 +1575,8 @@ export function renderAppHtml(): string {
         const metricC = tokenData.components[2] ? tokenData.components[2].name : 'Density';
 
         target.innerHTML = [
-          '<div class="component-preview" style="background:' + escapeHtml(safeColorValue(bgColor)) + '; color:' + escapeHtml(safeColorValue(textColor)) + '; font-family:' + escapeHtml(bodyFont) + '">',
-          '<div class="preview-banner" style="background:linear-gradient(140deg, ' + escapeHtml(safeColorValue(bgColor)) + ', rgba(0,0,0,0.06)); border:1px solid rgba(0,0,0,0.08)">',
+          '<div class="component-preview" style="background:' + escapeHtml(surface) + '; color:' + escapeHtml(textColor) + '; font-family:' + escapeHtml(bodyFont) + '">',
+          '<div class="preview-banner" style="background:linear-gradient(140deg, ' + escapeHtml(surface) + ', ' + escapeHtml(previewLift) + '); border:1px solid rgba(0,0,0,0.08)">',
           '<h4 style="font-family:' + escapeHtml(headlineFont) + '">STYLE SIGNAL</h4>',
           '<p>Previewing how extracted tokens feel when applied to UI blocks.</p>',
           '</div>',
@@ -1479,8 +1586,8 @@ export function renderAppHtml(): string {
           '<div class="preview-metric"><strong>' + escapeHtml(metricC) + '</strong><span>' + escapeHtml(String(tokenData.typography.length)) + ' styles</span></div>',
           '</div>',
           '<div class="preview-actions">',
-          '<button style="background:' + escapeHtml(safeColorValue(accent)) + '; color:#fff">Primary Action</button>',
-          '<button style="background:transparent; border:1px solid currentColor; color:' + escapeHtml(safeColorValue(textColor)) + '">Secondary</button>',
+          '<button style="background:' + escapeHtml(accent) + '; color:' + escapeHtml(accentText) + '">Primary Action</button>',
+          '<button style="background:transparent; border:1px solid currentColor; color:' + escapeHtml(textColor) + '">Secondary</button>',
           '</div>',
           '</div>',
         ].join('');
@@ -1520,7 +1627,9 @@ export function renderAppHtml(): string {
           empty.style.display = 'none';
           result.classList.add('active');
 
-          document.getElementById('result-title').textContent = new URL(data.url).hostname;
+          const hostname = new URL(data.url).hostname;
+          document.getElementById('result-title').textContent = hostname;
+          document.getElementById('result-crumb').textContent = '/ Styles / ' + hostname;
           document.getElementById('result-meta').textContent =
             data.summary.pages.length +
             ' pages inspected · run ' +
