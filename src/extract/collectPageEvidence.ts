@@ -25,11 +25,76 @@ export async function collectPageEvidence(
   options: { viewport: string; maxComponents: number },
 ): Promise<RawPageEvidence> {
   return page.evaluate(({ maxComponents }) => {
-    function toHex(value: string): string {
-      const match = value.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-      if (!match) return value;
-      const [, r, g, b] = match;
-      return `#${[r, g, b].map((part) => Number(part).toString(16).padStart(2, '0')).join('')}`;
+    const colorCanvas = document.createElement('canvas');
+    colorCanvas.width = 1;
+    colorCanvas.height = 1;
+    const colorContext = colorCanvas.getContext('2d');
+
+    function rgbToHex(red: number | string, green: number | string, blue: number | string): string {
+      return `#${[red, green, blue]
+        .map((part) => Math.max(0, Math.min(255, Math.round(Number(part)))).toString(16).padStart(2, '0'))
+        .join('')}`;
+    }
+
+    function alphaToString(alpha: number): string {
+      return String(Math.round(alpha * 1000) / 1000)
+        .replace(/0+$/, '')
+        .replace(/\.$/, '');
+    }
+
+    function normalizeColor(value: string): string {
+      const trimmed = value.trim();
+      if (!trimmed) return value;
+      if (trimmed === 'transparent') return trimmed;
+
+      const rgbMatch = trimmed.match(/rgba?\(\s*([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?/);
+      if (rgbMatch) {
+        const [, red, green, blue, alpha] = rgbMatch;
+        if (alpha !== undefined && Number(alpha) === 0) return 'transparent';
+        if (alpha !== undefined && Number(alpha) < 1) {
+          return `rgba(${Math.round(Number(red))}, ${Math.round(Number(green))}, ${Math.round(Number(blue))}, ${alphaToString(Number(alpha))})`;
+        }
+        return rgbToHex(red, green, blue);
+      }
+
+      if (/^#[0-9a-f]{3}$/i.test(trimmed)) {
+        const [, red, green, blue] = trimmed;
+        return `#${red}${red}${green}${green}${blue}${blue}`.toLowerCase();
+      }
+
+      if (/^#[0-9a-f]{6}$/i.test(trimmed)) {
+        return trimmed.toLowerCase();
+      }
+
+      if (!colorContext || !CSS.supports('color', trimmed)) {
+        return trimmed;
+      }
+
+      colorContext.clearRect(0, 0, 1, 1);
+      colorContext.fillStyle = trimmed;
+      colorContext.fillRect(0, 0, 1, 1);
+
+      const [red, green, blue, alpha] = colorContext.getImageData(0, 0, 1, 1).data;
+      if (alpha === 0) return 'transparent';
+      if (alpha < 255) {
+        return `rgba(${red}, ${green}, ${blue}, ${alphaToString(alpha / 255)})`;
+      }
+      return rgbToHex(red, green, blue);
+    }
+
+    function normalizeColorsInCssValue(value: string): string {
+      return value.replace(
+        /(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\([^)]+\)|#[0-9a-f]{3,8}\b/gi,
+        (color) => normalizeColor(color),
+      );
+    }
+
+    function borderValue(style: CSSStyleDeclaration): string {
+      const color = normalizeColor(style.borderColor);
+      if (!style.borderWidth || !style.borderStyle || color === 'transparent') {
+        return style.border;
+      }
+      return `${style.borderWidth} ${style.borderStyle} ${color}`;
     }
 
     function selectorPath(element: Element): string {
@@ -84,7 +149,7 @@ export async function collectPageEvidence(
       for (const property of ['color', 'backgroundColor', 'borderColor']) {
         const value = (style as CSSStyleDeclaration & Record<string, string>)[property];
         if (value && value !== 'rgba(0, 0, 0, 0)' && value !== 'transparent') {
-          colors.push({ value: toHex(value), property, selector });
+          colors.push({ value: normalizeColor(value), property, selector });
         }
       }
 
@@ -106,15 +171,15 @@ export async function collectPageEvidence(
           selector,
           textSample: element.textContent?.trim().slice(0, 80) ?? '',
           styles: {
-            color: toHex(style.color),
-            backgroundColor: toHex(style.backgroundColor),
+            color: normalizeColor(style.color),
+            backgroundColor: normalizeColor(style.backgroundColor),
             borderRadius: style.borderRadius,
             padding: style.padding,
             fontFamily: style.fontFamily,
             fontSize: style.fontSize,
             fontWeight: style.fontWeight,
-            boxShadow: style.boxShadow,
-            border: style.border,
+            boxShadow: normalizeColorsInCssValue(style.boxShadow),
+            border: borderValue(style),
           },
           bounds: { width: rect.width, height: rect.height },
         });

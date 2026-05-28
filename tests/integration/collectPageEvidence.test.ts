@@ -18,4 +18,36 @@ describe('collectPageEvidence', () => {
     expect(evidence.typography.some((type) => type.fontSize === '48px')).toBe(true);
     expect(evidence.components.some((component) => component.kind === 'button')).toBe(true);
   });
+
+  it('normalizes modern browser color functions into reusable CSS colors', async () => {
+    const browser = await chromium.launch();
+    const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+    await page.setContent(`
+      <style>
+        button {
+          color: oklab(0.46 0.09 -0.12);
+          background: lab(82 -20 28);
+          border: 2px solid color(display-p3 0.88 0.2 0.16);
+          box-shadow: 0 0 0 1px oklab(0.46 0.09 -0.12 / 0.2);
+        }
+      </style>
+      <button>Extract style</button>
+    `);
+
+    const evidence = await collectPageEvidence(page, { viewport: 'desktop', maxComponents: 20 });
+    await browser.close();
+
+    const button = evidence.components.find((component) => component.kind === 'button');
+    const extractedValues = [
+      ...evidence.colors.map((color) => color.value),
+      button?.styles.color,
+      button?.styles.backgroundColor,
+    ].filter(Boolean);
+
+    expect(extractedValues).not.toContain('oklab(0.46 0.09 -0.12)');
+    expect(extractedValues).not.toContain('lab(82 -20 28)');
+    expect(extractedValues.every((value) => /^#[0-9a-f]{6}$/i.test(value))).toBe(true);
+    expect(button?.styles.border).not.toMatch(/color\(/);
+    expect(button?.styles.boxShadow).not.toMatch(/oklab\(/);
+  });
 });
