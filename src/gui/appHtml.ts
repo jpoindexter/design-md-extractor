@@ -438,6 +438,22 @@ export function renderAppHtml(): string {
         gap: 7px;
         margin-bottom: 10px;
       }
+      .downloads {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 7px;
+        margin: 0 0 10px;
+      }
+      .download-btn {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--ink);
+        min-height: 34px;
+        font-size: 12px;
+        font-weight: 680;
+        cursor: pointer;
+      }
       .tab {
         border: 1px solid var(--line);
         background: #fff;
@@ -482,6 +498,11 @@ export function renderAppHtml(): string {
         white-space: pre;
       }
       .error { color: var(--error); }
+      .hint {
+        margin: 0 0 8px;
+        color: var(--muted);
+        font-size: 11px;
+      }
       @media (max-width: 1180px) {
         .workspace { grid-template-columns: minmax(0, 1fr); }
         .export-pane {
@@ -508,6 +529,7 @@ export function renderAppHtml(): string {
           grid-template-columns: minmax(0, 1fr);
         }
         .tabs { grid-template-columns: minmax(0, 1fr); }
+        .downloads { grid-template-columns: minmax(0, 1fr); }
       }
     </style>
   </head>
@@ -532,6 +554,15 @@ export function renderAppHtml(): string {
               <option value="7" selected>Broad scan, up to 7 pages</option>
               <option value="4">Quick scan, up to 4 pages</option>
               <option value="12">Deep scan, up to 12 pages</option>
+            </select>
+          </label>
+          <label>
+            AI Assistant
+            <select id="ai-target" name="aiTarget">
+              <option value="codex" selected>Codex (OpenAI)</option>
+              <option value="claude">Claude (Anthropic)</option>
+              <option value="chatgpt">ChatGPT</option>
+              <option value="generic">Other / Generic</option>
             </select>
           </label>
           <button id="run" class="run" type="submit">Extract Style</button>
@@ -655,6 +686,16 @@ export function renderAppHtml(): string {
                 <button class="tab" type="button" data-tab="css">CSS Variables</button>
                 <button class="tab" type="button" data-tab="tailwind">Tailwind v4</button>
                 <button class="tab" type="button" data-tab="json">JSON Tokens</button>
+                <button class="tab" type="button" data-tab="prompt">AI Prompt</button>
+              </div>
+              <p class="hint">Download and use with your selected assistant.</p>
+              <div class="downloads">
+                <button id="download-design" class="download-btn" type="button">Download DESIGN.md</button>
+                <button id="download-css" class="download-btn" type="button">Download CSS Vars</button>
+                <button id="download-tailwind" class="download-btn" type="button">Download Tailwind</button>
+                <button id="download-json" class="download-btn" type="button">Download Tokens JSON</button>
+                <button id="download-prompt" class="download-btn" type="button">Download AI Prompt</button>
+                <button id="download-bundle" class="download-btn" type="button">Download Bundle</button>
               </div>
               <div id="tab-design" class="tab-panel active">
                 <p class="export-note">Open full document: <a id="open-design-inline" href="#" target="_blank" rel="noreferrer">DESIGN.md</a></p>
@@ -669,6 +710,9 @@ export function renderAppHtml(): string {
               <div id="tab-json" class="tab-panel">
                 <pre id="json-tokens" class="code-block"></pre>
               </div>
+              <div id="tab-prompt" class="tab-panel">
+                <pre id="ai-prompt" class="code-block"></pre>
+              </div>
             </aside>
           </div>
         </div>
@@ -680,6 +724,37 @@ export function renderAppHtml(): string {
       const run = document.getElementById('run');
       const empty = document.getElementById('empty');
       const result = document.getElementById('result');
+      const aiTarget = document.getElementById('ai-target');
+      const downloadDesign = document.getElementById('download-design');
+      const downloadCss = document.getElementById('download-css');
+      const downloadTailwind = document.getElementById('download-tailwind');
+      const downloadJson = document.getElementById('download-json');
+      const downloadPrompt = document.getElementById('download-prompt');
+      const downloadBundle = document.getElementById('download-bundle');
+      const aiTargetStorageKey = 'design-md-extractor.aiTarget';
+      let latestExportData = null;
+
+      if (aiTarget) {
+        try {
+          const storedTarget = window.localStorage.getItem(aiTargetStorageKey);
+          if (storedTarget && Array.from(aiTarget.options).some((option) => option.value === storedTarget)) {
+            aiTarget.value = storedTarget;
+          }
+        } catch {}
+
+        aiTarget.addEventListener('change', () => {
+          try {
+            window.localStorage.setItem(aiTargetStorageKey, aiTarget.value);
+          } catch {}
+          if (latestExportData) {
+            latestExportData.aiPrompt = buildAiPrompt(aiTarget.value, latestExportData);
+            const promptTarget = document.getElementById('ai-prompt');
+            if (promptTarget) {
+              promptTarget.textContent = latestExportData.aiPrompt;
+            }
+          }
+        });
+      }
 
       const tabs = Array.from(document.querySelectorAll('.tab'));
       tabs.forEach((tabButton) => {
@@ -828,6 +903,13 @@ export function renderAppHtml(): string {
         return normalizeList(lines).find((line) => String(line || '').trim().length > 0) || '';
       }
 
+      function aiTargetLabel(target) {
+        if (target === 'codex') return 'Codex';
+        if (target === 'claude') return 'Claude';
+        if (target === 'chatgpt') return 'ChatGPT';
+        return 'Generic Assistant';
+      }
+
       function createThesis(data, evidence, tokenData) {
         if (data && data.summary && typeof data.summary.styleThesis === 'string' && data.summary.styleThesis.trim()) {
           return data.summary.styleThesis.trim();
@@ -944,6 +1026,113 @@ export function renderAppHtml(): string {
           .filter((line) => line.trim().length > 0 && !line.startsWith('|') && !line.startsWith('---'))
           .slice(0, 14);
         return lines.join('\\n');
+      }
+
+      function buildAiPrompt(target, exportData) {
+        const site = exportData && exportData.url ? exportData.url : '';
+        const thesis = exportData && exportData.thesis ? exportData.thesis : '';
+        const cssVars = exportData && exportData.cssVars ? exportData.cssVars : '';
+        const tailwind = exportData && exportData.tailwindTheme ? exportData.tailwindTheme : '';
+        const tokens = exportData && exportData.jsonTokens ? exportData.jsonTokens : '';
+        const assistant = aiTargetLabel(target);
+
+        return [
+          'Assistant: ' + assistant,
+          'Task: Recreate and extend the target website style in a production UI.',
+          '',
+          'Source Site',
+          site,
+          '',
+          'Style Thesis',
+          thesis,
+          '',
+          'Instructions',
+          '1. Keep the visual tone, hierarchy, and spacing rhythm faithful to the thesis.',
+          '2. Use the provided token outputs as the source of truth.',
+          '3. Build accessible UI with clear contrast and responsive layouts.',
+          '4. Do not add colors or fonts not present in the token set unless explicitly noted.',
+          '5. Return implementation-ready code and call out any assumptions.',
+          '',
+          'CSS Variables',
+          cssVars,
+          '',
+          'Tailwind v4 Theme',
+          tailwind,
+          '',
+          'JSON Tokens',
+          tokens,
+        ].join('\\n');
+      }
+
+      function downloadText(filename, content, mimeType) {
+        const blob = new Blob([String(content || '')], { type: mimeType || 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = filename;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      function attachDownloadHandlers() {
+        if (downloadDesign) {
+          downloadDesign.addEventListener('click', () => {
+            if (!latestExportData) return;
+            downloadText('DESIGN.md', latestExportData.designMd, 'text/markdown;charset=utf-8');
+          });
+        }
+
+        if (downloadCss) {
+          downloadCss.addEventListener('click', () => {
+            if (!latestExportData) return;
+            downloadText('style-variables.css', latestExportData.cssVars, 'text/css;charset=utf-8');
+          });
+        }
+
+        if (downloadTailwind) {
+          downloadTailwind.addEventListener('click', () => {
+            if (!latestExportData) return;
+            downloadText('tailwind-theme.css', latestExportData.tailwindTheme, 'text/css;charset=utf-8');
+          });
+        }
+
+        if (downloadJson) {
+          downloadJson.addEventListener('click', () => {
+            if (!latestExportData) return;
+            downloadText('design-tokens.json', latestExportData.jsonTokens, 'application/json;charset=utf-8');
+          });
+        }
+
+        if (downloadPrompt) {
+          downloadPrompt.addEventListener('click', () => {
+            if (!latestExportData) return;
+            downloadText('ai-prompt.txt', latestExportData.aiPrompt, 'text/plain;charset=utf-8');
+          });
+        }
+
+        if (downloadBundle) {
+          downloadBundle.addEventListener('click', () => {
+            if (!latestExportData) return;
+            const bundle = {
+              metadata: {
+                runId: latestExportData.runId,
+                url: latestExportData.url,
+                aiTarget: latestExportData.aiTarget,
+                exportedAt: new Date().toISOString(),
+              },
+              files: {
+                'DESIGN.md': latestExportData.designMd,
+                'style-variables.css': latestExportData.cssVars,
+                'tailwind-theme.css': latestExportData.tailwindTheme,
+                'design-tokens.json': latestExportData.jsonTokens,
+                'ai-prompt.txt': latestExportData.aiPrompt,
+              },
+            };
+            downloadText('style-bundle.json', JSON.stringify(bundle, null, 2), 'application/json;charset=utf-8');
+          });
+        }
       }
 
       function buildTokenData(data, evidence) {
@@ -1297,6 +1486,8 @@ export function renderAppHtml(): string {
         ].join('');
       }
 
+      attachDownloadHandlers();
+
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
         run.disabled = true;
@@ -1309,6 +1500,7 @@ export function renderAppHtml(): string {
             body: JSON.stringify({
               url: document.getElementById('url').value,
               maxPages: Number(document.getElementById('max-pages').value),
+              aiTarget: aiTarget ? aiTarget.value : 'generic',
             }),
           });
 
@@ -1375,10 +1567,38 @@ export function renderAppHtml(): string {
           setList('guidelines-do', guide.doRules, (rule) => '<li>' + escapeHtml(rule) + '</li>', 'No rules generated.');
           setList('guidelines-dont', guide.dontRules, (rule) => '<li>' + escapeHtml(rule) + '</li>', 'No warnings generated.');
 
-          document.getElementById('design-excerpt').textContent = extractDesignExcerpt(designMd, thesis, data);
-          document.getElementById('css-vars').textContent = buildCssVariables(tokenData);
-          document.getElementById('tailwind-theme').textContent = buildTailwindTheme(tokenData);
-          document.getElementById('json-tokens').textContent = buildJsonTokens(data, tokenData);
+          const selectedAiTarget = aiTarget ? aiTarget.value : 'generic';
+          const designExcerpt = extractDesignExcerpt(designMd, thesis, data);
+          const cssVars = buildCssVariables(tokenData);
+          const tailwindTheme = buildTailwindTheme(tokenData);
+          const jsonTokens = buildJsonTokens(data, tokenData);
+          const aiPrompt = buildAiPrompt(selectedAiTarget, {
+            runId: data.runId,
+            url: data.url,
+            thesis,
+            cssVars,
+            tailwindTheme,
+            jsonTokens,
+            designMd,
+          });
+
+          latestExportData = {
+            runId: data.runId,
+            url: data.url,
+            aiTarget: selectedAiTarget,
+            thesis,
+            designMd,
+            cssVars,
+            tailwindTheme,
+            jsonTokens,
+            aiPrompt,
+          };
+
+          document.getElementById('design-excerpt').textContent = designExcerpt;
+          document.getElementById('css-vars').textContent = cssVars;
+          document.getElementById('tailwind-theme').textContent = tailwindTheme;
+          document.getElementById('json-tokens').textContent = jsonTokens;
+          document.getElementById('ai-prompt').textContent = aiPrompt;
 
           status.textContent = 'Extraction complete: ' + data.runId;
         } catch (error) {
