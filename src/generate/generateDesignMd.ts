@@ -1,7 +1,14 @@
 import type { Evidence } from '../types/evidence.js';
 
 function siteName(url: string): string {
-  return new URL(url).hostname.replace(/^www\./, '');
+  const parsed = new URL(url);
+  if (parsed.protocol === 'file:') {
+    const segments = parsed.pathname.split('/').filter(Boolean);
+    return segments.at(-1) ?? 'local-file';
+  }
+
+  const host = parsed.hostname.replace(/^www\./, '');
+  return host || 'site';
 }
 
 function colorRows(evidence: Evidence): string {

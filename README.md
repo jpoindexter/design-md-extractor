@@ -14,4 +14,18 @@ files for humans and coding agents.
 - [Agent Workflow](docs/system/agent-workflow.md)
 - [Design Spec](docs/superpowers/specs/2026-05-28-design-md-extractor-design.md)
 - [Implementation Plan](docs/superpowers/plans/2026-05-28-design-md-extractor.md)
-Extract website styles into reusable DESIGN.md files
+
+## Usage
+
+```bash
+npm install
+npm run build
+npx design-md-extractor extract https://example.com --out ./out/example
+```
+
+Generated artifacts:
+
+- `evidence.json`
+- `DESIGN.md`
+- `preview.html`
+- `screenshots/`
