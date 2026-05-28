@@ -46,9 +46,47 @@ describe('createGuiServer', () => {
           previewHtml: '/runs/example-com-123/preview.html',
         },
         summary: {
+          source: {
+            primaryUrl: 'https://example.com/',
+            capturedAt: '2026-05-28T12:00:00.000Z',
+          },
+          styleThesis:
+            'sparse density, #111111 primary and #f5f5f5 secondary, Inter as the main typeface, and 2 distinct surface levels across 1 inspected pages.',
+          bestScreenshotHref: '/runs/example-com-123/screenshots/example-com-desktop.png',
           pages: [{ url: 'https://example.com/', status: 'success' }],
-          colors: [],
-          typography: [],
+          colors: [
+            {
+              name: 'Rich Black',
+              value: '#111111',
+              cssVariable: '--color-rich-black',
+              role: 'Surface or background color',
+              confidence: 'high',
+            },
+          ],
+          typography: [
+            {
+              role: 'body',
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '16px',
+              fontWeight: '400',
+              lineHeight: '24px',
+              letterSpacing: '0px',
+              confidence: 'high',
+            },
+          ],
+          spacing: [{ name: 'Space 1', value: '8px', confidence: 'high' }],
+          radii: [{ name: 'Radius 1', value: '8px', confidence: 'high' }],
+          shadows: [{ name: 'Shadow 1', value: '0 4px 16px rgba(0,0,0,.12)', confidence: 'medium' }],
+          surfaces: [
+            {
+              level: 1,
+              name: 'Base Surface',
+              value: '#ffffff',
+              purpose: 'Primary canvas',
+              confidence: 'high',
+            },
+          ],
+          warnings: [{ code: 'PARTIAL_SCAN', message: 'Only one page inspected.', severity: 'info' }],
           components: [],
           screenshots: [],
         },
@@ -69,6 +107,21 @@ describe('createGuiServer', () => {
         runId: 'example-com-123',
         artifacts: {
           designMd: '/runs/example-com-123/DESIGN.md',
+        },
+        summary: {
+          source: {
+            primaryUrl: 'https://example.com/',
+            capturedAt: '2026-05-28T12:00:00.000Z',
+          },
+          styleThesis: expect.stringContaining('sparse density'),
+          bestScreenshotHref: '/runs/example-com-123/screenshots/example-com-desktop.png',
+          colors: [{ cssVariable: '--color-rich-black' }],
+          typography: [{ lineHeight: '24px', letterSpacing: '0px' }],
+          spacing: [{ name: 'Space 1' }],
+          radii: [{ name: 'Radius 1' }],
+          shadows: [{ name: 'Shadow 1' }],
+          surfaces: [{ name: 'Base Surface' }],
+          warnings: [{ code: 'PARTIAL_SCAN', severity: 'info' }],
         },
       });
     } finally {

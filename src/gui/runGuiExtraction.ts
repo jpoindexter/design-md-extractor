@@ -17,13 +17,65 @@ function artifactUrl(runId: string, path: string): string {
   return `/runs/${runId}/${path.split(/[\\/]/).join('/')}`;
 }
 
+function pickBestScreenshotHref(
+  runId: string,
+  screenshots: Array<{ viewport: string; url: string; path: string }>,
+  primaryUrl: string,
+): string | null {
+  const desktopForPrimary = screenshots.find((shot) => shot.viewport === 'desktop' && shot.url === primaryUrl);
+  if (desktopForPrimary) {
+    return artifactUrl(runId, desktopForPrimary.path);
+  }
+
+  const desktop = screenshots.find((shot) => shot.viewport === 'desktop');
+  if (desktop) {
+    return artifactUrl(runId, desktop.path);
+  }
+
+  const primary = screenshots.find((shot) => shot.url === primaryUrl);
+  if (primary) {
+    return artifactUrl(runId, primary.path);
+  }
+
+  const fallback = screenshots.at(0);
+  return fallback ? artifactUrl(runId, fallback.path) : null;
+}
+
+function generateStyleThesis(evidence: ReturnType<typeof EvidenceSchema.parse>): string {
+  const density = evidence.layout.density;
+  const dominantColor = evidence.tokens.colors[0]?.value;
+  const accentColor = evidence.tokens.colors[1]?.value;
+  const primaryFont = evidence.tokens.typography[0]?.fontFamily;
+  const surfaceCount = evidence.surfaces.length;
+  const successfulPages = evidence.source.pages.filter((page) => page.status === 'success').length;
+
+  const colorPhrase =
+    dominantColor && accentColor
+      ? `${dominantColor} primary and ${accentColor} secondary`
+      : dominantColor
+      ? dominantColor
+      : 'a restrained neutral palette';
+  const typographyPhrase = primaryFont ? `${primaryFont} as the main typeface` : 'a compact typography stack';
+  const surfacePhrase = surfaceCount > 0 ? `${surfaceCount} distinct surface levels` : 'minimal surface layering';
+
+  return `${density} density, ${colorPhrase}, ${typographyPhrase}, and ${surfacePhrase} across ${successfulPages} inspected pages.`;
+}
+
 export function summarizeEvidence(runId: string, evidenceJson: unknown): GuiRunResult['summary'] {
   const evidence = EvidenceSchema.parse(evidenceJson);
+
   return {
+    source: {
+      primaryUrl: evidence.source.primaryUrl,
+      capturedAt: evidence.source.capturedAt,
+    },
+    styleThesis: generateStyleThesis(evidence),
+    bestScreenshotHref: pickBestScreenshotHref(runId, evidence.screenshots, evidence.source.primaryUrl),
     pages: evidence.source.pages,
     colors: evidence.tokens.colors.slice(0, 12).map((color) => ({
       name: color.name,
       value: color.value,
+      cssVariable: color.cssVariable,
       role: color.role,
       confidence: color.confidence,
     })),
@@ -32,8 +84,33 @@ export function summarizeEvidence(runId: string, evidenceJson: unknown): GuiRunR
       fontFamily: typography.fontFamily,
       fontSize: typography.fontSize,
       fontWeight: typography.fontWeight,
+      lineHeight: typography.lineHeight,
+      letterSpacing: typography.letterSpacing,
       confidence: typography.confidence,
     })),
+    spacing: evidence.tokens.spacing.slice(0, 12).map((spacing) => ({
+      name: spacing.name,
+      value: spacing.value,
+      confidence: spacing.confidence,
+    })),
+    radii: evidence.tokens.radii.slice(0, 12).map((radius) => ({
+      name: radius.name,
+      value: radius.value,
+      confidence: radius.confidence,
+    })),
+    shadows: evidence.tokens.shadows.slice(0, 12).map((shadow) => ({
+      name: shadow.name,
+      value: shadow.value,
+      confidence: shadow.confidence,
+    })),
+    surfaces: evidence.surfaces.slice(0, 12).map((surface) => ({
+      level: surface.level,
+      name: surface.name,
+      value: surface.value,
+      purpose: surface.purpose,
+      confidence: surface.confidence,
+    })),
+    warnings: evidence.warnings,
     components: evidence.components.slice(0, 12).map((component) => ({
       name: component.name,
       kind: component.kind,
