@@ -1,0 +1,48 @@
+import { describe, expect, it } from 'vitest';
+import { normalizeEvidence } from '../../src/evidence/normalizeEvidence.js';
+
+describe('normalizeEvidence', () => {
+  it('promotes repeated colors and component samples into schema evidence', () => {
+    const evidence = normalizeEvidence({
+      primaryUrl: 'https://example.com',
+      pages: [{ url: 'https://example.com', status: 'success' as const }],
+      capturedAt: '2026-05-28T10:00:00.000Z',
+      viewports: [{ name: 'desktop', width: 1440, height: 1000 }],
+      screenshots: [],
+      rawPages: [
+        {
+          viewport: 'desktop',
+          colors: [
+            { value: '#ffffff', property: 'backgroundColor', selector: 'body' },
+            { value: '#ffffff', property: 'backgroundColor', selector: 'main' },
+            { value: '#ff5900', property: 'backgroundColor', selector: 'a.button' },
+          ],
+          typography: [
+            {
+              selector: 'h1',
+              role: 'heading',
+              fontFamily: 'Inter',
+              fontSize: '48px',
+              fontWeight: '600',
+              lineHeight: '52.8px',
+              letterSpacing: '-1.92px',
+            },
+          ],
+          components: [
+            {
+              kind: 'button',
+              selector: 'a.button',
+              textSample: 'Get started',
+              styles: { backgroundColor: '#ff5900', color: '#ffffff', borderRadius: '8px' },
+              bounds: { width: 120, height: 40 },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(evidence.tokens.colors[0]?.value).toBe('#ffffff');
+    expect(evidence.tokens.typography[0]?.role).toBe('heading');
+    expect(evidence.components[0]?.name).toBe('Button');
+  });
+});
