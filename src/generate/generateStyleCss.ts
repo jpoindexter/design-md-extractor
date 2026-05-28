@@ -1,6 +1,6 @@
 import type { Evidence } from '../types/evidence.js';
 
-function slug(input: string): string {
+export function slug(input: string): string {
   const normalized = input
     .trim()
     .toLowerCase()
@@ -9,7 +9,7 @@ function slug(input: string): string {
   return normalized || 'token';
 }
 
-function cssVariable(prefix: string, name: string): string {
+export function cssVariable(prefix: string, name: string): string {
   const normalizedName = slug(name);
   const prefixSlug = slug(prefix);
   const suffix = normalizedName.startsWith(`${prefixSlug}-`)
@@ -22,7 +22,13 @@ function cssLines(evidence: Evidence): string[] {
   const lines = [':root {'];
 
   for (const color of evidence.tokens.colors) {
-    lines.push(`  ${color.cssVariable ?? cssVariable('color', color.name)}: ${color.value};`);
+    lines.push(
+      `  ${color.cssVariable ?? cssVariable('color', color.name)}: ${color.value};`,
+    );
+  }
+
+  for (const surface of evidence.surfaces) {
+    lines.push(`  ${cssVariable('surface', surface.name)}: ${surface.value};`);
   }
 
   for (const typography of evidence.tokens.typography) {

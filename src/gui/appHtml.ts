@@ -125,9 +125,40 @@ export function renderAppHtml(): string {
         padding: 11px;
         min-width: 0;
       }
+      body.site-themed-ui {
+        background: var(--site-canvas, var(--canvas));
+        color: var(--site-text, var(--ink));
+        font-family: var(--site-font-body, "Helvetica Neue", Arial, sans-serif);
+      }
+      body.site-themed-ui .side {
+        background: var(--site-surface, var(--paper));
+        border-bottom: var(--site-border-width, 1px) var(--site-border-style, solid) var(--site-border, var(--line));
+      }
+      body.site-themed-ui input,
+      body.site-themed-ui select,
+      body.site-themed-ui .status {
+        border: var(--site-border-width, 1px) var(--site-border-style, solid) var(--site-border, var(--line));
+        border-radius: var(--site-radius, 6px);
+        background: var(--site-card, #fff);
+        color: var(--site-text, var(--ink));
+      }
+      body.site-themed-ui label,
+      body.site-themed-ui .lede,
+      body.site-themed-ui .status {
+        color: var(--site-muted, var(--muted));
+      }
+      body.site-themed-ui .run {
+        border-radius: var(--site-radius, 6px);
+        background: var(--site-accent, var(--accent-soft));
+        color: var(--site-accent-text, #fff);
+      }
+      body.site-themed-ui .run:hover { background: var(--site-accent, var(--accent-soft)); }
       main {
         padding: 34px 42px 52px;
         overflow: auto;
+      }
+      main:has(.result.site-themed.active) {
+        background: var(--site-canvas, var(--canvas));
       }
       .empty {
         min-height: calc(100vh - 44px);
@@ -142,6 +173,34 @@ export function renderAppHtml(): string {
       }
       .result { display: none; gap: 14px; max-width: 1460px; margin: 0 auto; }
       .result.active { display: grid; }
+      .result.site-themed {
+        --site-canvas: #edf0ed;
+        --site-surface: #ffffff;
+        --site-card: #ffffff;
+        --site-code: #f7f8fb;
+        --site-text: #141715;
+        --site-muted: #656b66;
+        --site-accent: #3a5446;
+        --site-accent-text: #ffffff;
+        --site-border: #dfe4df;
+        --site-border-width: 1px;
+        --site-border-style: solid;
+        --site-radius: 8px;
+        --site-shadow: 0 10px 34px rgba(20, 23, 21, 0.035);
+        --site-frame-shadow: inset 0 0 0 1px var(--site-border);
+        --site-space: 14px;
+        --site-section-space: 36px;
+        --site-font-body: "Helvetica Neue", Arial, sans-serif;
+        --site-font-display: var(--site-font-body);
+        --site-display-size: 72px;
+        --site-display-weight: 700;
+        --site-display-line: 0.92;
+        color: var(--site-text);
+        font-family: var(--site-font-body);
+        background: var(--site-canvas);
+        padding: var(--site-space);
+        border-radius: var(--site-radius);
+      }
       .result-head {
         display: flex;
         gap: 14px;
@@ -161,6 +220,17 @@ export function renderAppHtml(): string {
         font-weight: 520;
         max-width: 820px;
         overflow-wrap: anywhere;
+      }
+      .result.site-themed .result-head h2 {
+        color: var(--site-text);
+        font-family: var(--site-font-display);
+        font-size: var(--site-display-size);
+        line-height: var(--site-display-line);
+        font-weight: var(--site-display-weight);
+      }
+      .result.site-themed .crumb,
+      .result.site-themed #result-meta {
+        color: var(--site-muted);
       }
       #result-meta {
         margin: 10px 0 0;
@@ -184,6 +254,19 @@ export function renderAppHtml(): string {
         letter-spacing: 0;
         padding: 8px 10px;
       }
+      .result.site-themed .actions a {
+        border-color: var(--site-border);
+        border-width: var(--site-border-width);
+        border-style: var(--site-border-style);
+        border-radius: var(--site-radius);
+        background: var(--site-card);
+        color: var(--site-text);
+        font-family: var(--site-font-body);
+      }
+      .result.site-themed .actions a:hover {
+        border-color: var(--site-accent);
+        color: var(--site-accent);
+      }
       .workspace {
         display: grid;
         grid-template-columns: minmax(620px, 1fr) minmax(500px, 0.78fr);
@@ -196,6 +279,14 @@ export function renderAppHtml(): string {
         overflow: clip;
         box-shadow: 0 10px 34px rgba(20, 23, 21, 0.035);
       }
+      .result.site-themed .workspace {
+        border-color: var(--site-border);
+        border-width: var(--site-border-width);
+        border-style: var(--site-border-style);
+        border-radius: var(--site-radius);
+        background: var(--site-canvas);
+        box-shadow: var(--site-shadow);
+      }
       .reference {
         display: grid;
         gap: 0;
@@ -203,12 +294,27 @@ export function renderAppHtml(): string {
         padding: 36px 42px 52px;
         border-right: 1px solid var(--line);
       }
+      .result.site-themed .reference {
+        background: var(--site-surface);
+        color: var(--site-text);
+        border-right-color: var(--site-border);
+        border-right-width: var(--site-border-width);
+        border-right-style: var(--site-border-style);
+        font-family: var(--site-font-body);
+        padding: var(--site-section-space) calc(var(--site-section-space) * 1.15) calc(var(--site-section-space) * 1.45);
+      }
       .panel {
         border: 0;
         border-top: 1px solid var(--line);
         border-radius: 0;
         background: transparent;
         padding: 36px 0;
+      }
+      .result.site-themed .panel {
+        border-top-color: var(--site-border);
+        border-top-width: var(--site-border-width);
+        border-top-style: var(--site-border-style);
+        padding: var(--site-section-space) 0;
       }
       .reference > .panel:first-child { border-top: 0; padding-top: 0; }
       .reference > .panel:last-child { padding-bottom: 0; }
@@ -220,12 +326,29 @@ export function renderAppHtml(): string {
         color: var(--ink);
         font-weight: 660;
       }
+      .result.site-themed .panel h3 {
+        color: var(--site-text);
+        font-family: var(--site-font-display);
+        font-weight: 700;
+      }
       .hero-figure {
         margin: 0;
         border: 1px solid var(--line);
         border-radius: 8px;
         overflow: hidden;
         background: #deddd8;
+      }
+      .result.site-themed .hero-figure,
+      .result.site-themed .thumb-strip a {
+        border-color: var(--site-border);
+        border-width: var(--site-border-width);
+        border-style: var(--site-border-style);
+        border-radius: var(--site-radius);
+        background: var(--site-canvas);
+      }
+      .result.site-themed .hero-meta {
+        border-top-color: var(--site-border);
+        color: var(--site-muted);
       }
       .hero-figure img {
         width: 100%;
@@ -268,6 +391,10 @@ export function renderAppHtml(): string {
         line-height: 1.55;
         color: #303530;
       }
+      .result.site-themed .thesis {
+        color: var(--site-text);
+        font-family: var(--site-font-body);
+      }
       .profile-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -279,12 +406,37 @@ export function renderAppHtml(): string {
         background: #fff;
         padding: 14px;
       }
+      .result.site-themed .profile-card,
+      .result.site-themed .category,
+      .result.site-themed .swatch-item,
+      .result.site-themed .scale-row,
+      .result.site-themed .font-card {
+        border-color: var(--site-border);
+        border-width: var(--site-border-width);
+        border-style: var(--site-border-style);
+        border-radius: var(--site-radius);
+        background: var(--site-card);
+        color: var(--site-text);
+        padding: var(--site-space);
+      }
       .profile-card h4 {
         margin: 0 0 8px;
         color: var(--quiet);
         font-size: 10px;
         text-transform: uppercase;
         letter-spacing: 0;
+      }
+      .result.site-themed .profile-card h4,
+      .result.site-themed .category h4,
+      .result.site-themed .scale-row .meta,
+      .result.site-themed .font-card p,
+      .result.site-themed .muted,
+      .result.site-themed .swatch-meta code,
+      .result.site-themed .token-code,
+      .result.site-themed .component-specimen-meta,
+      .result.site-themed .mono-list,
+      .result.site-themed .panel > .muted {
+        color: var(--site-muted);
       }
       .profile-card p {
         margin: 0;
@@ -304,6 +456,19 @@ export function renderAppHtml(): string {
         color: var(--ink);
         font-size: 11px;
         padding: 4px 8px;
+      }
+      .result.site-themed .token-pill,
+      .result.site-themed .token-confidence {
+        border-color: var(--site-border);
+        border-width: var(--site-border-width);
+        border-style: var(--site-border-style);
+        background: var(--site-card);
+        color: var(--site-text);
+      }
+      .result.site-themed .run,
+      .result.site-themed .tab.active,
+      .result.site-themed .mode-btn.active {
+        color: var(--site-accent);
       }
       .category-grid {
         display: grid;
@@ -368,10 +533,17 @@ export function renderAppHtml(): string {
         border-bottom: 1px solid var(--line);
         padding: 0 0 6px;
       }
+      .result.site-themed .dense-table th {
+        color: var(--site-muted);
+        border-bottom-color: var(--site-border);
+      }
       .dense-table td {
         border-bottom: 1px solid var(--line);
         padding: 9px 0;
         vertical-align: top;
+      }
+      .result.site-themed .dense-table td {
+        border-bottom-color: var(--site-border);
       }
       .dense-table tr:last-child td { border-bottom: 0; }
       .muted { color: var(--muted); font-size: 12px; }
@@ -450,6 +622,16 @@ export function renderAppHtml(): string {
         padding: 12px;
         min-width: 0;
       }
+      .result.site-themed .visual-token-card,
+      .result.site-themed .component-specimen,
+      .result.site-themed .component-preview {
+        border: var(--site-border-width) var(--site-border-style) var(--site-border);
+        border-radius: var(--site-radius);
+        background: var(--site-card);
+        box-shadow: var(--site-frame-shadow);
+        color: var(--site-text);
+        padding: var(--site-space);
+      }
       .visual-token-card h4 {
         margin: 0 0 9px;
         font-size: 13px;
@@ -460,8 +642,26 @@ export function renderAppHtml(): string {
         background: #f7f8fb;
         overflow: hidden;
       }
+      .result.site-themed .token-demo,
+      .result.site-themed .radius-demo,
+      .result.site-themed .shadow-demo,
+      .result.site-themed .component-specimen-stage {
+        border-color: var(--site-border);
+        border-width: var(--site-border-width);
+        border-style: var(--site-border-style);
+        border-radius: var(--site-radius);
+        background: var(--site-surface);
+      }
       .padding-demo {
         max-height: 184px;
+      }
+      .result.site-themed .padding-demo-inner {
+        border-color: var(--site-border);
+        border-width: var(--site-border-width);
+        border-style: var(--site-border-style);
+        border-radius: var(--site-radius);
+        background: var(--site-card);
+        color: var(--site-muted);
       }
       .padding-demo-inner {
         min-height: 38px;
@@ -532,6 +732,9 @@ export function renderAppHtml(): string {
         font-size: 13px;
         line-height: 1.5;
       }
+      .result.site-themed .guidelines ul {
+        color: var(--site-text);
+      }
       .guidelines li + li { margin-top: 8px; }
       .component-list {
         display: grid;
@@ -601,6 +804,13 @@ export function renderAppHtml(): string {
         display: block;
         margin-top: 10px;
         font-size: 13px;
+      }
+      .result.site-themed .component-specimen-title,
+      .result.site-themed .font-card h4,
+      .result.site-themed .swatch-meta strong,
+      .result.site-themed .visual-token-card h4 {
+        color: var(--site-text);
+        font-family: var(--site-font-display);
       }
       .component-specimen-meta {
         margin-top: 5px;
@@ -709,6 +919,19 @@ export function renderAppHtml(): string {
         font-size: 11px;
         overflow-wrap: anywhere;
       }
+      .result.site-themed .style-chip,
+      .result.site-themed .preview-metric {
+        border-color: var(--site-border);
+        border-width: var(--site-border-width);
+        border-style: var(--site-border-style);
+        border-radius: var(--site-radius);
+        background: var(--site-surface);
+        color: var(--site-text);
+      }
+      .result.site-themed .preview-palette span:first-child {
+        border-color: var(--site-accent);
+        box-shadow: inset 0 0 0 2px var(--site-accent);
+      }
       .style-chip strong {
         display: block;
         margin-bottom: 3px;
@@ -742,8 +965,17 @@ export function renderAppHtml(): string {
         display: flex;
         flex-direction: column;
       }
+      .result.site-themed .export-pane {
+        background: var(--site-code);
+        color: var(--site-text);
+        font-family: var(--site-font-body);
+      }
       .export-pane h3 {
         padding: 20px 22px 0;
+      }
+      .result.site-themed .export-pane h3 {
+        color: var(--site-text);
+        font-family: var(--site-font-display);
       }
       .tabs {
         display: flex;
@@ -752,6 +984,11 @@ export function renderAppHtml(): string {
         margin: 0;
         padding: 0 22px;
         border-bottom: 1px solid var(--line);
+      }
+      .result.site-themed .tabs,
+      .result.site-themed .export-actions,
+      .result.site-themed .downloads {
+        border-color: var(--site-border);
       }
       .export-actions {
         display: flex;
@@ -774,9 +1011,21 @@ export function renderAppHtml(): string {
         color: var(--muted);
         cursor: pointer;
       }
+      .result.site-themed .mode-btn,
+      .result.site-themed .tab,
+      .result.site-themed .export-note,
+      .result.site-themed .hint {
+        color: var(--site-muted);
+      }
       .mode-btn.active {
         color: var(--ink);
         border-bottom-color: var(--ink);
+      }
+      .result.site-themed .mode-btn.active,
+      .result.site-themed .tab.active,
+      .result.site-themed .export-note a {
+        color: var(--site-accent);
+        border-color: var(--site-accent);
       }
       .copy-btn {
         border-color: var(--line);
@@ -785,6 +1034,18 @@ export function renderAppHtml(): string {
         color: var(--ink);
         padding: 0 10px;
         font-weight: 680;
+      }
+      .result.site-themed .copy-btn,
+      .result.site-themed .download-btn {
+        border-color: var(--site-border);
+        border-radius: var(--site-radius);
+        background: var(--site-card);
+        color: var(--site-text);
+      }
+      .result.site-themed .download-btn:hover,
+      .result.site-themed .copy-btn:hover {
+        border-color: var(--site-accent);
+        color: var(--site-accent);
       }
       .downloads {
         display: grid;
@@ -855,6 +1116,13 @@ export function renderAppHtml(): string {
         overflow: auto;
         white-space: pre-wrap;
       }
+      .result.site-themed .excerpt,
+      .result.site-themed .code-block {
+        border-color: var(--site-border);
+        border-radius: var(--site-radius);
+        background: var(--site-card);
+        color: var(--site-text);
+      }
       .code-block {
         margin: 0;
         border: 1px solid #e7ebee;
@@ -882,6 +1150,7 @@ export function renderAppHtml(): string {
         .workspace { grid-template-columns: minmax(0, 1fr); }
         .reference { border-right: 0; }
         .result-head h2 { font-size: 42px; }
+        .result.site-themed .result-head h2 { font-size: 56px; }
         .export-pane {
           position: static;
           order: -1;
@@ -902,6 +1171,7 @@ export function renderAppHtml(): string {
       @media (max-width: 760px) {
         main { padding: 12px; }
         .result-head h2 { font-size: 34px; }
+        .result.site-themed .result-head h2 { font-size: 38px; }
         .preview-banner h4 { font-size: 34px; }
         .reference { padding: 18px; }
         .workspace { border-radius: 8px; }
@@ -991,6 +1261,10 @@ export function renderAppHtml(): string {
                 <div id="hero"></div>
               </section>
               <section class="panel">
+                <h3>Style Applied Preview</h3>
+                <div id="component-preview"></div>
+              </section>
+              <section class="panel">
                 <h3>Style Thesis</h3>
                 <p id="thesis" class="thesis"></p>
               </section>
@@ -1042,10 +1316,6 @@ export function renderAppHtml(): string {
                     <ul id="guidelines-dont"></ul>
                   </div>
                 </div>
-              </section>
-              <section class="panel">
-                <h3>Component Preview</h3>
-                <div id="component-preview"></div>
               </section>
               <section class="panel">
                 <h3>Components</h3>
@@ -1134,6 +1404,7 @@ export function renderAppHtml(): string {
       let exportMode = 'extended';
       let currentHostname = 'Style extraction';
       let currentThesis = '';
+      let currentTheme = null;
 
       if (aiTarget) {
         try {
@@ -1243,11 +1514,11 @@ export function renderAppHtml(): string {
 
       function visibleComponentBackground(component, tokenData) {
         const styles = component && component.styles ? component.styles : {};
-        if (styles.backgroundColor) {
+        if (styles.backgroundColor && !isTransparentColor(styles.backgroundColor)) {
           return cssTokenValue(styles.backgroundColor, '#ffffff');
         }
-        const surface = normalizeList(tokenData && tokenData.surfaces).find((item) => item.value && !isTransparentColor(item.value));
-        return surface ? safeColorValue(surface.value) : 'transparent';
+        if (currentTheme && currentTheme.surface) return currentTheme.surface;
+        return selectCanvasColor(tokenData || {});
       }
 
       function visibleComponentBorder(component) {
@@ -1262,7 +1533,7 @@ export function renderAppHtml(): string {
       function readableComponentText(component, background) {
         const styles = component && component.styles ? component.styles : {};
         const color = cssTokenValue(styles.color, '');
-        if (color) {
+        if (color && Math.abs(colorLuminance(color) - colorLuminance(background)) >= 0.18) {
           return color;
         }
         return contrastTextColor(background);
@@ -1295,15 +1566,21 @@ export function renderAppHtml(): string {
         const isButton = kind === 'button' || kind === 'link';
         const rawWidth = Number(bounds.width || 0);
         const rawHeight = Number(bounds.height || 0);
-        const width = rawWidth ? Math.min(Math.max(rawWidth, isButton ? 58 : 128), isButton ? 260 : 360) + 'px' : isButton ? 'auto' : '190px';
-        const height = rawHeight ? Math.min(Math.max(rawHeight, isButton ? 30 : 72), isButton ? 72 : 210) + 'px' : isButton ? '36px' : '110px';
-        const background = visibleComponentBackground(component, tokenData);
+        const width = rawWidth ? Math.min(Math.max(rawWidth, isButton ? 92 : 128), isButton ? 260 : 360) + 'px' : isButton ? 'auto' : '190px';
+        const height = rawHeight ? Math.min(Math.max(rawHeight, isButton ? 36 : 72), isButton ? 72 : 210) + 'px' : isButton ? '38px' : '110px';
+        const promotesColorToBackground =
+          isButton &&
+          (!styles.backgroundColor || isTransparentColor(styles.backgroundColor)) &&
+          styles.color &&
+          !isTransparentColor(styles.color);
+        const background = promotesColorToBackground ? cssTokenValue(styles.color, '#111111') : visibleComponentBackground(component, tokenData);
+        const textColor = promotesColorToBackground ? contrastTextColor(background) : readableComponentText(component, background);
         const paddingFallback = isButton ? '8px 12px' : '16px';
         const sizeRules = isButton
           ? ['min-width:' + width, 'min-height:' + height]
           : ['width:' + width, 'min-height:' + height];
         return [
-          'color:' + readableComponentText(component, background),
+          'color:' + textColor,
           'background:' + background,
           'border:' + visibleComponentBorder(component),
           'border-radius:' + cssTokenValue(styles.borderRadius, '0px'),
@@ -1314,6 +1591,57 @@ export function renderAppHtml(): string {
           'box-shadow:' + cssTokenValue(styles.boxShadow, 'none'),
           ...sizeRules,
         ].join(';');
+      }
+
+      function cleanComponentLabel(component, fallback) {
+        const kind = String(component && component.kind ? component.kind : 'component').toLowerCase();
+        const raw = String(component && component.textSample ? component.textSample : '').replace(/\\s+/g, ' ').trim();
+        const hasReadableSpacing = /\\s/.test(raw);
+        const looksLikeMergedCopy = raw.length > 18 && !hasReadableSpacing;
+        const hasSuspiciousWord = raw.split(/\\s+/).some((word) => word.length > 14);
+        if (!raw || looksLikeMergedCopy || hasSuspiciousWord) {
+          return fallback || component?.name || (kind.charAt(0).toUpperCase() + kind.slice(1));
+        }
+        return raw.slice(0, 72);
+      }
+
+      function componentArea(component) {
+        const bounds = component && component.bounds ? component.bounds : {};
+        return Math.max(0, Number(bounds.width || 0)) * Math.max(0, Number(bounds.height || 0));
+      }
+
+      function componentPreviewScore(component) {
+        const kind = String(component && component.kind ? component.kind : '').toLowerCase();
+        const styles = component && component.styles ? component.styles : {};
+        const area = componentArea(component);
+        const hasText = Boolean(String(component && component.textSample ? component.textSample : '').trim());
+        const kindBonus = kind === 'button' || kind === 'navigation' || kind === 'card' ? 20 : 8;
+        const visibleStyleBonus =
+          (styles.backgroundColor && !isTransparentColor(styles.backgroundColor) ? 10 : 0) +
+          (styles.color && !isTransparentColor(styles.color) ? 6 : 0) +
+          (styles.borderRadius && styles.borderRadius !== '0px' ? 5 : 0) +
+          (styles.padding && styles.padding !== '0px' ? 4 : 0);
+        return kindBonus + visibleStyleBonus + (hasText ? 8 : 0) + Math.min(area / 12000, 10);
+      }
+
+      function pickPreviewComponents(components) {
+        const ranked = normalizeList(components)
+          .filter((component) => component && component.styles)
+          .slice()
+          .sort((a, b) => componentPreviewScore(b) - componentPreviewScore(a));
+        const chosen = [];
+        const seenKinds = new Set();
+        ranked.forEach((component) => {
+          const kind = String(component.kind || component.name || 'component').toLowerCase();
+          if (chosen.length < 4 && !seenKinds.has(kind)) {
+            chosen.push(component);
+            seenKinds.add(kind);
+          }
+        });
+        ranked.forEach((component) => {
+          if (chosen.length < 4 && !chosen.includes(component)) chosen.push(component);
+        });
+        return chosen.slice(0, 4);
       }
 
       function colorToRgb(value) {
@@ -1380,6 +1708,301 @@ export function renderAppHtml(): string {
           .sort((a, b) => b.delta - a.delta || a.saturation - b.saturation);
         const readable = ranked.find((item) => item.delta >= 0.34);
         return readable ? readable.value : contrastTextColor(background);
+      }
+
+      function uniqueColorValues(items) {
+        const seen = new Set();
+        return normalizeList(items)
+          .map((item) => safeColorValue(item && item.value ? item.value : item))
+          .filter((value) => {
+            if (!colorToRgb(value) || isTransparentColor(value)) return false;
+            const key = value.toLowerCase();
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+      }
+
+      function blendColor(value, target, amount) {
+        const rgb = colorToRgb(value);
+        if (!rgb) return value;
+        const mixed = rgb.map((part, index) => Math.round(part * (1 - amount) + target[index] * amount));
+        return 'rgb(' + mixed.join(', ') + ')';
+      }
+
+      function alphaColor(value, alpha) {
+        const rgb = colorToRgb(value);
+        if (!rgb) return 'rgba(0, 0, 0, ' + alpha + ')';
+        return 'rgba(' + rgb.join(', ') + ', ' + alpha + ')';
+      }
+
+      function confidenceScore(value) {
+        if (value === 'high') return 3;
+        if (value === 'medium') return 2;
+        return 1;
+      }
+
+      function sourceWords(source) {
+        return [
+          source && source.name,
+          source && source.role,
+          source && source.purpose,
+          ...(normalizeList(source && source.sampleSelectors)),
+        ]
+          .join(' ')
+          .toLowerCase();
+      }
+
+      function tokenSourceForValue(value, sources) {
+        return normalizeList(sources).find((source) => safeColorValue(source && source.value).toLowerCase() === String(value).toLowerCase()) || {};
+      }
+
+      function selectCanvasColor(tokenData) {
+        const sources = [...normalizeList(tokenData.surfaces), ...normalizeList(tokenData.colors)];
+        const candidates = uniqueColorValues(sources);
+        if (!candidates.length) return '#ffffff';
+        const ranked = candidates
+          .map((value) => {
+            const source = tokenSourceForValue(value, sources);
+            const words = sourceWords(source);
+            const properties = normalizeList(source.properties);
+            const saturation = colorSaturation(value);
+            const luminance = colorLuminance(value);
+            const roleHit = /canvas|background|surface|page|body|stage|base/.test(words) ? 8 : 0;
+            const selectorHit = /(^|[\\s>#.])(body|html|stage)([\\s>#.]|$)/.test(words) ? 8 : 0;
+            const backgroundHit = properties.includes('backgroundColor') ? 5 : 0;
+            const levelBonus = Number.isFinite(Number(source.level)) ? Math.max(0, 4 - Number(source.level)) : 0;
+            const saturationPenalty = saturation > 0.35 ? saturation * 18 : saturation * 2;
+            const utilityPenalty = /cursor|svg|icon|badge/.test(words) && !/body|stage/.test(words) ? 6 : 0;
+            return {
+              value,
+              score:
+                confidenceScore(source.confidence) * 3 +
+                roleHit +
+                selectorHit +
+                backgroundHit +
+                levelBonus -
+                saturationPenalty -
+                utilityPenalty +
+                (luminance > 0.08 && luminance < 0.96 ? 2 : 0),
+            };
+          })
+          .sort((a, b) => b.score - a.score)[0];
+        return ranked.value;
+      }
+
+      function selectAccentColor(tokenData, canvas) {
+        const sources = normalizeList(tokenData.colors || []);
+        const candidates = uniqueColorValues(sources);
+        const canvasLum = colorLuminance(canvas);
+        const accent = candidates
+          .map((value) => {
+            const source = tokenSourceForValue(value, sources);
+            const normalized = String(value).toLowerCase();
+            const properties = normalizeList(source.properties);
+            const isBrowserDefaultBlue = normalized === '#0000ee' || normalized === '#0000ff' || normalized === 'rgb(0, 0, 238)' || normalized === 'blue';
+            const words = sourceWords(source);
+            return {
+              value,
+              saturation: colorSaturation(value),
+              delta: Math.abs(colorLuminance(value) - canvasLum),
+              frequency: Number(source.frequency || 0),
+              roleBonus: /accent|brand|primary|action|button|link|text|foreground/.test(words) || properties.includes('color') || properties.includes('borderColor') ? 1 : 0,
+              browserPenalty: isBrowserDefaultBlue ? 10 : 0,
+            };
+          })
+          .filter((item) => item.saturation > 0.28 && item.delta > 0.08 && item.browserPenalty < 10)
+          .sort((a, b) => b.roleBonus - a.roleBonus || b.frequency - a.frequency || b.saturation - a.saturation || b.delta - a.delta)[0];
+        return (accent || { value: candidates[0] || '#3a5446' }).value;
+      }
+
+      function selectTextColor(tokenData, canvas) {
+        const sources = normalizeList(tokenData.colors || []);
+        const candidates = uniqueColorValues(sources);
+        const roleMatch = candidates
+          .map((value) => {
+            const source = tokenSourceForValue(value, sources);
+            const words = sourceWords(source);
+            return { value, source, words, delta: Math.abs(colorLuminance(value) - colorLuminance(canvas)) };
+          })
+          .filter((item) => /text|foreground|heading|body|copy|ink|black/.test(item.words) && item.delta >= 0.34)
+          .sort((a, b) => confidenceScore(b.source.confidence) - confidenceScore(a.source.confidence) || b.delta - a.delta)[0];
+        if (roleMatch) return roleMatch.value;
+        const readable = pickReadableTextColor(
+          candidates.map((value) => ({ value })),
+          canvas
+        );
+        return readable || contrastTextColor(canvas);
+      }
+
+      function themeFontFamilies(tokenData) {
+        const typography = normalizeList(tokenData.typography);
+        const valid = typography.filter((item) => {
+          const family = String(item.fontFamily || '');
+          const size = numericPx(item.fontSize);
+          const lineHeight = numericPx(item.lineHeight);
+          return family && !/icon|symbol|material/i.test(family) && size > 0 && (lineHeight > 0 || String(item.lineHeight || '').toLowerCase() === 'normal');
+        });
+        const bodyMatch = valid.find((item) => /body|copy|paragraph|text|p\\b/.test(String(item.role || '').toLowerCase()) && numericPx(item.fontSize) <= 22);
+        const displayMatch = valid
+          .slice()
+          .filter((item) => /heading|display|title|hero|h1/.test(sourceWords(item)) || numericPx(item.fontSize) > 32)
+          .sort((a, b) => numericPx(b.fontSize) - numericPx(a.fontSize))[0];
+        const body =
+          bodyMatch?.fontFamily ||
+          valid.find((item) => numericPx(item.fontSize) <= 22)?.fontFamily ||
+          valid[0]?.fontFamily ||
+          '"Helvetica Neue", Arial, sans-serif';
+        const display = displayMatch?.fontFamily || body;
+        return { body, display };
+      }
+
+      function firstTokenValue(rows, fallback) {
+        const row = normalizeList(rows).find((item) => item && item.value);
+        return row ? cssTokenValue(row.value, fallback) : fallback;
+      }
+
+      function firstComponentStyle(tokenData, key, fallback) {
+        const component = normalizeList(tokenData.components).find((item) => item && item.styles && item.styles[key]);
+        return component ? cssTokenValue(component.styles[key], fallback) : fallback;
+      }
+
+      function scalarPxFromValue(value, fallback) {
+        const matches = String(value || '').match(/[\\d.]+px/g) || [];
+        const candidates = matches
+          .map((part) => Number.parseFloat(part))
+          .filter((part) => Number.isFinite(part) && part > 0 && part <= 28)
+          .sort((a, b) => a - b);
+        return candidates.length ? candidates[0] + 'px' : fallback;
+      }
+
+      function selectThemeSpacing(tokenData) {
+        const rows = normalizeList(tokenData.spacing);
+        const direct = rows.find((item) => /^\\d+(\\.\\d+)?px$/.test(String(item && item.value ? item.value : '').trim()) && numericPx(item.value) > 0 && numericPx(item.value) <= 28);
+        if (direct) return cssTokenValue(direct.value, '12px');
+        const composite = rows.find((item) => scalarPxFromValue(item && item.value, ''));
+        return composite ? scalarPxFromValue(composite.value, '12px') : '12px';
+      }
+
+      function parseBorderWidth(border) {
+        const match = String(border || '').match(/([\\d.]+)px/);
+        return match ? Number.parseFloat(match[1]) : 0;
+      }
+
+      function isRealBorder(styles) {
+        const border = String(styles && styles.border ? styles.border : '').toLowerCase();
+        const borderStyle = String(styles && styles.borderStyle ? styles.borderStyle : '').toLowerCase();
+        const width = parseBorderWidth(styles && (styles.borderWidth || styles.border));
+        if (border.includes('none') || borderStyle === 'none') return false;
+        return width > 0;
+      }
+
+      function selectBorderTheme(tokenData, text, canvas) {
+        const components = normalizeList(tokenData.components).filter((item) => item && item.styles);
+        const realBorders = components.filter((item) => isRealBorder(item.styles));
+        const noBorderRatio = components.length ? (components.length - realBorders.length) / components.length : 0;
+        if (components.length && noBorderRatio >= 0.62) {
+          return { color: 'transparent', width: '0px', style: 'none', frameShadow: 'none' };
+        }
+        const borderColor =
+          realBorders.map((item) => item.styles.borderColor || '').find((value) => value && !isTransparentColor(value)) ||
+          alphaColor(text, colorLuminance(canvas) > 0.55 ? 0.18 : 0.24);
+        return { color: cssTokenValue(borderColor, alphaColor(text, 0.18)), width: '1px', style: 'solid', frameShadow: 'inset 0 0 0 1px ' + cssTokenValue(borderColor, alphaColor(text, 0.18)) };
+      }
+
+      function selectSurfaceRadius(tokenData) {
+        const layoutComponents = normalizeList(tokenData.components).filter((component) => {
+          const kind = String(component && component.kind ? component.kind : '').toLowerCase();
+          const bounds = component && component.bounds ? component.bounds : {};
+          const area = Number(bounds.width || 0) * Number(bounds.height || 0);
+          return component && component.styles && (/card|navigation|header|section|container/.test(kind) || area > 24000);
+        });
+        const counts = new Map();
+        layoutComponents.forEach((component) => {
+          const value = cssTokenValue(component.styles.borderRadius, '');
+          if (!value || value.includes('%') || numericPx(value) > 48) return;
+          counts.set(value, (counts.get(value) || 0) + 1);
+        });
+        const dominant = Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0];
+        if (dominant) return dominant[0];
+        const token = normalizeList(tokenData.radii).find((item) => {
+          const value = String(item && item.value ? item.value : '');
+          return value && !value.includes('%') && numericPx(value) <= 32;
+        });
+        return token ? cssTokenValue(token.value, '8px') : '8px';
+      }
+
+      function selectThemeShadow(tokenData) {
+        const shadows = normalizeList(tokenData.shadows).filter((item) => item && item.value && String(item.value).toLowerCase() !== 'none');
+        if (shadows.length) return cssTokenValue(shadows[0].value, 'none');
+        const components = normalizeList(tokenData.components).filter((item) => item && item.styles);
+        const realShadow = components.find((item) => item.styles.boxShadow && String(item.styles.boxShadow).toLowerCase() !== 'none');
+        return realShadow ? cssTokenValue(realShadow.styles.boxShadow, 'none') : 'none';
+      }
+
+      function themeTypographyDetails(tokenData, fonts) {
+        const typography = normalizeList(tokenData.typography);
+        const display = typography
+          .slice()
+          .filter((item) => item && item.fontFamily === fonts.display)
+          .sort((a, b) => numericPx(b.fontSize) - numericPx(a.fontSize))[0] || typography.slice().sort((a, b) => numericPx(b.fontSize) - numericPx(a.fontSize))[0] || {};
+        const size = numericPx(display.fontSize);
+        return {
+          displaySize: (size ? Math.max(38, Math.min(size, 82)) : 72) + 'px',
+          displayWeight: cssTokenValue(display.fontWeight, '700'),
+          displayLine: cssTokenValue(display.lineHeight, '0.92'),
+        };
+      }
+
+      function applyExtractedTheme(tokenData) {
+        if (!result) return;
+        const canvas = selectCanvasColor(tokenData);
+        const text = selectTextColor(tokenData, canvas);
+        const accent = selectAccentColor(tokenData, canvas);
+        const accentText = contrastTextColor(accent);
+        const isLight = colorLuminance(canvas) > 0.55;
+        const surface = canvas;
+        const card = surface;
+        const code = isLight ? blendColor(canvas, [255, 255, 255], 0.14) : blendColor(canvas, [0, 0, 0], 0.18);
+        const muted = blendColor(text, colorToRgb(canvas) || [255, 255, 255], 0.42);
+        const borderTheme = selectBorderTheme(tokenData, text, canvas);
+        const radius = selectSurfaceRadius(tokenData);
+        const shadow = selectThemeShadow(tokenData);
+        const space = selectThemeSpacing(tokenData);
+        const sectionSpace = Math.max(24, Math.min((numericPx(space) || 12) * 3, 48)) + 'px';
+        const fonts = themeFontFamilies(tokenData);
+        const type = themeTypographyDetails(tokenData, fonts);
+        currentTheme = { canvas, surface, card, code, text, muted, accent, border: borderTheme.color, radius, shadow, fonts };
+
+        result.classList.add('site-themed');
+        document.body.classList.add('site-themed-ui');
+        const vars = {
+          '--site-canvas': canvas,
+          '--site-surface': surface,
+          '--site-card': card,
+          '--site-code': code,
+          '--site-text': text,
+          '--site-muted': muted,
+          '--site-accent': accent,
+          '--site-accent-text': accentText,
+          '--site-border': borderTheme.color,
+          '--site-border-width': borderTheme.width,
+          '--site-border-style': borderTheme.style,
+          '--site-radius': radius,
+          '--site-shadow': shadow,
+          '--site-frame-shadow': borderTheme.frameShadow,
+          '--site-space': space,
+          '--site-section-space': sectionSpace,
+          '--site-font-body': safeCssValue(fonts.body, '"Helvetica Neue", Arial, sans-serif'),
+          '--site-font-display': safeCssValue(fonts.display, safeCssValue(fonts.body, '"Helvetica Neue", Arial, sans-serif')),
+          '--site-display-size': type.displaySize,
+          '--site-display-weight': type.displayWeight,
+          '--site-display-line': type.displayLine,
+        };
+        Object.entries(vars).forEach(([name, value]) => {
+          result.style.setProperty(name, value);
+          document.documentElement.style.setProperty(name, value);
+        });
       }
 
       function clampSpecimenSize(fontSize) {
@@ -2098,7 +2721,7 @@ export function renderAppHtml(): string {
           .map((component) => {
             const styles = component.styles || {};
             const kind = String(component.kind || 'component').toLowerCase();
-            const label = String(component.textSample || component.name || component.role || 'Component').slice(0, 90);
+            const label = cleanComponentLabel(component, component.role || component.name || 'Component');
             const objectContent =
               kind === 'button' || kind === 'link'
                 ? '<span>' + escapeHtml(label) + '</span>'
@@ -2125,24 +2748,20 @@ export function renderAppHtml(): string {
       function renderComponentPreview(tokenData) {
         const target = document.getElementById('component-preview');
         if (!target) return;
-        const surface = tokenData.surfaces[0] ? safeColorValue(tokenData.surfaces[0].value) : '#ffffff';
-        const textColor = pickReadableTextColor(tokenData.colors, surface);
-        const previewLift = colorLuminance(surface) > 0.56 ? '#ffffff' : 'rgba(255,255,255,0.1)';
-        const headlineFont = tokenData.typography[0] ? tokenData.typography[0].fontFamily : 'sans-serif';
-        const bodyFont = tokenData.typography[1] ? tokenData.typography[1].fontFamily : headlineFont;
-        const sampleComponents = normalizeList(tokenData.components)
-          .filter((component) => {
-            const label = String(component.textSample || component.name || '').trim();
-            return component.styles && label.length > 2;
-          })
-          .slice(0, 4);
+        const surface = currentTheme ? currentTheme.surface : tokenData.surfaces[0] ? safeColorValue(tokenData.surfaces[0].value) : '#ffffff';
+        const textColor = currentTheme ? currentTheme.text : pickReadableTextColor(tokenData.colors, surface);
+        const accent = currentTheme ? currentTheme.accent : selectAccentColor(tokenData, surface);
+        const accentText = contrastTextColor(accent);
+        const headlineFont = currentTheme ? currentTheme.fonts.display : tokenData.typography[0] ? tokenData.typography[0].fontFamily : 'sans-serif';
+        const bodyFont = currentTheme ? currentTheme.fonts.body : tokenData.typography[1] ? tokenData.typography[1].fontFamily : headlineFont;
+        const sampleComponents = pickPreviewComponents(tokenData.components);
         const sampleHtml = sampleComponents.length
           ? [
               '<div class="component-samples">',
               sampleComponents
                 .map((component) => {
                   const kind = String(component.kind || 'component').toLowerCase();
-                  const label = String(component.textSample || component.name || component.kind || 'Component').trim().slice(0, 70);
+                  const label = cleanComponentLabel(component, component.role || component.name || component.kind || 'Component');
                   const content =
                     kind === 'button' || kind === 'link'
                       ? '<span>' + escapeHtml(label || 'Component') + '</span>'
@@ -2166,8 +2785,8 @@ export function renderAppHtml(): string {
         ];
 
         target.innerHTML = [
-          '<div class="component-preview" style="background:' + escapeHtml(surface) + '; color:' + escapeHtml(textColor) + '; font-family:' + escapeHtml(bodyFont) + '">',
-          '<div class="preview-banner" style="background:linear-gradient(140deg, ' + escapeHtml(surface) + ', ' + escapeHtml(previewLift) + '); border:1px solid rgba(0,0,0,0.08)">',
+          '<div class="component-preview" style="background:var(--site-surface, ' + escapeHtml(surface) + '); color:var(--site-text, ' + escapeHtml(textColor) + '); font-family:' + escapeHtml(bodyFont) + '">',
+          '<div class="preview-banner" style="background:var(--site-accent, ' + escapeHtml(accent) + '); color:' + escapeHtml(accentText) + '; border:1px solid var(--site-border); border-radius:var(--site-radius)">',
           '<h4 style="font-family:' + escapeHtml(headlineFont) + '">' + escapeHtml(currentHostname) + '</h4>',
           '<p>' + escapeHtml((currentThesis || 'Previewing how extracted tokens feel when applied to UI blocks.').slice(0, 210)) + '</p>',
           '</div>',
@@ -2217,6 +2836,7 @@ export function renderAppHtml(): string {
           const hostname = new URL(data.url).hostname;
           currentHostname = hostname;
           currentThesis = thesis;
+          applyExtractedTheme(tokenData);
           document.getElementById('result-title').textContent = hostname;
           document.getElementById('result-crumb').textContent = '/ Styles / ' + hostname;
           document.getElementById('result-meta').textContent =
