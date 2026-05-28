@@ -4,10 +4,12 @@
   "private": true,
   "type": "module",
   "bin": {
-    "design-md-extractor": "./dist/cli.js"
+    "design-md-extractor": "./dist/cli.js",
+    "design-md-extractor-gui": "./dist/gui.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "gui": "npm run build && node dist/gui.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",

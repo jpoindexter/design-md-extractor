@@ -17,6 +17,16 @@ files for humans and coding agents.
 
 ## Usage
 
+Launch the local GUI:
+
+```bash
+npm run gui
+```
+
+Open `http://127.0.0.1:4317`, paste a URL, and run extraction. The GUI auto-discovers likely internal pages so the style reference is based on broader coverage than a single homepage.
+
+Run the CLI directly:
+
 ```bash
 npm install
 npm run build
