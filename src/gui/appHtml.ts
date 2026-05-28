@@ -22,16 +22,20 @@ export function renderAppHtml(): string {
         --mono: "JetBrains Mono", "SFMono-Regular", Menlo, monospace;
       }
       * { box-sizing: border-box; }
+      html, body {
+        min-height: 100%;
+      }
       body {
         margin: 0;
         color: var(--ink);
         background: var(--canvas);
         font-family: "Helvetica Neue", Arial, sans-serif;
         letter-spacing: 0;
+        overflow: hidden;
       }
       button, input, select { font: inherit; color: inherit; }
       .shell {
-        min-height: 100vh;
+        height: 100dvh;
         display: grid;
         grid-template-rows: auto minmax(0, 1fr);
       }
@@ -154,16 +158,18 @@ export function renderAppHtml(): string {
       }
       body.site-themed-ui .run:hover { background: var(--site-accent, var(--accent-soft)); }
       main {
-        padding: 34px 42px 52px;
-        overflow: auto;
+        min-height: 0;
+        padding: 0;
+        overflow: hidden;
+        background: var(--canvas);
       }
       main:has(.result.site-themed.active) {
         background: var(--site-canvas, var(--canvas));
       }
       .empty {
-        min-height: calc(100vh - 44px);
-        border: 1px solid var(--line);
-        border-radius: 10px;
+        min-height: 100%;
+        border: 0;
+        border-radius: 0;
         background: var(--panel);
         color: var(--muted);
         display: grid;
@@ -171,7 +177,14 @@ export function renderAppHtml(): string {
         padding: 34px;
         text-align: center;
       }
-      .result { display: none; gap: 14px; max-width: 1460px; margin: 0 auto; }
+      .result {
+        display: none;
+        min-height: 0;
+        height: 100%;
+        gap: 0;
+        max-width: none;
+        margin: 0;
+      }
       .result.active { display: grid; }
       .result.site-themed {
         --site-canvas: #edf0ed;
@@ -198,15 +211,15 @@ export function renderAppHtml(): string {
         color: var(--site-text);
         font-family: var(--site-font-body);
         background: var(--site-canvas);
-        padding: var(--site-space);
-        border-radius: var(--site-radius);
+        padding: 0;
+        border-radius: 0;
       }
       .result-head {
         display: flex;
         gap: 14px;
         justify-content: space-between;
         align-items: flex-start;
-        padding: 0 2px 2px;
+        padding: 30px 0 6px;
       }
       .crumb {
         margin: 0 0 8px;
@@ -269,30 +282,48 @@ export function renderAppHtml(): string {
       }
       .workspace {
         display: grid;
-        grid-template-columns: minmax(620px, 1fr) minmax(500px, 0.78fr);
+        grid-template-columns: minmax(0, 1fr) minmax(520px, 1fr);
+        min-height: 0;
+        height: 100%;
         gap: 0;
         align-items: stretch;
         max-width: none;
-        border: 1px solid var(--line);
-        border-radius: 12px;
+        border: 0;
+        border-top: 1px solid var(--line);
+        border-radius: 0;
         background: var(--panel);
-        overflow: clip;
-        box-shadow: 0 10px 34px rgba(20, 23, 21, 0.035);
+        overflow: hidden;
+        box-shadow: none;
+        min-width: 0;
       }
       .result.site-themed .workspace {
         border-color: var(--site-border);
         border-width: var(--site-border-width);
         border-style: var(--site-border-style);
-        border-radius: var(--site-radius);
+        border-left: 0;
+        border-right: 0;
+        border-bottom: 0;
+        border-radius: 0;
         background: var(--site-canvas);
-        box-shadow: var(--site-shadow);
+        box-shadow: none;
       }
       .reference {
         display: grid;
+        align-content: start;
         gap: 0;
+        min-height: 0;
+        min-width: 0;
+        height: 100%;
+        overflow: auto;
+        overflow-x: hidden;
         background: #fff;
-        padding: 36px 42px 52px;
+        padding: 48px 40px 96px;
         border-right: 1px solid var(--line);
+      }
+      .reference > *,
+      .panel {
+        min-width: 0;
+        max-width: 100%;
       }
       .result.site-themed .reference {
         background: var(--site-surface);
@@ -301,20 +332,20 @@ export function renderAppHtml(): string {
         border-right-width: var(--site-border-width);
         border-right-style: var(--site-border-style);
         font-family: var(--site-font-body);
-        padding: var(--site-section-space) calc(var(--site-section-space) * 1.15) calc(var(--site-section-space) * 1.45);
+        padding: 48px 40px 96px;
       }
       .panel {
         border: 0;
         border-top: 1px solid var(--line);
         border-radius: 0;
         background: transparent;
-        padding: 36px 0;
+        padding: 56px 0;
       }
       .result.site-themed .panel {
         border-top-color: var(--site-border);
         border-top-width: var(--site-border-width);
         border-top-style: var(--site-border-style);
-        padding: var(--site-section-space) 0;
+        padding: 56px 0;
       }
       .reference > .panel:first-child { border-top: 0; padding-top: 0; }
       .reference > .panel:last-child { padding-bottom: 0; }
@@ -954,13 +985,15 @@ export function renderAppHtml(): string {
       }
       .mono-list li + li { margin-top: 4px; }
       .export-pane {
-        position: sticky;
-        top: 86px;
-        max-height: calc(100vh - 112px);
+        position: static;
+        min-height: 0;
+        min-width: 0;
+        height: 100%;
+        max-height: none;
         overflow: hidden;
         border: 0;
         border-radius: 0;
-        background: #f7f8fb;
+        background: #fafafa;
         padding: 0;
         display: flex;
         flex-direction: column;
@@ -971,7 +1004,12 @@ export function renderAppHtml(): string {
         font-family: var(--site-font-body);
       }
       .export-pane h3 {
-        padding: 20px 22px 0;
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
       }
       .result.site-themed .export-pane h3 {
         color: var(--site-text);
@@ -980,9 +1018,9 @@ export function renderAppHtml(): string {
       .tabs {
         display: flex;
         flex-wrap: wrap;
-        gap: 20px;
+        gap: 24px;
         margin: 0;
-        padding: 0 22px;
+        padding: 0 24px;
         border-bottom: 1px solid var(--line);
       }
       .result.site-themed .tabs,
@@ -995,7 +1033,7 @@ export function renderAppHtml(): string {
         align-items: center;
         justify-content: space-between;
         gap: 10px;
-        padding: 11px 22px;
+        padding: 11px 24px;
         border-bottom: 1px solid var(--line);
       }
       .mode-tabs {
@@ -1051,7 +1089,7 @@ export function renderAppHtml(): string {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 6px;
-        padding: 0 22px 12px;
+        padding: 0 24px 12px;
         margin: 0;
         border-bottom: 1px solid var(--line);
       }
@@ -1071,7 +1109,7 @@ export function renderAppHtml(): string {
         background: transparent;
         color: var(--muted);
         border-radius: 0;
-        min-height: 42px;
+        min-height: 46px;
         padding: 0;
         font-size: 12px;
         font-weight: 620;
@@ -1085,8 +1123,10 @@ export function renderAppHtml(): string {
       .tab-panel {
         display: none;
         min-height: 0;
+        min-width: 0;
         flex: 1;
-        padding: 14px 22px 22px;
+        padding: 14px 24px 24px;
+        overflow: hidden;
       }
       .tab-panel.active {
         display: flex;
@@ -1104,17 +1144,20 @@ export function renderAppHtml(): string {
       .excerpt {
         margin: 0;
         border: 1px solid #e7ebee;
-        border-radius: 7px;
+        border-radius: 0;
         background: #fff;
         padding: 15px;
-        font-size: 11px;
+        font-size: 12px;
         line-height: 1.65;
         font-family: var(--mono);
         min-height: 0;
+        min-width: 0;
+        max-width: 100%;
         max-height: none;
         flex: 1;
         overflow: auto;
         white-space: pre-wrap;
+        overflow-wrap: anywhere;
       }
       .result.site-themed .excerpt,
       .result.site-themed .code-block {
@@ -1126,14 +1169,16 @@ export function renderAppHtml(): string {
       .code-block {
         margin: 0;
         border: 1px solid #e7ebee;
-        border-radius: 7px;
+        border-radius: 0;
         background: #fff;
         color: #1f2722;
         font-family: var(--mono);
-        font-size: 11px;
+        font-size: 12px;
         line-height: 1.65;
         padding: 15px;
         min-height: 0;
+        min-width: 0;
+        max-width: 100%;
         max-height: none;
         flex: 1;
         overflow: auto;
@@ -1142,17 +1187,168 @@ export function renderAppHtml(): string {
       .error { color: var(--error); }
       .hint {
         margin: 0;
-        padding: 10px 22px 8px;
+        padding: 10px 24px 8px;
         color: var(--muted);
         font-size: 11px;
       }
+      body.site-themed-ui {
+        background: #ffffff;
+        color: #09090b;
+      }
+      body.site-themed-ui main {
+        background: #ffffff;
+      }
+      body.site-themed-ui main:has(.result.refero-layout.active) {
+        background: #ffffff;
+      }
+      body.site-themed-ui .side {
+        background: #ffffff;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      body.site-themed-ui input,
+      body.site-themed-ui select,
+      body.site-themed-ui .status {
+        border: 1px solid #dfe3e7;
+        border-radius: 10px;
+        background: #ffffff;
+        color: #09090b;
+      }
+      body.site-themed-ui .run {
+        border-radius: 999px;
+        background: #09090b;
+        color: #ffffff;
+      }
+      body.site-themed-ui .run:hover { background: #09090b; }
+      .result.refero-layout {
+        background: #ffffff;
+        color: #09090b;
+        font-family: "Helvetica Neue", Arial, sans-serif;
+      }
+      .result.refero-layout .workspace {
+        border-top: 1px solid #e5e7eb;
+        background: #ffffff;
+      }
+      .result.refero-layout .reference,
+      .result.refero-layout .export-pane {
+        overscroll-behavior: contain;
+      }
+      .result.refero-layout .reference {
+        background: #ffffff;
+        color: #09090b;
+        border-right: 1px solid #e5e7eb;
+      }
+      .result.refero-layout .panel {
+        border-top: 0;
+        padding: 0;
+      }
+      .result.refero-layout .panel + .panel {
+        margin-top: 64px;
+      }
+      .result.refero-layout .panel h3 {
+        margin-bottom: 24px;
+        color: #09090b;
+        font-size: 20px;
+        font-weight: 650;
+        letter-spacing: 0;
+      }
+      .result.refero-layout .result-head {
+        padding: 38px 0 0;
+      }
+      .result.refero-layout .result-head h2 {
+        color: #09090b;
+        font-size: 52px;
+        font-weight: 430;
+        line-height: 0.95;
+      }
+      .result.refero-layout .crumb,
+      .result.refero-layout #result-meta,
+      .result.refero-layout .muted {
+        color: #667085;
+      }
+      .result.refero-layout .actions a {
+        border: 0;
+        background: transparent;
+        color: #09090b;
+        padding: 0;
+      }
+      .result.refero-layout .hero-figure {
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        background: #ffffff;
+        box-shadow: 0 18px 44px rgba(16, 24, 40, 0.08);
+      }
+      .result.refero-layout .thumb-strip a,
+      .result.refero-layout .profile-card,
+      .result.refero-layout .category,
+      .result.refero-layout .scale-row,
+      .result.refero-layout .font-card,
+      .result.refero-layout .visual-token-card,
+      .result.refero-layout .component-specimen,
+      .result.refero-layout .component-preview,
+      .result.refero-layout .style-chip,
+      .result.refero-layout .preview-metric {
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        background: #ffffff;
+        box-shadow: none;
+      }
+      .result.refero-layout .swatch-item {
+        border: 0;
+        border-radius: 16px;
+        background: transparent;
+      }
+      .result.refero-layout .swatch-chip {
+        border: 1px solid #d9dde3;
+        border-radius: 16px;
+        height: 112px;
+      }
+      .result.refero-layout .export-pane {
+        border-top: 0;
+        background: #fafafa;
+        color: #09090b;
+        padding: 0;
+      }
+      .result.refero-layout .tabs {
+        border-bottom: 1px solid #e5e7eb;
+      }
+      .result.refero-layout .tab {
+        color: #667085;
+        font-size: 13px;
+        font-weight: 560;
+      }
+      .result.refero-layout .tab.active {
+        border-color: #09090b;
+        color: #09090b;
+        font-weight: 650;
+      }
+      .result.refero-layout .export-actions,
+      .result.refero-layout .downloads {
+        border-bottom: 1px solid #e5e7eb;
+      }
+      .result.refero-layout .copy-btn,
+      .result.refero-layout .download-btn {
+        border: 1px solid #d7dbe0;
+        border-radius: 10px;
+        background: #ffffff;
+        color: #09090b;
+      }
+      .result.refero-layout .excerpt,
+      .result.refero-layout .code-block {
+        border: 0;
+        border-radius: 0;
+        background: #fafafa;
+        color: #1f2937;
+      }
       @media (max-width: 1220px) {
-        .workspace { grid-template-columns: minmax(0, 1fr); }
-        .reference { border-right: 0; }
+        body { overflow: auto; }
+        .shell { height: auto; min-height: 100dvh; }
+        main { overflow: hidden; }
+        .result { height: auto; }
+        .workspace { grid-template-columns: minmax(0, 1fr); height: auto; overflow: hidden; }
+        .reference { height: auto; overflow: visible; overflow-x: hidden; border-right: 0; }
         .result-head h2 { font-size: 42px; }
         .result.site-themed .result-head h2 { font-size: 56px; }
         .export-pane {
-          position: static;
           order: -1;
           height: 720px;
           max-height: calc(100vh - 24px);
@@ -1169,12 +1365,28 @@ export function renderAppHtml(): string {
         .actions { justify-content: flex-start; }
       }
       @media (max-width: 760px) {
-        main { padding: 12px; }
+        main { padding: 0; overflow-x: hidden; }
         .result-head h2 { font-size: 34px; }
         .result.site-themed .result-head h2 { font-size: 38px; }
         .preview-banner h4 { font-size: 34px; }
         .reference { padding: 18px; }
-        .workspace { border-radius: 8px; }
+        .result.site-themed .reference,
+        .result.refero-layout .reference {
+          padding: 18px 12px 48px;
+        }
+        .result.refero-layout .panel + .panel {
+          margin-top: 44px;
+        }
+        .tab-panel {
+          padding: 12px;
+        }
+        .tabs,
+        .export-actions,
+        .downloads {
+          padding-left: 12px;
+          padding-right: 12px;
+        }
+        .workspace { border-radius: 0; }
         .hero-figure img { height: 260px; }
         form { grid-template-columns: minmax(0, 1fr); }
         .side { padding: 16px 12px; }
@@ -1241,25 +1453,25 @@ export function renderAppHtml(): string {
             <p class="lede">The app will inspect internal pages, render desktop/tablet/mobile, and assemble a style reference with exports.</p>
           </div>
         </div>
-        <div id="result" class="result">
-          <div class="result-head">
-            <div>
-              <p id="result-crumb" class="crumb">/ Styles / Style extraction</p>
-              <h2 id="result-title">Style extraction</h2>
-              <p id="result-meta"></p>
-            </div>
-            <div class="actions">
-              <a id="open-preview" href="#" target="_blank" rel="noreferrer">Preview</a>
-              <a id="open-design" href="#" target="_blank" rel="noreferrer">DESIGN.md</a>
-              <a id="open-evidence" href="#" target="_blank" rel="noreferrer">Evidence</a>
-            </div>
-          </div>
+        <div id="result" class="result refero-layout">
           <div class="workspace">
             <div class="reference">
               <section class="panel">
                 <h3>Hero Capture</h3>
                 <div id="hero"></div>
               </section>
+              <header class="result-head">
+                <div>
+                  <p id="result-crumb" class="crumb">/ Styles / Style extraction</p>
+                  <h2 id="result-title">Style extraction</h2>
+                  <p id="result-meta"></p>
+                </div>
+                <div class="actions">
+                  <a id="open-preview" href="#" target="_blank" rel="noreferrer">Preview</a>
+                  <a id="open-design" href="#" target="_blank" rel="noreferrer">DESIGN.md</a>
+                  <a id="open-evidence" href="#" target="_blank" rel="noreferrer">Evidence</a>
+                </div>
+              </header>
               <section class="panel">
                 <h3>Style Applied Preview</h3>
                 <div id="component-preview"></div>
