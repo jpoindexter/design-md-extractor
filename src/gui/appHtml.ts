@@ -320,6 +320,22 @@ export function renderAppHtml(): string {
         padding: 48px 40px 96px;
         border-right: 1px solid var(--line);
       }
+      .reference-hero h3 {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+      }
+      .style-summary h3 {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+      }
       .reference > *,
       .panel {
         min-width: 0;
@@ -1244,6 +1260,15 @@ export function renderAppHtml(): string {
       .result.refero-layout .panel + .panel {
         margin-top: 64px;
       }
+      .result.refero-layout .reference-hero + .result-head {
+        margin-top: 28px;
+      }
+      .result.refero-layout .result-head + .style-summary {
+        margin-top: 18px;
+      }
+      .result.refero-layout .style-summary + .panel {
+        margin-top: 56px;
+      }
       .result.refero-layout .panel h3 {
         margin-bottom: 24px;
         color: #09090b;
@@ -1252,30 +1277,48 @@ export function renderAppHtml(): string {
         letter-spacing: 0;
       }
       .result.refero-layout .result-head {
-        padding: 38px 0 0;
+        padding: 0;
+        display: block;
+        align-items: start;
       }
       .result.refero-layout .result-head h2 {
         color: #09090b;
-        font-size: 52px;
+        font-size: 56px;
         font-weight: 430;
-        line-height: 0.95;
+        line-height: 0.9;
       }
       .result.refero-layout .crumb,
       .result.refero-layout #result-meta,
       .result.refero-layout .muted {
         color: #667085;
       }
+      .result.refero-layout .thesis {
+        max-width: 620px;
+        color: #4b5563;
+        font-size: 16px;
+        line-height: 1.65;
+      }
       .result.refero-layout .actions a {
         border: 0;
         background: transparent;
         color: #09090b;
         padding: 0;
+        font-size: 12px;
+      }
+      .result.refero-layout .actions {
+        display: none;
       }
       .result.refero-layout .hero-figure {
         border: 1px solid #e5e7eb;
         border-radius: 18px;
         background: #ffffff;
         box-shadow: 0 18px 44px rgba(16, 24, 40, 0.08);
+      }
+      .result.refero-layout .hero-figure img {
+        height: clamp(320px, 46vh, 420px);
+      }
+      .result.refero-layout .thumb-strip {
+        display: none;
       }
       .result.refero-layout .thumb-strip a,
       .result.refero-layout .profile-card,
@@ -1325,12 +1368,26 @@ export function renderAppHtml(): string {
       .result.refero-layout .downloads {
         border-bottom: 1px solid #e5e7eb;
       }
+      .result.refero-layout .export-actions {
+        padding: 8px 12px 8px 24px;
+      }
+      .result.refero-layout .export-tools {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
       .result.refero-layout .copy-btn,
       .result.refero-layout .download-btn {
         border: 1px solid #d7dbe0;
         border-radius: 10px;
         background: #ffffff;
         color: #09090b;
+        min-height: 30px;
+        padding: 0 10px;
+      }
+      .result.refero-layout .hint,
+      .result.refero-layout .downloads {
+        display: none;
       }
       .result.refero-layout .excerpt,
       .result.refero-layout .code-block {
@@ -1354,6 +1411,14 @@ export function renderAppHtml(): string {
           max-height: calc(100vh - 24px);
         }
       }
+      @media (max-width: 1320px) and (min-width: 961px) {
+        form {
+          grid-template-columns: minmax(180px, 1.2fr) minmax(132px, 0.6fr) minmax(132px, 0.6fr) 126px;
+        }
+        .run {
+          padding-inline: 10px;
+        }
+      }
       @media (max-width: 960px) {
         .side {
           position: static;
@@ -1368,6 +1433,7 @@ export function renderAppHtml(): string {
         main { padding: 0; overflow-x: hidden; }
         .result-head h2 { font-size: 34px; }
         .result.site-themed .result-head h2 { font-size: 38px; }
+        .result.refero-layout .result-head h2 { font-size: 42px; }
         .preview-banner h4 { font-size: 34px; }
         .reference { padding: 18px; }
         .result.site-themed .reference,
@@ -1456,7 +1522,7 @@ export function renderAppHtml(): string {
         <div id="result" class="result refero-layout">
           <div class="workspace">
             <div class="reference">
-              <section class="panel">
+              <section class="panel reference-hero">
                 <h3>Hero Capture</h3>
                 <div id="hero"></div>
               </section>
@@ -1472,11 +1538,7 @@ export function renderAppHtml(): string {
                   <a id="open-evidence" href="#" target="_blank" rel="noreferrer">Evidence</a>
                 </div>
               </header>
-              <section class="panel">
-                <h3>Style Applied Preview</h3>
-                <div id="component-preview"></div>
-              </section>
-              <section class="panel">
+              <section class="panel style-summary">
                 <h3>Style Thesis</h3>
                 <p id="thesis" class="thesis"></p>
               </section>
@@ -1530,6 +1592,10 @@ export function renderAppHtml(): string {
                 </div>
               </section>
               <section class="panel">
+                <h3>Component Preview</h3>
+                <div id="component-preview"></div>
+              </section>
+              <section class="panel">
                 <h3>Components</h3>
                 <div id="components" class="component-list"></div>
               </section>
@@ -1563,7 +1629,11 @@ export function renderAppHtml(): string {
                   <button class="mode-btn" type="button" data-mode="compact">Compact</button>
                   <button class="mode-btn active" type="button" data-mode="extended">Extended</button>
                 </div>
-                <button id="copy-active" class="copy-btn" type="button">Copy</button>
+                <div class="export-tools">
+                  <button id="copy-active" class="copy-btn" type="button">Copy</button>
+                  <button id="download-active" class="download-btn" type="button">.md</button>
+                  <button id="download-bundle-top" class="download-btn" type="button">Bundle</button>
+                </div>
               </div>
               <p class="hint">Download and use with your selected assistant.</p>
               <div class="downloads">
@@ -1608,6 +1678,8 @@ export function renderAppHtml(): string {
       const downloadJson = document.getElementById('download-json');
       const downloadPrompt = document.getElementById('download-prompt');
       const downloadBundle = document.getElementById('download-bundle');
+      const downloadActive = document.getElementById('download-active');
+      const downloadBundleTop = document.getElementById('download-bundle-top');
       const copyActive = document.getElementById('copy-active');
       const modeButtons = Array.from(document.querySelectorAll('.mode-btn'));
       const aiTargetStorageKey = 'design-md-extractor.aiTarget';
@@ -1649,6 +1721,7 @@ export function renderAppHtml(): string {
           Array.from(document.querySelectorAll('.tab-panel')).forEach((panel) => {
             panel.classList.toggle('active', panel.id === 'tab-' + tab);
           });
+          updateActiveDownloadLabel();
         });
       });
 
@@ -2486,7 +2559,87 @@ export function renderAppHtml(): string {
         URL.revokeObjectURL(url);
       }
 
+      function activeDownloadPayload() {
+        if (!latestExportData) return null;
+        if (activeExportTab === 'css') {
+          return {
+            filename: 'style-variables.css',
+            content: latestExportData.cssVars,
+            mimeType: 'text/css;charset=utf-8',
+            label: '.css',
+          };
+        }
+        if (activeExportTab === 'tailwind') {
+          return {
+            filename: 'tailwind-theme.css',
+            content: latestExportData.tailwindTheme,
+            mimeType: 'text/css;charset=utf-8',
+            label: '.css',
+          };
+        }
+        if (activeExportTab === 'json') {
+          return {
+            filename: 'design-tokens.json',
+            content: latestExportData.jsonTokens,
+            mimeType: 'application/json;charset=utf-8',
+            label: '.json',
+          };
+        }
+        if (activeExportTab === 'prompt') {
+          return {
+            filename: 'ai-prompt.txt',
+            content: latestExportData.aiPrompt,
+            mimeType: 'text/plain;charset=utf-8',
+            label: '.txt',
+          };
+        }
+        return {
+          filename: 'DESIGN.md',
+          content: latestExportData.designMd,
+          mimeType: 'text/markdown;charset=utf-8',
+          label: '.md',
+        };
+      }
+
+      function updateActiveDownloadLabel() {
+        if (!downloadActive) return;
+        const payload = activeDownloadPayload();
+        downloadActive.textContent = payload ? payload.label : '.md';
+      }
+
       function attachDownloadHandlers() {
+        const downloadBundleFile = () => {
+          if (!latestExportData) return;
+          const bundle = {
+            metadata: {
+              runId: latestExportData.runId,
+              url: latestExportData.url,
+              aiTarget: latestExportData.aiTarget,
+              exportedAt: new Date().toISOString(),
+            },
+            files: {
+              'DESIGN.md': latestExportData.designMd,
+              'style-variables.css': latestExportData.cssVars,
+              'tailwind-theme.css': latestExportData.tailwindTheme,
+              'design-tokens.json': latestExportData.jsonTokens,
+              'ai-prompt.txt': latestExportData.aiPrompt,
+            },
+          };
+          downloadText('style-bundle.json', JSON.stringify(bundle, null, 2), 'application/json;charset=utf-8');
+        };
+
+        if (downloadActive) {
+          downloadActive.addEventListener('click', () => {
+            const payload = activeDownloadPayload();
+            if (!payload) return;
+            downloadText(payload.filename, payload.content, payload.mimeType);
+          });
+        }
+
+        if (downloadBundleTop) {
+          downloadBundleTop.addEventListener('click', downloadBundleFile);
+        }
+
         if (downloadDesign) {
           downloadDesign.addEventListener('click', () => {
             if (!latestExportData) return;
@@ -2524,23 +2677,7 @@ export function renderAppHtml(): string {
 
         if (downloadBundle) {
           downloadBundle.addEventListener('click', () => {
-            if (!latestExportData) return;
-            const bundle = {
-              metadata: {
-                runId: latestExportData.runId,
-                url: latestExportData.url,
-                aiTarget: latestExportData.aiTarget,
-                exportedAt: new Date().toISOString(),
-              },
-              files: {
-                'DESIGN.md': latestExportData.designMd,
-                'style-variables.css': latestExportData.cssVars,
-                'tailwind-theme.css': latestExportData.tailwindTheme,
-                'design-tokens.json': latestExportData.jsonTokens,
-                'ai-prompt.txt': latestExportData.aiPrompt,
-              },
-            };
-            downloadText('style-bundle.json', JSON.stringify(bundle, null, 2), 'application/json;charset=utf-8');
+            downloadBundleFile();
           });
         }
       }
@@ -3126,6 +3263,7 @@ export function renderAppHtml(): string {
           };
 
           updateDesignPreview();
+          updateActiveDownloadLabel();
           document.getElementById('css-vars').textContent = cssVars;
           document.getElementById('tailwind-theme').textContent = tailwindTheme;
           document.getElementById('json-tokens').textContent = jsonTokens;
