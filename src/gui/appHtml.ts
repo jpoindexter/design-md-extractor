@@ -608,6 +608,22 @@ export function renderAppHtml(): string {
         gap: 10px;
         margin-bottom: 18px;
       }
+      .type-scale-summary {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        padding: 12px 14px;
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        color: var(--muted);
+        font-size: 12px;
+        margin-bottom: 4px;
+      }
+      .type-scale-summary strong {
+        color: var(--ink);
+        font-size: 13px;
+      }
       .scale-row {
         border: 1px solid var(--line);
         border-radius: 8px;
@@ -647,6 +663,13 @@ export function renderAppHtml(): string {
         color: var(--muted);
         font-size: 11px;
         line-height: 1.4;
+      }
+      .font-card .font-label {
+        margin: 0 0 8px;
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
       }
       .tri-grid {
         display: grid;
@@ -1553,18 +1576,22 @@ export function renderAppHtml(): string {
               </section>
               <section class="panel">
                 <h3>Typography</h3>
+                <p class="muted">Type Scale</p>
                 <div id="type-scale" class="scale-list"></div>
+                <p class="muted">Extracted Roles</p>
                 <table class="dense-table">
                   <thead>
                     <tr>
                       <th>Role</th>
                       <th>Font</th>
                       <th>Size / Weight</th>
+                      <th>Line / Track</th>
                       <th>Confidence</th>
                     </tr>
                   </thead>
                   <tbody id="typography-body"></tbody>
                 </table>
+                <p class="muted">Fonts</p>
                 <div id="font-cards" class="font-cards"></div>
               </section>
               <section class="panel">
@@ -2300,13 +2327,15 @@ export function renderAppHtml(): string {
         const role = String(item && item.role ? item.role : '').toLowerCase();
         const size = numericPx(item && item.fontSize ? item.fontSize : '');
         if (size > 32 || role.includes('heading') || role.includes('display') || role.includes('title')) {
-          return currentHostname;
+          return 'THE QUICK BROWN FOX JUMPS';
         }
         if (role.includes('link') || role.includes('nav')) {
           return 'Studio Projects About Contact';
         }
-        const sentence = String(currentThesis || '').split('.').find((line) => line.trim().length > 20);
-        return sentence ? sentence.trim() : 'A practical style system grounded in captured browser evidence.';
+        if (role.includes('button')) {
+          return 'Primary Action';
+        }
+        return 'The quick brown fox jumps over a precise interface.';
       }
 
       function clampPaddingValue(value) {
@@ -2902,6 +2931,7 @@ export function renderAppHtml(): string {
             '<td>' + escapeHtml(type.role || 'text') + '</td>',
             '<td>' + escapeHtml(type.fontFamily || 'sans-serif') + '</td>',
             '<td>' + escapeHtml((type.fontSize || '16px') + ' / ' + (type.fontWeight || '400')) + '</td>',
+            '<td>' + escapeHtml((type.lineHeight || 'normal') + ' / ' + (type.letterSpacing || 'normal')) + '</td>',
             '<td>' + escapeHtml(type.confidence || 'low') + '</td>',
             '</tr>',
           ].join(''),
@@ -2915,16 +2945,25 @@ export function renderAppHtml(): string {
         const sorted = normalizeList(rows)
           .slice()
           .sort((a, b) => numericPx(b.fontSize) - numericPx(a.fontSize))
-          .slice(0, 5);
+          .slice(0, 7);
         if (!sorted.length) {
           target.innerHTML = '<p class="muted">No type scale tokens found.</p>';
           return;
         }
-        target.innerHTML = sorted
+        const sizes = sorted.map((item) => numericPx(item.fontSize)).filter((size) => size > 0);
+        const minSize = sizes.length ? Math.min(...sizes) : 16;
+        const maxSize = sizes.length ? Math.max(...sizes) : 16;
+        const summary = [
+          '<div class="type-scale-summary">',
+          '<div><strong>Observed type scale</strong><br>' + escapeHtml(String(sorted.length)) + ' text roles from ' + escapeHtml(String(minSize || 0)) + 'px to ' + escapeHtml(String(maxSize || 0)) + 'px</div>',
+          '<div>Base ' + escapeHtml(String(minSize || 16)) + 'px</div>',
+          '</div>',
+        ].join('');
+        target.innerHTML = summary + sorted
           .map((item) => [
             '<article class="scale-row">',
-            '<div class="meta">' + escapeHtml((item.role || 'text') + ' · ' + (item.fontSize || '16px') + ' / ' + (item.fontWeight || '400')) + '</div>',
-            '<p class="sample" style="font-family:' + escapeHtml(item.fontFamily || 'sans-serif') + '; font-size:' + escapeHtml(clampSpecimenSize(item.fontSize || '16px')) + '; font-weight:' + escapeHtml(item.fontWeight || '400') + '; letter-spacing:' + escapeHtml(item.letterSpacing || 'normal') + '">' + escapeHtml(typeSpecimenCopy(item)) + '</p>',
+            '<div class="meta">' + escapeHtml((item.role || 'text') + ' · ' + (item.fontSize || '16px') + ' · ' + (item.fontWeight || '400') + ' · ' + (item.lineHeight || 'normal')) + '</div>',
+            '<p class="sample" style="font-family:' + escapeHtml(item.fontFamily || 'sans-serif') + '; font-size:' + escapeHtml(clampSpecimenSize(item.fontSize || '16px')) + '; font-weight:' + escapeHtml(item.fontWeight || '400') + '; line-height:' + escapeHtml(item.lineHeight || '1.1') + '; letter-spacing:' + escapeHtml(item.letterSpacing || 'normal') + '">' + escapeHtml(typeSpecimenCopy(item)) + '</p>',
             '</article>',
           ].join(''))
           .join('');
@@ -2945,14 +2984,21 @@ export function renderAppHtml(): string {
           return;
         }
         target.innerHTML = entries
-          .map(([font, items]) => {
+          .map(([font, items], index) => {
             const roles = Array.from(new Set(items.map((item) => item.role).filter(Boolean))).join(', ');
-            const sizes = Array.from(new Set(items.map((item) => item.fontSize).filter(Boolean))).slice(0, 3).join(', ');
+            const weights = Array.from(new Set(items.map((item) => item.fontWeight).filter(Boolean))).join(', ');
+            const sizes = Array.from(new Set(items.map((item) => item.fontSize).filter(Boolean))).slice(0, 6);
+            const lineHeights = Array.from(new Set(items.map((item) => item.lineHeight).filter(Boolean))).slice(0, 4).join(', ');
+            const tracking = Array.from(new Set(items.map((item) => item.letterSpacing).filter((value) => value && value !== 'normal'))).slice(0, 4).join(', ');
             return [
               '<article class="font-card">',
+              '<p class="font-label">' + escapeHtml(index === 0 ? 'Primary' : 'Secondary') + '</p>',
               '<h4 style="font-family:' + escapeHtml(font) + '">' + escapeHtml(font) + '</h4>',
               '<p>Roles: ' + escapeHtml(roles || 'text') + '</p>',
-              '<p>Sizes: ' + escapeHtml(sizes || '16px') + '</p>',
+              '<p>Weights: ' + escapeHtml(weights || '400') + '</p>',
+              '<p>Sizes: ' + escapeHtml(sizes.join(', ') || '16px') + '</p>',
+              '<p>Line height: ' + escapeHtml(lineHeights || 'normal') + '</p>',
+              '<p>Tracking: ' + escapeHtml(tracking || 'normal') + '</p>',
               '</article>',
             ].join('');
           })

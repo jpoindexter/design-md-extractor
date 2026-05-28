@@ -61,6 +61,18 @@ function styleSignalScore(component: {
   return score;
 }
 
+function typographySignalScore(item: { role: string; fontSize: string; fontWeight: string; seen: number }): number {
+  const role = normalizeStyleValue(item.role);
+  const size = numericPx(item.fontSize);
+  const weight = Number.parseInt(item.fontWeight, 10);
+  let score = item.seen * 3 + size / 4;
+  if (role.includes('heading')) score += 12;
+  if (role.includes('button') || role.includes('link')) score += 4;
+  if (Number.isFinite(weight) && weight >= 600) score += 2;
+  if (size >= 32) score += 8;
+  return score;
+}
+
 function styleSignature(styles: Record<string, string>): string {
   return [
     normalizeStyleValue(styles.color),
@@ -194,7 +206,11 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
   }
 
   const typography = Array.from(typographyMap.values())
-    .sort((a, b) => b.seen - a.seen)
+    .sort((a, b) => {
+      const scoreDelta = typographySignalScore(b) - typographySignalScore(a);
+      if (scoreDelta !== 0) return scoreDelta;
+      return b.seen - a.seen;
+    })
     .slice(0, 12)
     .map((item) => ({
       role: item.role,

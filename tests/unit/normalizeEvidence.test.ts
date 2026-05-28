@@ -58,4 +58,56 @@ describe('normalizeEvidence', () => {
     expect(evidence.components[0]?.count).toBe(2);
     expect(evidence.surfaces[0]?.value).toBe('#ffffff');
   });
+
+  it('keeps rare large display typography alongside frequent body text', () => {
+    const frequentBodyTypography = Array.from({ length: 13 }, (_, index) => [
+      {
+        selector: `.body-${index}-a`,
+        role: 'body',
+        fontFamily: 'Inter, sans-serif',
+        fontSize: `${12 + index}px`,
+        fontWeight: '400',
+        lineHeight: `${18 + index}px`,
+        letterSpacing: '0px',
+      },
+      {
+        selector: `.body-${index}-b`,
+        role: 'body',
+        fontFamily: 'Inter, sans-serif',
+        fontSize: `${12 + index}px`,
+        fontWeight: '400',
+        lineHeight: `${18 + index}px`,
+        letterSpacing: '0px',
+      },
+    ]).flat();
+
+    const evidence = normalizeEvidence({
+      primaryUrl: 'https://example.com',
+      pages: [{ url: 'https://example.com', status: 'success' as const }],
+      capturedAt: '2026-05-28T10:00:00.000Z',
+      viewports: [{ name: 'desktop', width: 1440, height: 1000 }],
+      screenshots: [],
+      rawPages: [
+        {
+          viewport: 'desktop',
+          colors: [],
+          typography: [
+            ...frequentBodyTypography,
+            {
+              selector: 'h1.hero-title',
+              role: 'heading',
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '72px',
+              fontWeight: '700',
+              lineHeight: '76px',
+              letterSpacing: '-2px',
+            },
+          ],
+          components: [],
+        },
+      ],
+    });
+
+    expect(evidence.tokens.typography.some((item) => item.fontSize === '72px' && item.role === 'heading')).toBe(true);
+  });
 });
