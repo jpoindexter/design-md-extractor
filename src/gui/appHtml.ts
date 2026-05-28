@@ -191,6 +191,62 @@ export function renderAppHtml(): string {
         display: block;
       }
       .thesis { margin: 0; font-size: 14px; line-height: 1.5; }
+      .profile-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .profile-card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        padding: 10px;
+      }
+      .profile-card h4 {
+        margin: 0 0 6px;
+        color: var(--muted);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .profile-card p {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+      .token-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .token-pill {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--panel-soft);
+        color: var(--ink);
+        font-size: 11px;
+        padding: 4px 8px;
+      }
+      .category-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .category {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        padding: 8px;
+      }
+      .category h4 {
+        margin: 0 0 6px;
+        color: var(--muted);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .category .muted { margin: 0; }
       .swatch-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
@@ -225,6 +281,47 @@ export function renderAppHtml(): string {
       }
       .dense-table tr:last-child td { border-bottom: 0; }
       .muted { color: var(--muted); font-size: 12px; }
+      .scale-list {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .scale-row {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        padding: 8px 10px;
+      }
+      .scale-row .meta {
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .scale-row .sample {
+        margin: 4px 0 0;
+        line-height: 1.1;
+      }
+      .font-cards {
+        margin-top: 10px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .font-card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        padding: 8px 10px;
+      }
+      .font-card h4 {
+        margin: 0;
+        font-size: 12px;
+      }
+      .font-card p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.4;
+      }
       .tri-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -260,6 +357,62 @@ export function renderAppHtml(): string {
       .component-row:last-child { border-bottom: 0; padding-bottom: 0; }
       .component-row strong { font-size: 13px; }
       .component-row span { color: var(--muted); font-size: 12px; text-align: right; }
+      .component-preview {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px;
+        background: #fff;
+      }
+      .preview-banner {
+        border-radius: 8px;
+        padding: 14px;
+        margin-bottom: 10px;
+      }
+      .preview-banner h4 {
+        margin: 0;
+        font-size: 26px;
+        line-height: 1.05;
+      }
+      .preview-banner p {
+        margin: 8px 0 0;
+        font-size: 13px;
+        line-height: 1.4;
+      }
+      .preview-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .preview-metric {
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 6px;
+        padding: 8px;
+        background: rgba(255,255,255,0.8);
+      }
+      .preview-metric strong {
+        display: block;
+        font-size: 11px;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+      .preview-metric span {
+        display: block;
+        font-size: 13px;
+        font-weight: 650;
+      }
+      .preview-actions {
+        margin-top: 10px;
+        display: flex;
+        gap: 8px;
+      }
+      .preview-actions button {
+        border: 0;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 8px 12px;
+        cursor: default;
+      }
       .split-list {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -344,8 +497,14 @@ export function renderAppHtml(): string {
       }
       @media (max-width: 680px) {
         .guidelines,
+        .category-grid,
+        .font-cards,
         .split-list,
         .tri-grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .profile-grid,
+        .preview-metrics {
           grid-template-columns: minmax(0, 1fr);
         }
         .tabs { grid-template-columns: minmax(0, 1fr); }
@@ -409,11 +568,17 @@ export function renderAppHtml(): string {
                 <p id="thesis" class="thesis"></p>
               </section>
               <section class="panel">
+                <h3>Style Profile</h3>
+                <div id="style-profile" class="profile-grid"></div>
+              </section>
+              <section class="panel">
                 <h3>Color Palette</h3>
+                <div id="color-categories" class="category-grid"></div>
                 <div id="colors" class="swatch-grid"></div>
               </section>
               <section class="panel">
                 <h3>Typography</h3>
+                <div id="type-scale" class="scale-list"></div>
                 <table class="dense-table">
                   <thead>
                     <tr>
@@ -425,6 +590,7 @@ export function renderAppHtml(): string {
                   </thead>
                   <tbody id="typography-body"></tbody>
                 </table>
+                <div id="font-cards" class="font-cards"></div>
               </section>
               <section class="panel">
                 <h3>Spacing, Radius, Shadows</h3>
@@ -457,6 +623,10 @@ export function renderAppHtml(): string {
                     <ul id="guidelines-dont"></ul>
                   </div>
                 </div>
+              </section>
+              <section class="panel">
+                <h3>Component Preview</h3>
+                <div id="component-preview"></div>
               </section>
               <section class="panel">
                 <h3>Components</h3>
@@ -556,6 +726,79 @@ export function renderAppHtml(): string {
         return '#d9ddd7';
       }
 
+      function colorToRgb(value) {
+        const color = String(value || '').trim().toLowerCase();
+        if (color.startsWith('#')) {
+          const hex = color.slice(1);
+          if (hex.length === 3) {
+            return [
+              Number.parseInt(hex[0] + hex[0], 16),
+              Number.parseInt(hex[1] + hex[1], 16),
+              Number.parseInt(hex[2] + hex[2], 16),
+            ];
+          }
+          if (hex.length === 6) {
+            return [
+              Number.parseInt(hex.slice(0, 2), 16),
+              Number.parseInt(hex.slice(2, 4), 16),
+              Number.parseInt(hex.slice(4, 6), 16),
+            ];
+          }
+        }
+        const match = color.match(/rgba?\\((\\d+),\\s*(\\d+),\\s*(\\d+)/);
+        if (match) {
+          return [Number(match[1]), Number(match[2]), Number(match[3])];
+        }
+        return null;
+      }
+
+      function colorLuminance(value) {
+        const rgb = colorToRgb(value);
+        if (!rgb) return 0.8;
+        return (0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]) / 255;
+      }
+
+      function colorSaturation(value) {
+        const rgb = colorToRgb(value);
+        if (!rgb) return 0;
+        const max = Math.max(rgb[0], rgb[1], rgb[2]) / 255;
+        const min = Math.min(rgb[0], rgb[1], rgb[2]) / 255;
+        if (max === min) return 0;
+        const lightness = (max + min) / 2;
+        return (max - min) / (1 - Math.abs(2 * lightness - 1));
+      }
+
+      function numericPx(value) {
+        const match = String(value || '').match(/([\\d.]+)/);
+        return match ? Number.parseFloat(match[1]) : 0;
+      }
+
+      function toneLabel(colors) {
+        const list = normalizeList(colors);
+        if (!list.length) return 'Mixed';
+        const avg = list.slice(0, 4).reduce((sum, color) => sum + colorLuminance(color.value), 0) / Math.min(4, list.length);
+        if (avg < 0.35) return 'Dark';
+        if (avg > 0.65) return 'Light';
+        return 'Balanced';
+      }
+
+      function selectAccentColors(colors) {
+        return normalizeList(colors)
+          .filter((color) => colorSaturation(color.value) >= 0.42)
+          .slice(0, 2);
+      }
+
+      function colorCategorySummary(colors) {
+        const list = normalizeList(colors);
+        const accents = selectAccentColors(list);
+        const neutrals = list.filter((color) => colorSaturation(color.value) < 0.2).slice(0, 3);
+        return {
+          brand: list[0] ? [list[0]] : [],
+          accents,
+          neutrals,
+        };
+      }
+
       function selectHeroShot(shots, preferredHref) {
         const all = normalizeList(shots);
         if (preferredHref) {
@@ -595,6 +838,53 @@ export function renderAppHtml(): string {
         const colorCount = tokenData.colors.length;
         const typographyCount = tokenData.typography.length;
         return 'This style reads as ' + layoutDensity + ' density, with ' + colorCount + ' primary color tokens, ' + typographyCount + ' typography tokens, and a ' + imagery + ' approach across ' + pageCount + ' inspected page(s).';
+      }
+
+      function renderStyleProfile(data, tokenData, evidence) {
+        const target = document.getElementById('style-profile');
+        if (!target) return;
+        const pages = normalizeList(data.summary.pages);
+        const accents = selectAccentColors(tokenData.colors);
+        const theme = toneLabel(tokenData.surfaces.length ? tokenData.surfaces : tokenData.colors);
+        const topFont = tokenData.typography[0] ? tokenData.typography[0].fontFamily : 'Unknown';
+        const imagery = evidence && evidence.imagery && evidence.imagery.strategy ? evidence.imagery.strategy : 'unknown';
+
+        const cards = [
+          [
+            '<article class="profile-card">',
+            '<h4>Theme</h4>',
+            '<p>' + escapeHtml(theme) + ' tone with ' + escapeHtml(String(accents.length)) + ' accent signal(s).</p>',
+            '</article>',
+          ].join(''),
+          [
+            '<article class="profile-card">',
+            '<h4>Coverage</h4>',
+            '<p>' + escapeHtml(String(pages.length)) + ' pages inspected across ' + escapeHtml(String(normalizeList(data.summary.screenshots).length)) + ' screenshots.</p>',
+            '</article>',
+          ].join(''),
+          [
+            '<article class="profile-card">',
+            '<h4>Typography Lead</h4>',
+            '<p>' + escapeHtml(topFont) + '</p>',
+            '</article>',
+          ].join(''),
+          [
+            '<article class="profile-card">',
+            '<h4>Imagery Strategy</h4>',
+            '<p>' + escapeHtml(String(imagery)) + '</p>',
+            '</article>',
+          ].join(''),
+        ];
+
+        const pills = [
+          '<div class="token-pills">',
+          '<span class="token-pill">Colors ' + escapeHtml(String(tokenData.colors.length)) + '</span>',
+          '<span class="token-pill">Typography ' + escapeHtml(String(tokenData.typography.length)) + '</span>',
+          '<span class="token-pill">Components ' + escapeHtml(String(tokenData.components.length)) + '</span>',
+          '</div>',
+        ].join('');
+
+        target.innerHTML = cards.join('') + pills;
       }
 
       function buildGuidelines(data, tokenData) {
@@ -841,6 +1131,28 @@ export function renderAppHtml(): string {
           .join('');
       }
 
+      function renderColorCategories(colors) {
+        const target = document.getElementById('color-categories');
+        if (!target) return;
+        const groups = colorCategorySummary(colors);
+        const renderGroup = (title, list) => {
+          const names = normalizeList(list).map((item) => item.name || item.value || 'n/a');
+          const values = normalizeList(list).map((item) => item.value || '').join(', ');
+          return [
+            '<article class="category">',
+            '<h4>' + escapeHtml(title) + '</h4>',
+            '<p class="muted">' + escapeHtml(names.length ? names.join(' · ') : 'No tokens detected') + '</p>',
+            '<p class="muted">' + escapeHtml(values) + '</p>',
+            '</article>',
+          ].join('');
+        };
+        target.innerHTML = [
+          renderGroup('Brand', groups.brand),
+          renderGroup('Accents', groups.accents),
+          renderGroup('Neutrals', groups.neutrals),
+        ].join('');
+      }
+
       function renderTypography(rows) {
         renderRows(
           'typography-body',
@@ -855,6 +1167,56 @@ export function renderAppHtml(): string {
           ].join(''),
           'No typography tokens found.'
         );
+      }
+
+      function renderTypeScale(rows) {
+        const target = document.getElementById('type-scale');
+        if (!target) return;
+        const sorted = normalizeList(rows)
+          .slice()
+          .sort((a, b) => numericPx(b.fontSize) - numericPx(a.fontSize))
+          .slice(0, 5);
+        if (!sorted.length) {
+          target.innerHTML = '<p class="muted">No type scale tokens found.</p>';
+          return;
+        }
+        target.innerHTML = sorted
+          .map((item) => [
+            '<article class="scale-row">',
+            '<div class="meta">' + escapeHtml((item.role || 'text') + ' · ' + (item.fontSize || '16px') + ' / ' + (item.fontWeight || '400')) + '</div>',
+            '<p class="sample" style="font-family:' + escapeHtml(item.fontFamily || 'sans-serif') + '; font-size:' + escapeHtml(item.fontSize || '16px') + '; font-weight:' + escapeHtml(item.fontWeight || '400') + '; letter-spacing:' + escapeHtml(item.letterSpacing || 'normal') + '">THE QUICK BROWN FOX JUMPS</p>',
+            '</article>',
+          ].join(''))
+          .join('');
+      }
+
+      function renderFontCards(rows) {
+        const target = document.getElementById('font-cards');
+        if (!target) return;
+        const grouped = new Map();
+        normalizeList(rows).forEach((item) => {
+          const key = item.fontFamily || 'sans-serif';
+          if (!grouped.has(key)) grouped.set(key, []);
+          grouped.get(key).push(item);
+        });
+        const entries = Array.from(grouped.entries()).slice(0, 4);
+        if (!entries.length) {
+          target.innerHTML = '<p class="muted">No font families detected.</p>';
+          return;
+        }
+        target.innerHTML = entries
+          .map(([font, items]) => {
+            const roles = Array.from(new Set(items.map((item) => item.role).filter(Boolean))).join(', ');
+            const sizes = Array.from(new Set(items.map((item) => item.fontSize).filter(Boolean))).slice(0, 3).join(', ');
+            return [
+              '<article class="font-card">',
+              '<h4 style="font-family:' + escapeHtml(font) + '">' + escapeHtml(font) + '</h4>',
+              '<p>Roles: ' + escapeHtml(roles || 'text') + '</p>',
+              '<p>Sizes: ' + escapeHtml(sizes || '16px') + '</p>',
+              '</article>',
+            ].join('');
+          })
+          .join('');
       }
 
       function renderDensityTable(id, rows, emptyText) {
@@ -904,6 +1266,37 @@ export function renderAppHtml(): string {
           .join('');
       }
 
+      function renderComponentPreview(tokenData) {
+        const target = document.getElementById('component-preview');
+        if (!target) return;
+        const bgColor = tokenData.surfaces[0] ? tokenData.surfaces[0].value : '#ffffff';
+        const textColor = tokenData.colors.find((color) => colorSaturation(color.value) < 0.2)?.value || '#111111';
+        const accent = tokenData.colors.find((color) => colorSaturation(color.value) >= 0.42)?.value || '#176b52';
+        const headlineFont = tokenData.typography[0] ? tokenData.typography[0].fontFamily : 'sans-serif';
+        const bodyFont = tokenData.typography[1] ? tokenData.typography[1].fontFamily : headlineFont;
+        const metricA = tokenData.components[0] ? tokenData.components[0].name : 'Signal';
+        const metricB = tokenData.components[1] ? tokenData.components[1].name : 'Coverage';
+        const metricC = tokenData.components[2] ? tokenData.components[2].name : 'Density';
+
+        target.innerHTML = [
+          '<div class="component-preview" style="background:' + escapeHtml(safeColorValue(bgColor)) + '; color:' + escapeHtml(safeColorValue(textColor)) + '; font-family:' + escapeHtml(bodyFont) + '">',
+          '<div class="preview-banner" style="background:linear-gradient(140deg, ' + escapeHtml(safeColorValue(bgColor)) + ', rgba(0,0,0,0.06)); border:1px solid rgba(0,0,0,0.08)">',
+          '<h4 style="font-family:' + escapeHtml(headlineFont) + '">STYLE SIGNAL</h4>',
+          '<p>Previewing how extracted tokens feel when applied to UI blocks.</p>',
+          '</div>',
+          '<div class="preview-metrics">',
+          '<div class="preview-metric"><strong>' + escapeHtml(metricA) + '</strong><span>Active</span></div>',
+          '<div class="preview-metric"><strong>' + escapeHtml(metricB) + '</strong><span>' + escapeHtml(String(tokenData.colors.length)) + ' tokens</span></div>',
+          '<div class="preview-metric"><strong>' + escapeHtml(metricC) + '</strong><span>' + escapeHtml(String(tokenData.typography.length)) + ' styles</span></div>',
+          '</div>',
+          '<div class="preview-actions">',
+          '<button style="background:' + escapeHtml(safeColorValue(accent)) + '; color:#fff">Primary Action</button>',
+          '<button style="background:transparent; border:1px solid currentColor; color:' + escapeHtml(safeColorValue(textColor)) + '">Secondary</button>',
+          '</div>',
+          '</div>',
+        ].join('');
+      }
+
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
         run.disabled = true;
@@ -948,12 +1341,17 @@ export function renderAppHtml(): string {
 
           renderHero(data.summary.screenshots, data.summary.bestScreenshotHref);
           document.getElementById('thesis').textContent = thesis;
+          renderStyleProfile(data, tokenData, evidence);
+          renderColorCategories(tokenData.colors);
           renderColors(tokenData.colors);
+          renderTypeScale(tokenData.typography);
           renderTypography(tokenData.typography);
+          renderFontCards(tokenData.typography);
           renderDensityTable('spacing-body', tokenData.spacing, 'No spacing tokens found.');
           renderDensityTable('radii-body', tokenData.radii, 'No radius tokens found.');
           renderDensityTable('shadows-body', tokenData.shadows, 'No shadow tokens found.');
           renderSurfaces(tokenData.surfaces);
+          renderComponentPreview(tokenData);
           renderComponents(tokenData.components);
 
           setList(
