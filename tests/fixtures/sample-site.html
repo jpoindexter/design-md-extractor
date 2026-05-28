@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+  <head>
+    <style>
+      :root {
+        --brand: #ff5900;
+        --canvas: #ffffff;
+        --ink: #000000;
+        --muted: #60646c;
+      }
+      body {
+        margin: 0;
+        background: var(--canvas);
+        color: var(--ink);
+        font-family: Inter, system-ui, sans-serif;
+      }
+      main {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 80px 24px;
+      }
+      h1 {
+        font-size: 48px;
+        line-height: 1.1;
+        letter-spacing: -0.04em;
+      }
+      p {
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .button {
+        display: inline-flex;
+        background: var(--brand);
+        color: white;
+        border-radius: 8px;
+        padding: 10px 16px;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .card {
+        border: 1px solid #e5e5e5;
+        border-radius: 14px;
+        padding: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Design evidence that agents can use</h1>
+      <p>Extract tokens, components, and layout rules from rendered pages.</p>
+      <a class="button" href="/start">Get started</a>
+      <section class="card">
+        <h2>Fast local capture</h2>
+        <p>Run the extractor against public websites.</p>
+      </section>
+    </main>
+  </body>
+</html>
