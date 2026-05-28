@@ -33,6 +33,64 @@ function postJson(port: number, path: string, body: unknown): Promise<{ status: 
 }
 
 describe('createGuiServer', () => {
+  it('normalizes bare hostnames in extraction requests', async () => {
+    let receivedUrl = '';
+    const server = createGuiServer({
+      runExtraction: async (input) => {
+        receivedUrl = input.url;
+        return {
+          runId: 'www-example-com-123',
+          url: input.url,
+          outDir: '/tmp/www-example-com-123',
+          discoveredPages: [],
+          artifacts: {
+            designMd: '/runs/www-example-com-123/DESIGN.md',
+            evidenceJson: '/runs/www-example-com-123/evidence.json',
+            previewHtml: '/runs/www-example-com-123/preview.html',
+          },
+          summary: {
+            source: {
+              primaryUrl: input.url,
+              capturedAt: '2026-05-28T12:00:00.000Z',
+            },
+            styleThesis: 'test thesis',
+            bestScreenshotHref: null,
+            pages: [{ url: input.url, status: 'success' }],
+            colors: [],
+            typography: [],
+            spacing: [],
+            radii: [],
+            shadows: [],
+            surfaces: [],
+            warnings: [],
+            components: [],
+            screenshots: [],
+          },
+        };
+      },
+    });
+
+    await new Promise<void>((resolve) => {
+      server.listen(0, '127.0.0.1', resolve);
+    });
+
+    try {
+      const address = server.address();
+      const port = typeof address === 'object' && address ? address.port : 0;
+      const response = await postJson(port, '/api/extract', { url: 'www.example.com' });
+
+      expect(response.status).toBe(200);
+      expect(receivedUrl).toBe('https://www.example.com/');
+      expect(response.json).toMatchObject({
+        url: 'https://www.example.com/',
+      });
+    } finally {
+      await new Promise<void>((resolve, reject) => {
+        server.close((error) => (error ? reject(error) : resolve()));
+      });
+    }
+  });
+
   it('accepts extraction requests and returns artifact links', async () => {
     const server = createGuiServer({
       runExtraction: async (input) => ({

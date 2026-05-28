@@ -57,6 +57,12 @@ function readRequestJson(req: IncomingMessage): Promise<unknown> {
   });
 }
 
+function normalizeTargetUrl(input: unknown): string {
+  const raw = String(input ?? '').trim();
+  const hasScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(raw);
+  return new URL(hasScheme ? raw : `https://${raw}`).toString();
+}
+
 async function serveRunFile(res: ServerResponse, runsDir: string, requestPath: string): Promise<void> {
   const relative = decodeURIComponent(requestPath.replace(/^\/runs\//, ''));
   const absolute = resolve(runsDir, relative);
@@ -107,7 +113,7 @@ export function createGuiServer(options: CreateGuiServerOptions = {}): Server {
     if (req.method === 'POST' && url.pathname === '/api/extract') {
       try {
         const body = (await readRequestJson(req)) as { url?: unknown; maxPages?: unknown };
-        const targetUrl = new URL(String(body.url ?? '')).toString();
+        const targetUrl = normalizeTargetUrl(body.url);
         const maxPages = Number.isFinite(Number(body.maxPages)) ? Number(body.maxPages) : 7;
         const result = await runner({ url: targetUrl, maxPages });
         sendJson(res, 200, result);

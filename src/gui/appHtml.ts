@@ -1489,7 +1489,7 @@ export function renderAppHtml(): string {
         <form id="extract-form">
           <label>
             Website URL
-            <input id="url" name="url" type="url" placeholder="https://ui.shadcn.com" required>
+            <input id="url" name="url" type="text" inputmode="url" autocapitalize="none" spellcheck="false" placeholder="www.example.com or https://example.com" required>
           </label>
           <label>
             Coverage
