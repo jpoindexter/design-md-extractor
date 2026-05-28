@@ -25,6 +25,56 @@ function componentName(kind: string): string {
     .join(' ');
 }
 
+function normalizeStyleValue(value: string | undefined): string {
+  return String(value ?? '').trim().toLowerCase();
+}
+
+function nonTransparentColor(value: string | undefined): boolean {
+  const normalized = normalizeStyleValue(value);
+  return normalized !== '' && normalized !== 'transparent' && normalized !== 'rgba(0, 0, 0, 0)' && normalized !== '#00000000';
+}
+
+function numericPx(value: string | undefined): number {
+  const match = String(value ?? '').match(/([\\d.]+)/);
+  return match ? Number.parseFloat(match[1]) : 0;
+}
+
+function nonZeroBorder(value: string | undefined): boolean {
+  const normalized = normalizeStyleValue(value);
+  if (!normalized || normalized === 'none') return false;
+  return !/^0(?:\\.0+)?px\\b/.test(normalized) && !normalized.includes(' transparent');
+}
+
+function styleSignalScore(component: {
+  styles: Record<string, string>;
+  textSample: string;
+  bounds: { width: number; height: number };
+}): number {
+  let score = 0;
+  if (nonTransparentColor(component.styles.backgroundColor)) score += 3;
+  if (nonZeroBorder(component.styles.border)) score += 2;
+  if (numericPx(component.styles.borderRadius) > 0) score += 2;
+  if (numericPx(component.styles.padding) >= 8) score += 2;
+  if (normalizeStyleValue(component.styles.boxShadow) !== '' && normalizeStyleValue(component.styles.boxShadow) !== 'none') score += 2;
+  if (component.textSample.trim().length >= 10) score += 1;
+  if (component.bounds.width >= 120 && component.bounds.height >= 60) score += 1;
+  return score;
+}
+
+function styleSignature(styles: Record<string, string>): string {
+  return [
+    normalizeStyleValue(styles.color),
+    normalizeStyleValue(styles.backgroundColor),
+    normalizeStyleValue(styles.border),
+    normalizeStyleValue(styles.borderRadius),
+    normalizeStyleValue(styles.padding),
+    normalizeStyleValue(styles.fontFamily),
+    normalizeStyleValue(styles.fontSize),
+    normalizeStyleValue(styles.fontWeight),
+    normalizeStyleValue(styles.boxShadow),
+  ].join('|');
+}
+
 function isUsefulTokenValue(value: string | undefined, rejected: string[]): value is string {
   if (!value) return false;
   const normalized = value.trim().toLowerCase();
@@ -170,18 +220,29 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
       count: number;
       styles: Record<string, string>;
       bounds: { width: number; height: number };
+      signalScore: number;
     }
   >();
 
   for (const page of input.rawPages) {
     for (const component of page.components) {
-      const key = [component.kind, component.selector, component.textSample].join('|');
+      const key = [component.kind, styleSignature(component.styles)].join('|');
       const existing = componentMap.get(key);
       if (existing) {
         existing.count += 1;
+        if (component.textSample.length > existing.textSample.length) {
+          existing.textSample = component.textSample;
+        }
+        if (styleSignalScore(component) > existing.signalScore) {
+          existing.selector = component.selector;
+          existing.viewport = page.viewport;
+          existing.bounds = component.bounds;
+          existing.signalScore = styleSignalScore(component);
+        }
         continue;
       }
 
+      const signalScore = styleSignalScore(component);
       componentMap.set(key, {
         name: componentName(component.kind),
         kind: component.kind,
@@ -192,12 +253,17 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
         count: 1,
         styles: component.styles,
         bounds: component.bounds,
+        signalScore,
       });
     }
   }
 
   const components = Array.from(componentMap.values())
-    .sort((a, b) => b.count - a.count)
+    .filter((component) => component.signalScore > 0 || component.textSample.trim().length > 0)
+    .sort((a, b) => {
+      if (b.signalScore !== a.signalScore) return b.signalScore - a.signalScore;
+      return b.count - a.count;
+    })
     .slice(0, 80)
     .map((component) => ({
       ...component,
