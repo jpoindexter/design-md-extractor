@@ -23,6 +23,16 @@ const evidence: Evidence = {
         sampleSelectors: ['body'],
         confidence: 'high',
       },
+      {
+        name: 'Ink Black',
+        value: '#111111',
+        cssVariable: '--color-ink-black',
+        role: 'Primary text',
+        properties: ['color'],
+        frequency: 8,
+        sampleSelectors: ['h1', 'p'],
+        confidence: 'high',
+      },
     ],
     typography: [
       {
@@ -37,9 +47,9 @@ const evidence: Evidence = {
         confidence: 'high',
       },
     ],
-    spacing: [],
-    radii: [],
-    shadows: [],
+    spacing: [{ name: 'Space 1', value: '8px', confidence: 'high' }],
+    radii: [{ name: 'Radius 1', value: '6px', confidence: 'medium' }],
+    shadows: [{ name: 'Shadow 1', value: '0 8px 24px rgba(0,0,0,.12)', confidence: 'medium' }],
   },
   surfaces: [
     {
@@ -51,8 +61,30 @@ const evidence: Evidence = {
       confidence: 'high',
     },
   ],
-  components: [],
-  layout: { density: 'comfortable' },
+  components: [
+    {
+      name: 'Button',
+      kind: 'button',
+      role: 'Primary action',
+      textSample: 'Start',
+      viewport: 'desktop',
+      selector: '.button',
+      count: 2,
+      styles: {
+        backgroundColor: '#111111',
+        color: '#ffffff',
+        fontFamily: 'Inter',
+        fontSize: '16px',
+        fontWeight: '600',
+        borderRadius: '6px',
+        boxShadow: '0 8px 24px rgba(0,0,0,.12)',
+        padding: '12px 18px',
+      },
+      bounds: { width: 120, height: 44 },
+      confidence: 'high',
+    },
+  ],
+  layout: { density: 'comfortable', containerWidths: [1120], sectionGaps: ['64px'] },
   imagery: { strategy: 'product-focused', notes: ['No photography observed.'] },
   responsive: { notes: ['Desktop captured.'] },
   warnings: [],
@@ -66,6 +98,17 @@ describe('generateDesignMd', () => {
     expect(markdown).toContain('## 1. Style Thesis');
     expect(markdown).toContain('## 3. Tokens');
     expect(markdown).toContain('| Canvas White | `#ffffff` | `--color-canvas-white` | Page background | high |');
+    expect(markdown).toContain('### Spacing');
+    expect(markdown).toContain('| Space 1 | `8px` | high |');
+    expect(markdown).toContain('### Radii');
+    expect(markdown).toContain('### Shadows');
+    expect(markdown).toContain('### Button');
+    expect(markdown).toContain('- Color: background `#111111`, text `#ffffff`.');
+    expect(markdown).toContain('- Radius: `6px`.');
+    expect(markdown).toContain('### CSS Token Starter');
+    expect(markdown).toContain('--color-ink-black: #111111;');
+    expect(markdown).toContain('Container widths: `1120px`.');
+    expect(markdown).toContain('- Preserve the comfortable density');
     expect(markdown).toContain('## 11. Known Gaps');
   });
 });

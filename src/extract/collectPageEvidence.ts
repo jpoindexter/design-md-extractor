@@ -97,6 +97,23 @@ export async function collectPageEvidence(
       return `${style.borderWidth} ${style.borderStyle} ${color}`;
     }
 
+    function hasVisibleBorder(style: CSSStyleDeclaration): boolean {
+      return ['Top', 'Right', 'Bottom', 'Left'].some((side) => {
+        const width = style[`border${side}Width` as keyof CSSStyleDeclaration];
+        const borderStyle = style[`border${side}Style` as keyof CSSStyleDeclaration];
+        const color = style[`border${side}Color` as keyof CSSStyleDeclaration];
+        return (
+          typeof width === 'string' &&
+          typeof borderStyle === 'string' &&
+          typeof color === 'string' &&
+          numericPx(width) > 0 &&
+          borderStyle !== 'none' &&
+          borderStyle !== 'hidden' &&
+          normalizeColor(color) !== 'transparent'
+        );
+      });
+    }
+
     function selectorPath(element: Element): string {
       if (element.id) return `#${element.id}`;
       const parts: string[] = [];
@@ -128,7 +145,7 @@ export async function collectPageEvidence(
     function hasVisiblePaint(style: CSSStyleDeclaration): boolean {
       return (
         normalizeColor(style.backgroundColor) !== 'transparent' ||
-        normalizeColor(style.borderColor) !== 'transparent' ||
+        hasVisibleBorder(style) ||
         style.boxShadow !== 'none'
       );
     }
@@ -178,12 +195,42 @@ export async function collectPageEvidence(
       return null;
     }
 
+    function textSampleFor(element: Element): string {
+      return (element.textContent ?? '').replace(/\s+/g, ' ').trim().slice(0, 80);
+    }
+
+    function componentStyleScore(
+      kind: string,
+      style: CSSStyleDeclaration,
+      rect: DOMRect,
+      textSample: string,
+      childElementCount: number,
+    ): number {
+      let score = 0;
+      if (kind === 'button') score += 7;
+      if (kind === 'navigation') score += 5;
+      if (kind === 'card') score += 4;
+      if (kind === 'input') score += 3;
+      if (normalizeColor(style.backgroundColor) !== 'transparent') score += 5;
+      if (hasVisibleBorder(style)) score += 4;
+      if (numericPx(style.borderRadius) > 0) score += 4;
+      if (style.boxShadow !== 'none') score += 4;
+      if (numericPx(style.paddingTop) + numericPx(style.paddingRight) + numericPx(style.paddingBottom) + numericPx(style.paddingLeft) > 0) {
+        score += 3;
+      }
+      if (textSample.length > 0) score += 1;
+      if (rect.width >= 32 && rect.height >= 24) score += 1;
+      if (rect.width >= 120 && rect.height >= 60) score += 1;
+      if (childElementCount > 6 && !hasVisiblePaint(style)) score -= 4;
+      return score;
+    }
+
     const elements = Array.from(document.querySelectorAll('body, body *')).filter(isVisible);
     const colors: RawPageEvidence['colors'] = [];
     const typography: RawPageEvidence['typography'] = [];
-    const components: RawPageEvidence['components'] = [];
+    const componentCandidates: Array<RawPageEvidence['components'][number] & { score: number; order: number }> = [];
 
-    for (const element of elements) {
+    for (const [order, element] of elements.entries()) {
       const style = window.getComputedStyle(element);
       const selector = selectorPath(element);
 
@@ -206,26 +253,45 @@ export async function collectPageEvidence(
 
       const rect = element.getBoundingClientRect();
       const kind = componentKind(element, style, rect);
-      if (kind && components.length < maxComponents) {
-        components.push({
+      if (kind) {
+        const textSample = textSampleFor(element);
+        componentCandidates.push({
           kind,
           selector,
-          textSample: element.textContent?.trim().slice(0, 80) ?? '',
+          textSample,
           styles: {
             color: normalizeColor(style.color),
             backgroundColor: normalizeColor(style.backgroundColor),
+            border: borderValue(style),
             borderRadius: style.borderRadius,
             padding: style.padding,
+            boxShadow: normalizeColorsInCssValue(style.boxShadow),
+            font: style.font,
             fontFamily: style.fontFamily,
             fontSize: style.fontSize,
             fontWeight: style.fontWeight,
-            boxShadow: normalizeColorsInCssValue(style.boxShadow),
-            border: borderValue(style),
+            lineHeight: style.lineHeight,
           },
           bounds: { width: rect.width, height: rect.height },
+          score: componentStyleScore(kind, style, rect, textSample, element.children.length),
+          order,
         });
       }
     }
+
+    const components = componentCandidates
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return a.order - b.order;
+      })
+      .slice(0, maxComponents)
+      .map((component) => ({
+        kind: component.kind,
+        selector: component.selector,
+        textSample: component.textSample,
+        styles: component.styles,
+        bounds: component.bounds,
+      }));
 
     return { colors, typography, components };
   }, options);

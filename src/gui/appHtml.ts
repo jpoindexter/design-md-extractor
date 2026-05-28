@@ -9,12 +9,13 @@ export function renderAppHtml(): string {
       :root {
         --ink: #141715;
         --muted: #656b66;
-        --line: #d4d9d4;
-        --line-strong: #c1c7c1;
-        --canvas: #ecefed;
-        --paper: #f6f7f6;
+        --quiet: #8a908b;
+        --line: #dfe4df;
+        --line-strong: #c8cec8;
+        --canvas: #edf0ed;
+        --paper: #fbfcfb;
         --panel: #ffffff;
-        --rail: #f0f2f0;
+        --rail: #f6f8fb;
         --accent: #1b2f24;
         --accent-soft: #3a5446;
         --error: #9f1239;
@@ -37,21 +38,21 @@ export function renderAppHtml(): string {
       .side {
         border-bottom: 1px solid var(--line);
         background: var(--paper);
-        padding: 14px 28px;
+        padding: 13px 32px;
         position: sticky;
         top: 0;
         z-index: 20;
         display: grid;
-        grid-template-columns: auto minmax(0, 1fr) minmax(210px, 280px);
-        gap: 18px;
+        grid-template-columns: auto minmax(0, 1fr) minmax(180px, 240px);
+        gap: 20px;
         align-items: end;
       }
-      .brand { display: flex; align-items: center; gap: 10px; margin: 0 8px 3px 0; min-width: 220px; }
+      .brand { display: flex; align-items: center; gap: 10px; margin: 0 8px 3px 0; min-width: 200px; }
       .mark {
-        width: 28px;
-        height: 28px;
+        width: 26px;
+        height: 26px;
         border: 1.5px solid var(--ink);
-        border-radius: 7px;
+        border-radius: 6px;
         display: grid;
         place-items: center;
         background: #fff;
@@ -63,18 +64,19 @@ export function renderAppHtml(): string {
         border-radius: 2px;
         background: var(--accent-soft);
       }
-      h1 { margin: 0; font-size: 19px; line-height: 1.2; }
+      h1 { margin: 0; font-size: 17px; line-height: 1.15; }
       .lede {
         margin: 6px 0 0;
         color: var(--muted);
-        font-size: 12px;
+        font-size: 11px;
         line-height: 1.45;
       }
       form {
         display: grid;
-        grid-template-columns: minmax(280px, 1.4fr) minmax(190px, 0.72fr) minmax(180px, 0.68fr) 150px;
+        grid-template-columns: minmax(220px, 1.45fr) minmax(160px, 0.72fr) minmax(150px, 0.68fr) 140px;
         gap: 10px;
         align-items: end;
+        min-width: 0;
       }
       label {
         display: grid;
@@ -87,9 +89,9 @@ export function renderAppHtml(): string {
       }
       input, select {
         width: 100%;
-        min-height: 40px;
+        min-height: 38px;
         border: 1px solid var(--line);
-        border-radius: 7px;
+        border-radius: 6px;
         background: #fff;
         color: var(--ink);
         padding: 9px 10px;
@@ -101,8 +103,8 @@ export function renderAppHtml(): string {
       }
       .run {
         border: 0;
-        min-height: 42px;
-        border-radius: 7px;
+        min-height: 40px;
+        border-radius: 6px;
         background: var(--accent-soft);
         color: #fff;
         font-weight: 710;
@@ -113,17 +115,18 @@ export function renderAppHtml(): string {
       .run:disabled { opacity: 0.6; cursor: wait; }
       .status {
         margin: 0;
-        min-height: 44px;
+        min-height: 42px;
         border: 1px solid var(--line);
-        border-radius: 7px;
-        background: #eef1ef;
+        border-radius: 6px;
+        background: #f2f4f2;
         color: var(--muted);
         font-size: 12px;
         line-height: 1.45;
         padding: 11px;
+        min-width: 0;
       }
       main {
-        padding: 28px 40px 40px;
+        padding: 34px 42px 52px;
         overflow: auto;
       }
       .empty {
@@ -137,14 +140,14 @@ export function renderAppHtml(): string {
         padding: 34px;
         text-align: center;
       }
-      .result { display: none; gap: 14px; }
+      .result { display: none; gap: 14px; max-width: 1460px; margin: 0 auto; }
       .result.active { display: grid; }
       .result-head {
         display: flex;
         gap: 14px;
         justify-content: space-between;
         align-items: flex-start;
-        padding: 0 2px;
+        padding: 0 2px 2px;
       }
       .crumb {
         margin: 0 0 8px;
@@ -153,9 +156,11 @@ export function renderAppHtml(): string {
       }
       .result-head h2 {
         margin: 0;
-        font-size: 46px;
-        line-height: 0.95;
+        font-size: 44px;
+        line-height: 1.02;
         font-weight: 520;
+        max-width: 820px;
+        overflow-wrap: anywhere;
       }
       #result-meta {
         margin: 10px 0 0;
@@ -170,7 +175,7 @@ export function renderAppHtml(): string {
       .actions a {
         text-decoration: none;
         border: 1px solid var(--line);
-        border-radius: 7px;
+        border-radius: 6px;
         background: #fff;
         color: var(--ink);
         font-size: 11px;
@@ -181,84 +186,109 @@ export function renderAppHtml(): string {
       }
       .workspace {
         display: grid;
-        grid-template-columns: minmax(0, 720px) minmax(520px, 1fr);
-        gap: 16px;
-        align-items: start;
+        grid-template-columns: minmax(620px, 1fr) minmax(500px, 0.78fr);
+        gap: 0;
+        align-items: stretch;
         max-width: none;
-      }
-      .reference { display: grid; gap: 14px; }
-      .panel {
         border: 1px solid var(--line);
-        border-radius: 10px;
+        border-radius: 12px;
         background: var(--panel);
-        padding: 14px;
+        overflow: clip;
+        box-shadow: 0 10px 34px rgba(20, 23, 21, 0.035);
       }
+      .reference {
+        display: grid;
+        gap: 0;
+        background: #fff;
+        padding: 36px 42px 52px;
+        border-right: 1px solid var(--line);
+      }
+      .panel {
+        border: 0;
+        border-top: 1px solid var(--line);
+        border-radius: 0;
+        background: transparent;
+        padding: 36px 0;
+      }
+      .reference > .panel:first-child { border-top: 0; padding-top: 0; }
+      .reference > .panel:last-child { padding-bottom: 0; }
       .panel h3 {
-        margin: 0 0 11px;
-        font-size: 11px;
+        margin: 0 0 18px;
+        font-size: 15px;
         letter-spacing: 0;
-        text-transform: uppercase;
-        color: var(--muted);
+        text-transform: none;
+        color: var(--ink);
+        font-weight: 660;
       }
       .hero-figure {
         margin: 0;
         border: 1px solid var(--line);
-        border-radius: 10px;
+        border-radius: 8px;
         overflow: hidden;
-        background: #fff;
+        background: #deddd8;
       }
       .hero-figure img {
         width: 100%;
-        aspect-ratio: 16 / 9;
-        object-fit: cover;
+        height: 420px;
+        max-height: 52vh;
+        object-fit: contain;
         display: block;
       }
       .hero-meta {
-        padding: 10px 11px;
+        padding: 11px 12px;
         border-top: 1px solid var(--line);
         color: var(--muted);
         font-size: 12px;
       }
       .thumb-strip {
-        margin-top: 10px;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(126px, 1fr));
-        gap: 8px;
+        margin-top: 12px;
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 2px;
       }
       .thumb-strip a {
         border: 1px solid var(--line);
         border-radius: 8px;
         overflow: hidden;
         display: block;
+        flex: 0 0 138px;
+        background: #deddd8;
       }
       .thumb-strip img {
         width: 100%;
         aspect-ratio: 16 / 10;
-        object-fit: cover;
+        object-fit: contain;
         display: block;
       }
-      .thesis { margin: 0; font-size: 14px; line-height: 1.55; }
+      .thesis {
+        margin: 0;
+        max-width: 720px;
+        font-size: 18px;
+        line-height: 1.55;
+        color: #303530;
+      }
       .profile-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+        gap: 12px;
       }
       .profile-card {
         border: 1px solid var(--line);
         border-radius: 8px;
         background: #fff;
-        padding: 10px;
+        padding: 14px;
       }
       .profile-card h4 {
-        margin: 0 0 6px;
-        color: var(--muted);
+        margin: 0 0 8px;
+        color: var(--quiet);
         font-size: 10px;
         text-transform: uppercase;
         letter-spacing: 0;
       }
       .profile-card p {
         margin: 0;
-        font-size: 12px;
+        font-size: 14px;
         line-height: 1.45;
       }
       .token-pills {
@@ -278,30 +308,30 @@ export function renderAppHtml(): string {
       .category-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 8px;
-        margin-bottom: 10px;
+        gap: 12px;
+        margin-bottom: 18px;
       }
       .category {
         border: 1px solid var(--line);
         border-radius: 8px;
         background: #fff;
-        padding: 9px;
+        padding: 13px;
       }
       .category h4 {
-        margin: 0 0 6px;
-        color: var(--muted);
+        margin: 0 0 8px;
+        color: var(--quiet);
         font-size: 10px;
         text-transform: uppercase;
         letter-spacing: 0;
       }
       .category .muted {
         margin: 0;
-        font-size: 11px;
+        font-size: 12px;
       }
       .swatch-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 8px;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 12px;
       }
       .swatch-item {
         border: 1px solid var(--line);
@@ -309,9 +339,17 @@ export function renderAppHtml(): string {
         overflow: hidden;
         background: #fff;
       }
-      .swatch-chip { height: 56px; border-bottom: 1px solid var(--line); }
-      .swatch-meta { padding: 8px 9px 9px; display: grid; gap: 3px; }
-      .swatch-meta strong { font-size: 12px; }
+      .swatch-item:nth-child(1),
+      .swatch-item:nth-child(2) {
+        grid-column: span 2;
+      }
+      .swatch-item:nth-child(1) .swatch-chip,
+      .swatch-item:nth-child(2) .swatch-chip {
+        height: 124px;
+      }
+      .swatch-chip { height: 92px; border-bottom: 1px solid var(--line); }
+      .swatch-meta { padding: 12px 13px 13px; display: grid; gap: 4px; min-height: 98px; }
+      .swatch-meta strong { font-size: 14px; }
       .swatch-meta code {
         font-family: var(--mono);
         font-size: 11px;
@@ -321,7 +359,7 @@ export function renderAppHtml(): string {
       .dense-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 12px;
+        font-size: 13px;
       }
       .dense-table th {
         text-align: left;
@@ -332,21 +370,30 @@ export function renderAppHtml(): string {
       }
       .dense-table td {
         border-bottom: 1px solid var(--line);
-        padding: 7px 0;
+        padding: 9px 0;
         vertical-align: top;
       }
       .dense-table tr:last-child td { border-bottom: 0; }
       .muted { color: var(--muted); font-size: 12px; }
+      .panel > .muted {
+        margin: 22px 0 10px;
+        color: var(--quiet);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+      .panel > .muted:first-child { margin-top: 0; }
       .scale-list {
         display: grid;
-        gap: 8px;
-        margin-bottom: 12px;
+        gap: 10px;
+        margin-bottom: 18px;
       }
       .scale-row {
         border: 1px solid var(--line);
         border-radius: 8px;
         background: #fff;
-        padding: 8px 10px;
+        padding: 12px 14px;
       }
       .scale-row .meta {
         color: var(--muted);
@@ -354,23 +401,23 @@ export function renderAppHtml(): string {
         font-family: var(--mono);
       }
       .scale-row .sample {
-        margin: 6px 0 0;
+        margin: 8px 0 0;
         line-height: 1.06;
-        white-space: nowrap;
+        white-space: normal;
         overflow: hidden;
-        text-overflow: ellipsis;
+        overflow-wrap: anywhere;
       }
       .font-cards {
-        margin-top: 10px;
+        margin-top: 18px;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
+        gap: 12px;
       }
       .font-card {
         border: 1px solid var(--line);
         border-radius: 8px;
         background: #fff;
-        padding: 8px 10px;
+        padding: 13px 14px;
       }
       .font-card h4 {
         margin: 0;
@@ -389,35 +436,32 @@ export function renderAppHtml(): string {
       }
       .visual-token-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 10px;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 12px;
       }
       .visual-token-grid + .muted {
         margin-top: 14px;
       }
       .visual-token-card {
-        border: 1px solid var(--line);
+        border: 0;
         border-radius: 8px;
-        background: #fff;
-        padding: 10px;
+        background: #fafbfa;
+        box-shadow: inset 0 0 0 1px var(--line);
+        padding: 12px;
         min-width: 0;
       }
       .visual-token-card h4 {
-        margin: 0 0 6px;
-        font-size: 12px;
+        margin: 0 0 9px;
+        font-size: 13px;
       }
       .token-demo {
         border: 1px solid rgba(0, 0, 0, 0.16);
-        min-height: 86px;
-        background:
-          linear-gradient(45deg, rgba(0, 0, 0, 0.035) 25%, transparent 25%),
-          linear-gradient(-45deg, rgba(0, 0, 0, 0.035) 25%, transparent 25%),
-          #f8f9f8;
-        background-size: 14px 14px;
+        min-height: 112px;
+        background: #f7f8fb;
         overflow: hidden;
       }
       .padding-demo {
-        max-height: 150px;
+        max-height: 184px;
       }
       .padding-demo-inner {
         min-height: 38px;
@@ -430,18 +474,18 @@ export function renderAppHtml(): string {
         font-size: 11px;
       }
       .radius-demo {
-        height: 86px;
+        height: 112px;
         border: 1px solid rgba(0, 0, 0, 0.2);
         background: #f7f8fb;
       }
       .shadow-demo {
-        height: 86px;
+        height: 112px;
         border: 1px solid rgba(0, 0, 0, 0.08);
         border-radius: 8px;
         background: #fff;
       }
       .surface-demo {
-        min-height: 92px;
+        min-height: 112px;
         border: 1px solid rgba(0, 0, 0, 0.14);
         border-radius: 8px;
         padding: 10px;
@@ -473,7 +517,7 @@ export function renderAppHtml(): string {
       .guidelines {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+        gap: 28px;
       }
       .guidelines h4 {
         margin: 0 0 7px;
@@ -483,13 +527,17 @@ export function renderAppHtml(): string {
       }
       .guidelines ul {
         margin: 0;
-        padding-left: 16px;
+        padding-left: 18px;
         color: var(--ink);
-        font-size: 12px;
-        line-height: 1.4;
+        font-size: 13px;
+        line-height: 1.5;
       }
-      .guidelines li + li { margin-top: 5px; }
-      .component-list { display: grid; gap: 8px; }
+      .guidelines li + li { margin-top: 8px; }
+      .component-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+        gap: 12px;
+      }
       .component-row {
         border-bottom: 1px solid var(--line);
         display: flex;
@@ -510,25 +558,38 @@ export function renderAppHtml(): string {
         gap: 10px;
       }
       .component-specimen {
-        border: 1px solid var(--line);
+        border: 0;
         border-radius: 8px;
-        background: #fff;
-        padding: 10px;
+        background: #fafbfa;
+        box-shadow: inset 0 0 0 1px var(--line);
+        padding: 12px;
         min-width: 0;
       }
       .component-specimen-stage {
-        min-height: 132px;
-        border: 1px dashed rgba(0, 0, 0, 0.18);
+        min-height: 178px;
+        border: 1px solid var(--line);
         border-radius: 8px;
-        background: #f8f9f8;
+        background: #fff;
         display: grid;
         place-items: center;
-        padding: 14px;
+        padding: 18px;
         overflow: hidden;
       }
       .component-specimen-object {
         max-width: 100%;
         overflow: hidden;
+        overflow-wrap: anywhere;
+      }
+      .component-specimen-object.is-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .component-specimen-object.is-button span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       .component-specimen-object.is-card,
       .component-specimen-object.is-navigation {
@@ -538,31 +599,32 @@ export function renderAppHtml(): string {
       }
       .component-specimen-title {
         display: block;
-        margin-top: 8px;
-        font-size: 12px;
+        margin-top: 10px;
+        font-size: 13px;
       }
       .component-specimen-meta {
-        margin-top: 4px;
+        margin-top: 5px;
         color: var(--muted);
         font-family: var(--mono);
-        font-size: 10px;
+        font-size: 11px;
         line-height: 1.35;
         overflow-wrap: anywhere;
       }
       .component-preview {
-        border: 1px solid var(--line);
+        border: 0;
         border-radius: 8px;
-        padding: 12px;
-        background: #fff;
+        padding: 14px;
+        background: #fafbfa;
+        box-shadow: inset 0 0 0 1px var(--line);
       }
       .preview-banner {
         border-radius: 8px;
-        padding: 14px;
-        margin-bottom: 10px;
+        padding: 22px;
+        margin-bottom: 12px;
       }
       .preview-banner h4 {
         margin: 0;
-        font-size: 25px;
+        font-size: 48px;
         line-height: 1;
       }
       .preview-banner p {
@@ -570,10 +632,23 @@ export function renderAppHtml(): string {
         font-size: 13px;
         line-height: 1.4;
       }
+      .preview-palette {
+        display: flex;
+        gap: 8px;
+        margin: 12px 0;
+      }
+      .preview-palette span {
+        display: block;
+        height: 28px;
+        flex: 1 1 0;
+        border-radius: 6px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+      }
       .preview-metrics {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 8px;
+        gap: 10px;
+        margin-top: 12px;
       }
       .preview-metric {
         border: 1px solid rgba(0, 0, 0, 0.12);
@@ -610,7 +685,7 @@ export function renderAppHtml(): string {
       .component-samples {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
+        gap: 12px;
         align-items: center;
         margin-top: 12px;
       }
@@ -624,13 +699,13 @@ export function renderAppHtml(): string {
         margin-top: 12px;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
+        gap: 10px;
       }
       .style-chip {
         border: 1px solid rgba(0, 0, 0, 0.12);
         border-radius: 6px;
         background: rgba(255, 255, 255, 0.72);
-        padding: 8px;
+        padding: 10px;
         font-size: 11px;
         overflow-wrap: anywhere;
       }
@@ -657,24 +732,25 @@ export function renderAppHtml(): string {
       .mono-list li + li { margin-top: 4px; }
       .export-pane {
         position: sticky;
-        top: 92px;
-        max-height: calc(100vh - 118px);
+        top: 86px;
+        max-height: calc(100vh - 112px);
         overflow: hidden;
-        border-color: var(--line-strong);
-        background: var(--rail);
+        border: 0;
+        border-radius: 0;
+        background: #f7f8fb;
         padding: 0;
         display: flex;
         flex-direction: column;
       }
       .export-pane h3 {
-        padding: 14px 18px 0;
+        padding: 20px 22px 0;
       }
       .tabs {
         display: flex;
         flex-wrap: wrap;
-        gap: 18px;
+        gap: 20px;
         margin: 0;
-        padding: 0 18px;
+        padding: 0 22px;
         border-bottom: 1px solid var(--line);
       }
       .export-actions {
@@ -682,7 +758,7 @@ export function renderAppHtml(): string {
         align-items: center;
         justify-content: space-between;
         gap: 10px;
-        padding: 10px 18px;
+        padding: 11px 22px;
         border-bottom: 1px solid var(--line);
       }
       .mode-tabs {
@@ -714,13 +790,13 @@ export function renderAppHtml(): string {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 6px;
-        padding: 0 18px 10px;
+        padding: 0 22px 12px;
         margin: 0;
         border-bottom: 1px solid var(--line);
       }
       .download-btn {
         border: 1px solid var(--line);
-        border-radius: 7px;
+        border-radius: 6px;
         background: #fff;
         color: var(--ink);
         min-height: 32px;
@@ -736,7 +812,7 @@ export function renderAppHtml(): string {
         border-radius: 0;
         min-height: 42px;
         padding: 0;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 620;
         cursor: pointer;
       }
@@ -749,7 +825,7 @@ export function renderAppHtml(): string {
         display: none;
         min-height: 0;
         flex: 1;
-        padding: 12px 18px 18px;
+        padding: 14px 22px 22px;
       }
       .tab-panel.active {
         display: flex;
@@ -766,12 +842,12 @@ export function renderAppHtml(): string {
       }
       .excerpt {
         margin: 0;
-        border: 1px solid var(--line);
-        border-radius: 8px;
+        border: 1px solid #e7ebee;
+        border-radius: 7px;
         background: #fff;
-        padding: 10px;
-        font-size: 12px;
-        line-height: 1.45;
+        padding: 15px;
+        font-size: 11px;
+        line-height: 1.65;
         font-family: var(--mono);
         min-height: 0;
         max-height: none;
@@ -781,14 +857,14 @@ export function renderAppHtml(): string {
       }
       .code-block {
         margin: 0;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: #f8f9f8;
+        border: 1px solid #e7ebee;
+        border-radius: 7px;
+        background: #fff;
         color: #1f2722;
         font-family: var(--mono);
         font-size: 11px;
-        line-height: 1.5;
-        padding: 10px;
+        line-height: 1.65;
+        padding: 15px;
         min-height: 0;
         max-height: none;
         flex: 1;
@@ -798,12 +874,14 @@ export function renderAppHtml(): string {
       .error { color: var(--error); }
       .hint {
         margin: 0;
-        padding: 10px 18px 8px;
+        padding: 10px 22px 8px;
         color: var(--muted);
         font-size: 11px;
       }
       @media (max-width: 1220px) {
         .workspace { grid-template-columns: minmax(0, 1fr); }
+        .reference { border-right: 0; }
+        .result-head h2 { font-size: 42px; }
         .export-pane {
           position: static;
           order: -1;
@@ -824,6 +902,10 @@ export function renderAppHtml(): string {
       @media (max-width: 760px) {
         main { padding: 12px; }
         .result-head h2 { font-size: 34px; }
+        .preview-banner h4 { font-size: 34px; }
+        .reference { padding: 18px; }
+        .workspace { border-radius: 8px; }
+        .hero-figure img { height: 260px; }
         form { grid-template-columns: minmax(0, 1fr); }
         .side { padding: 16px 12px; }
         .export-pane {
@@ -837,8 +919,11 @@ export function renderAppHtml(): string {
         .tri-grid,
         .profile-grid,
         .preview-metrics,
-        .downloads {
+        .downloads,
+        .swatch-item:nth-child(1),
+        .swatch-item:nth-child(2) {
           grid-template-columns: minmax(0, 1fr);
+          grid-column: auto;
         }
       }
     </style>
@@ -1047,6 +1132,8 @@ export function renderAppHtml(): string {
       let latestExportData = null;
       let activeExportTab = 'design';
       let exportMode = 'extended';
+      let currentHostname = 'Style extraction';
+      let currentThesis = '';
 
       if (aiTarget) {
         try {
@@ -1156,26 +1243,26 @@ export function renderAppHtml(): string {
 
       function visibleComponentBackground(component, tokenData) {
         const styles = component && component.styles ? component.styles : {};
-        if (styles.backgroundColor && !isTransparentColor(styles.backgroundColor)) {
+        if (styles.backgroundColor) {
           return cssTokenValue(styles.backgroundColor, '#ffffff');
         }
         const surface = normalizeList(tokenData && tokenData.surfaces).find((item) => item.value && !isTransparentColor(item.value));
-        return surface ? safeColorValue(surface.value) : '#ffffff';
+        return surface ? safeColorValue(surface.value) : 'transparent';
       }
 
       function visibleComponentBorder(component) {
         const styles = component && component.styles ? component.styles : {};
         const border = String(styles.border || '').trim();
-        if (border && !/^0(?:px)?\\s+/i.test(border) && !border.includes('transparent')) {
+        if (border) {
           return cssTokenValue(border, '1px solid rgba(0,0,0,0.18)');
         }
-        return '1px solid rgba(0,0,0,0.18)';
+        return '0 solid transparent';
       }
 
       function readableComponentText(component, background) {
         const styles = component && component.styles ? component.styles : {};
         const color = cssTokenValue(styles.color, '');
-        if (color && Math.abs(colorLuminance(color) - colorLuminance(background)) >= 0.32) {
+        if (color) {
           return color;
         }
         return contrastTextColor(background);
@@ -1204,21 +1291,28 @@ export function renderAppHtml(): string {
       function specimenStyleForComponent(component, tokenData) {
         const styles = component && component.styles ? component.styles : {};
         const bounds = component && component.bounds ? component.bounds : {};
-        const width = bounds.width ? Math.min(Math.max(Number(bounds.width), 120), 340) + 'px' : '180px';
-        const height = bounds.height ? Math.min(Math.max(Number(bounds.height), 70), 190) + 'px' : '100px';
+        const kind = String(component && component.kind ? component.kind : '').toLowerCase();
+        const isButton = kind === 'button' || kind === 'link';
+        const rawWidth = Number(bounds.width || 0);
+        const rawHeight = Number(bounds.height || 0);
+        const width = rawWidth ? Math.min(Math.max(rawWidth, isButton ? 58 : 128), isButton ? 260 : 360) + 'px' : isButton ? 'auto' : '190px';
+        const height = rawHeight ? Math.min(Math.max(rawHeight, isButton ? 30 : 72), isButton ? 72 : 210) + 'px' : isButton ? '36px' : '110px';
         const background = visibleComponentBackground(component, tokenData);
+        const paddingFallback = isButton ? '8px 12px' : '16px';
+        const sizeRules = isButton
+          ? ['min-width:' + width, 'min-height:' + height]
+          : ['width:' + width, 'min-height:' + height];
         return [
           'color:' + readableComponentText(component, background),
           'background:' + background,
           'border:' + visibleComponentBorder(component),
           'border-radius:' + cssTokenValue(styles.borderRadius, '0px'),
-          'padding:' + cssTokenValue(styles.padding, '16px'),
+          'padding:' + cssTokenValue(styles.padding, paddingFallback),
           'font-family:' + cssTokenValue(styles.fontFamily, 'inherit'),
           'font-size:' + cssTokenValue(styles.fontSize, '13px'),
           'font-weight:' + cssTokenValue(styles.fontWeight, '500'),
           'box-shadow:' + cssTokenValue(styles.boxShadow, 'none'),
-          'width:' + width,
-          'min-height:' + height,
+          ...sizeRules,
         ].join(';');
       }
 
@@ -1292,6 +1386,19 @@ export function renderAppHtml(): string {
         const px = numericPx(fontSize);
         if (!px || !Number.isFinite(px)) return '18px';
         return Math.max(12, Math.min(px, 74)) + 'px';
+      }
+
+      function typeSpecimenCopy(item) {
+        const role = String(item && item.role ? item.role : '').toLowerCase();
+        const size = numericPx(item && item.fontSize ? item.fontSize : '');
+        if (size > 32 || role.includes('heading') || role.includes('display') || role.includes('title')) {
+          return currentHostname;
+        }
+        if (role.includes('link') || role.includes('nav')) {
+          return 'Studio Projects About Contact';
+        }
+        const sentence = String(currentThesis || '').split('.').find((line) => line.trim().length > 20);
+        return sentence ? sentence.trim() : 'A practical style system grounded in captured browser evidence.';
       }
 
       function clampPaddingValue(value) {
@@ -1845,7 +1952,7 @@ export function renderAppHtml(): string {
           .map((item) => [
             '<article class="scale-row">',
             '<div class="meta">' + escapeHtml((item.role || 'text') + ' · ' + (item.fontSize || '16px') + ' / ' + (item.fontWeight || '400')) + '</div>',
-            '<p class="sample" style="font-family:' + escapeHtml(item.fontFamily || 'sans-serif') + '; font-size:' + escapeHtml(clampSpecimenSize(item.fontSize || '16px')) + '; font-weight:' + escapeHtml(item.fontWeight || '400') + '; letter-spacing:' + escapeHtml(item.letterSpacing || 'normal') + '">THE QUICK BROWN FOX JUMPS</p>',
+            '<p class="sample" style="font-family:' + escapeHtml(item.fontFamily || 'sans-serif') + '; font-size:' + escapeHtml(clampSpecimenSize(item.fontSize || '16px')) + '; font-weight:' + escapeHtml(item.fontWeight || '400') + '; letter-spacing:' + escapeHtml(item.letterSpacing || 'normal') + '">' + escapeHtml(typeSpecimenCopy(item)) + '</p>',
             '</article>',
           ].join(''))
           .join('');
@@ -1990,6 +2097,12 @@ export function renderAppHtml(): string {
         target.innerHTML = components
           .map((component) => {
             const styles = component.styles || {};
+            const kind = String(component.kind || 'component').toLowerCase();
+            const label = String(component.textSample || component.name || component.role || 'Component').slice(0, 90);
+            const objectContent =
+              kind === 'button' || kind === 'link'
+                ? '<span>' + escapeHtml(label) + '</span>'
+                : '<strong>' + escapeHtml(component.name || 'Component') + '</strong><span>' + escapeHtml(label || 'component') + '</span>';
             const meta = [
               styles.border ? 'border ' + styles.border : '',
               styles.borderRadius ? 'radius ' + styles.borderRadius : '',
@@ -1999,10 +2112,7 @@ export function renderAppHtml(): string {
             return [
               '<article class="component-specimen">',
               '<div class="component-specimen-stage">',
-              '<div class="component-specimen-object is-' + escapeHtml(component.kind || 'component') + '" style="' + escapeHtml(specimenStyleForComponent(component, tokenData)) + '">',
-              '<strong>' + escapeHtml(component.name || 'Component') + '</strong>',
-              '<span>' + escapeHtml(String(component.textSample || component.role || 'component').slice(0, 90)) + '</span>',
-              '</div>',
+              '<div class="component-specimen-object is-' + escapeHtml(kind) + '" style="' + escapeHtml(specimenStyleForComponent(component, tokenData)) + '">' + objectContent + '</div>',
               '</div>',
               '<strong class="component-specimen-title">' + escapeHtml(component.name || 'Component') + ' · ' + escapeHtml(String(component.count || 0)) + ' samples · ' + escapeHtml(component.confidence || 'low') + '</strong>',
               '<div class="component-specimen-meta">' + escapeHtml(meta || component.selector || '') + '</div>',
@@ -2020,9 +2130,6 @@ export function renderAppHtml(): string {
         const previewLift = colorLuminance(surface) > 0.56 ? '#ffffff' : 'rgba(255,255,255,0.1)';
         const headlineFont = tokenData.typography[0] ? tokenData.typography[0].fontFamily : 'sans-serif';
         const bodyFont = tokenData.typography[1] ? tokenData.typography[1].fontFamily : headlineFont;
-        const metricA = tokenData.components[0] ? tokenData.components[0].name : 'Signal';
-        const metricB = tokenData.components[1] ? tokenData.components[1].name : 'Coverage';
-        const metricC = tokenData.components[2] ? tokenData.components[2].name : 'Density';
         const sampleComponents = normalizeList(tokenData.components)
           .filter((component) => {
             const label = String(component.textSample || component.name || '').trim();
@@ -2034,12 +2141,20 @@ export function renderAppHtml(): string {
               '<div class="component-samples">',
               sampleComponents
                 .map((component) => {
+                  const kind = String(component.kind || 'component').toLowerCase();
                   const label = String(component.textSample || component.name || component.kind || 'Component').trim().slice(0, 70);
-                  return '<div class="sample-component component-specimen-object is-' + escapeHtml(component.kind || 'component') + '" style="' + escapeHtml(specimenStyleForComponent(component, tokenData)) + '"><strong>' + escapeHtml(component.name || 'Component') + '</strong><span>' + escapeHtml(label || 'Component') + '</span></div>';
+                  const content =
+                    kind === 'button' || kind === 'link'
+                      ? '<span>' + escapeHtml(label || 'Component') + '</span>'
+                      : '<strong>' + escapeHtml(component.name || 'Component') + '</strong><span>' + escapeHtml(label || 'Component') + '</span>';
+                  return '<div class="sample-component component-specimen-object is-' + escapeHtml(kind) + '" style="' + escapeHtml(specimenStyleForComponent(component, tokenData)) + '">' + content + '</div>';
                 })
                 .join(''),
               '</div>',
             ].join('')
+          : '';
+        const paletteHtml = tokenData.colors.length
+          ? '<div class="preview-palette">' + tokenData.colors.slice(0, 5).map((color) => '<span style="background:' + escapeHtml(safeColorValue(color.value)) + '"></span>').join('') + '</div>'
           : '';
         const firstStyled = sampleComponents[0] || tokenData.components.find((component) => component.styles) || null;
         const firstStyles = firstStyled && firstStyled.styles ? firstStyled.styles : {};
@@ -2053,15 +2168,11 @@ export function renderAppHtml(): string {
         target.innerHTML = [
           '<div class="component-preview" style="background:' + escapeHtml(surface) + '; color:' + escapeHtml(textColor) + '; font-family:' + escapeHtml(bodyFont) + '">',
           '<div class="preview-banner" style="background:linear-gradient(140deg, ' + escapeHtml(surface) + ', ' + escapeHtml(previewLift) + '); border:1px solid rgba(0,0,0,0.08)">',
-          '<h4 style="font-family:' + escapeHtml(headlineFont) + '">STYLE SIGNAL</h4>',
-          '<p>Previewing how extracted tokens feel when applied to UI blocks.</p>',
+          '<h4 style="font-family:' + escapeHtml(headlineFont) + '">' + escapeHtml(currentHostname) + '</h4>',
+          '<p>' + escapeHtml((currentThesis || 'Previewing how extracted tokens feel when applied to UI blocks.').slice(0, 210)) + '</p>',
           '</div>',
+          paletteHtml,
           sampleHtml,
-          '<div class="preview-metrics">',
-          '<div class="preview-metric"><strong>' + escapeHtml(metricA) + '</strong><span>Active</span></div>',
-          '<div class="preview-metric"><strong>' + escapeHtml(metricB) + '</strong><span>' + escapeHtml(String(tokenData.colors.length)) + ' tokens</span></div>',
-          '<div class="preview-metric"><strong>' + escapeHtml(metricC) + '</strong><span>' + escapeHtml(String(tokenData.typography.length)) + ' styles</span></div>',
-          '</div>',
           '<div class="component-style-grid">',
           styleGrid.map(([label, value]) => '<div class="style-chip"><strong>' + escapeHtml(label) + '</strong>' + escapeHtml(value) + '</div>').join(''),
           '</div>',
@@ -2104,6 +2215,8 @@ export function renderAppHtml(): string {
           result.classList.add('active');
 
           const hostname = new URL(data.url).hostname;
+          currentHostname = hostname;
+          currentThesis = thesis;
           document.getElementById('result-title').textContent = hostname;
           document.getElementById('result-crumb').textContent = '/ Styles / ' + hostname;
           document.getElementById('result-meta').textContent =

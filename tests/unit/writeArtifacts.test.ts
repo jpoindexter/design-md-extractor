@@ -31,6 +31,7 @@ describe('writeArtifacts', () => {
 
       await expect(readFile(join(dir, 'evidence.json'), 'utf8')).resolves.toContain('"version": "0.1.0"');
       await expect(readFile(join(dir, 'DESIGN.md'), 'utf8')).resolves.toContain('# Design');
+      await expect(readFile(join(dir, 'tokens.css'), 'utf8')).resolves.toContain(':root');
       await expect(readFile(join(dir, 'preview.html'), 'utf8')).resolves.toContain('<html>');
     } finally {
       await rm(dir, { recursive: true, force: true });
