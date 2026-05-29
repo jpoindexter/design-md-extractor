@@ -1,8 +1,38 @@
 {
   "name": "design-md-extractor",
   "version": "0.1.0",
+  "description": "Extract a website's usable visual system — colors, typography, spacing, components — into a structured DESIGN.md, design tokens, and AI-ready prompts. CLI + local GUI.",
+  "keywords": [
+    "design-tokens",
+    "design-system",
+    "css",
+    "scraper",
+    "playwright",
+    "design-to-code",
+    "ai",
+    "cli"
+  ],
+  "license": "MIT",
+  "author": "Jason Poindexter",
+  "homepage": "https://github.com/jpoindexter/design-md-extractor#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jpoindexter/design-md-extractor.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jpoindexter/design-md-extractor/issues"
+  },
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=18.18"
+  },
+  "files": [
+    "dist",
+    "skill",
+    "README.md",
+    "LICENSE"
+  ],
   "bin": {
     "design-md-extractor": "./dist/cli.js",
     "design-md-extractor-gui": "./dist/gui.js"

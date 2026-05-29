@@ -104,6 +104,16 @@ export const EvidenceSchema = z.object({
       confidence: ConfidenceSchema,
     }),
   ),
+  fontFaces: z
+    .array(
+      z.object({
+        family: z.string(),
+        weight: z.string(),
+        style: z.string(),
+        src: z.string(),
+      }),
+    )
+    .optional(),
   layout: z.object({
     density: z.string(),
     containerWidths: z.array(z.number()).optional(),

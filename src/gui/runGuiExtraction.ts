@@ -9,7 +9,10 @@ import type { GuiRunInput, GuiRunResult } from './types.js';
 function slugForRun(url: string): string {
   const parsed = new URL(url);
   const host = parsed.hostname.replace(/^www\./, '') || 'site';
-  const stamp = new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14);
+  const stamp = new Date()
+    .toISOString()
+    .replace(/[-:.TZ]/g, '')
+    .slice(0, 14);
   return `${host}-${stamp}`.replace(/[^a-zA-Z0-9.-]+/g, '-').toLowerCase();
 }
 
@@ -22,7 +25,9 @@ function pickBestScreenshotHref(
   screenshots: Array<{ viewport: string; url: string; path: string }>,
   primaryUrl: string,
 ): string | null {
-  const desktopForPrimary = screenshots.find((shot) => shot.viewport === 'desktop' && shot.url === primaryUrl);
+  const desktopForPrimary = screenshots.find(
+    (shot) => shot.viewport === 'desktop' && shot.url === primaryUrl,
+  );
   if (desktopForPrimary) {
     return artifactUrl(runId, desktopForPrimary.path);
   }
@@ -41,27 +46,40 @@ function pickBestScreenshotHref(
   return fallback ? artifactUrl(runId, fallback.path) : null;
 }
 
-function generateStyleThesis(evidence: ReturnType<typeof EvidenceSchema.parse>): string {
+function generateStyleThesis(
+  evidence: ReturnType<typeof EvidenceSchema.parse>,
+): string {
   const density = evidence.layout.density;
   const dominantColor = evidence.tokens.colors[0]?.value;
   const accentColor = evidence.tokens.colors[1]?.value;
   const primaryFont = evidence.tokens.typography[0]?.fontFamily;
   const surfaceCount = evidence.surfaces.length;
-  const successfulPages = evidence.source.pages.filter((page) => page.status === 'success').length;
+  const successfulPages = evidence.source.pages.filter(
+    (page) => page.status === 'success',
+  ).length;
 
   const colorPhrase =
     dominantColor && accentColor
       ? `${dominantColor} primary and ${accentColor} secondary`
       : dominantColor
-      ? dominantColor
-      : 'a restrained neutral palette';
-  const typographyPhrase = primaryFont ? `${primaryFont} as the main typeface` : 'a compact typography stack';
-  const surfacePhrase = surfaceCount > 0 ? `${surfaceCount} distinct surface levels` : 'minimal surface layering';
+        ? dominantColor
+        : 'a restrained neutral palette';
+  const typographyPhrase = primaryFont
+    ? `${primaryFont} as the main typeface`
+    : 'a compact typography stack';
+  const surfacePhrase =
+    surfaceCount > 0
+      ? `${surfaceCount} distinct surface ${surfaceCount === 1 ? 'level' : 'levels'}`
+      : 'minimal surface layering';
 
-  return `${density} density, ${colorPhrase}, ${typographyPhrase}, and ${surfacePhrase} across ${successfulPages} inspected pages.`;
+  const pageWord = successfulPages === 1 ? 'page' : 'pages';
+  return `${density} density, ${colorPhrase}, ${typographyPhrase}, and ${surfacePhrase} across ${successfulPages} inspected ${pageWord}.`;
 }
 
-export function summarizeEvidence(runId: string, evidenceJson: unknown): GuiRunResult['summary'] {
+export function summarizeEvidence(
+  runId: string,
+  evidenceJson: unknown,
+): GuiRunResult['summary'] {
   const evidence = EvidenceSchema.parse(evidenceJson);
 
   return {
@@ -70,7 +88,11 @@ export function summarizeEvidence(runId: string, evidenceJson: unknown): GuiRunR
       capturedAt: evidence.source.capturedAt,
     },
     styleThesis: generateStyleThesis(evidence),
-    bestScreenshotHref: pickBestScreenshotHref(runId, evidence.screenshots, evidence.source.primaryUrl),
+    bestScreenshotHref: pickBestScreenshotHref(
+      runId,
+      evidence.screenshots,
+      evidence.source.primaryUrl,
+    ),
     pages: evidence.source.pages,
     colors: evidence.tokens.colors.slice(0, 12).map((color) => ({
       name: color.name,
@@ -129,7 +151,10 @@ export function summarizeEvidence(runId: string, evidenceJson: unknown): GuiRunR
   };
 }
 
-export async function runGuiExtraction(input: GuiRunInput, runsDir = resolve('out/gui-runs')): Promise<GuiRunResult> {
+export async function runGuiExtraction(
+  input: GuiRunInput,
+  runsDir = resolve('out/gui-runs'),
+): Promise<GuiRunResult> {
   const url = new URL(input.url).toString();
   const runId = slugForRun(url);
   const outDir = resolve(runsDir, runId);
@@ -150,7 +175,9 @@ export async function runGuiExtraction(input: GuiRunInput, runsDir = resolve('ou
     timeoutMs: 30000,
   });
 
-  const evidenceJson = JSON.parse(await readFile(resolve(outDir, 'evidence.json'), 'utf8'));
+  const evidenceJson = JSON.parse(
+    await readFile(resolve(outDir, 'evidence.json'), 'utf8'),
+  );
 
   return {
     runId,

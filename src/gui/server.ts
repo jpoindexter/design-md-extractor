@@ -1,6 +1,11 @@
 import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
-import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
+import {
+  createServer,
+  type IncomingMessage,
+  type Server,
+  type ServerResponse,
+} from 'node:http';
 import { extname, resolve, sep } from 'node:path';
 import { renderAppHtml } from './appHtml.js';
 import { runGuiExtraction } from './runGuiExtraction.js';
@@ -26,7 +31,11 @@ function contentType(path: string): string {
   }
 }
 
-function sendJson(res: ServerResponse, statusCode: number, body: unknown): void {
+function sendJson(
+  res: ServerResponse,
+  statusCode: number,
+  body: unknown,
+): void {
   const payload = JSON.stringify(body);
   res.writeHead(statusCode, {
     'content-type': 'application/json; charset=utf-8',
@@ -63,7 +72,37 @@ function normalizeTargetUrl(input: unknown): string {
   return new URL(hasScheme ? raw : `https://${raw}`).toString();
 }
 
-async function serveRunFile(res: ServerResponse, runsDir: string, requestPath: string): Promise<void> {
+// Translate raw Playwright/Chromium navigation errors into a clean, actionable
+// message. The browser may auto-retry a failed bare domain with a `www.` prefix,
+// so the host shown is read from the failing URL in the error itself.
+export function friendlyExtractionError(message: string): string {
+  const urlMatch = message.match(/https?:\/\/[^\s/]+/);
+  const host = urlMatch ? urlMatch[0].replace(/^https?:\/\//, '') : 'the site';
+  if (/ERR_NAME_NOT_RESOLVED|ENOTFOUND|getaddrinfo/i.test(message)) {
+    return `Could not resolve ${host}. Check the domain is spelled correctly and includes the right extension (e.g. example.com).`;
+  }
+  if (
+    /ERR_CONNECTION_(REFUSED|TIMED_OUT|CLOSED|RESET)|ECONNREFUSED/i.test(
+      message,
+    )
+  ) {
+    return `Could not connect to ${host}. The site may be down or blocking automated visits.`;
+  }
+  if (/ERR_CERT|SSL|certificate/i.test(message)) {
+    return `${host} has an SSL/certificate problem that blocked the capture.`;
+  }
+  if (/Timeout.*(exceeded|ms)|exceeded.*ms/i.test(message)) {
+    return `${host} took too long to respond and the capture timed out.`;
+  }
+  // Strip Playwright's verbose "Call log:" tail for anything else.
+  return message.split(/\n?Call log:/)[0].trim() || message;
+}
+
+async function serveRunFile(
+  res: ServerResponse,
+  runsDir: string,
+  requestPath: string,
+): Promise<void> {
   const relative = decodeURIComponent(requestPath.replace(/^\/runs\//, ''));
   const absolute = resolve(runsDir, relative);
   const root = resolve(runsDir);
@@ -90,7 +129,8 @@ async function serveRunFile(res: ServerResponse, runsDir: string, requestPath: s
 
 export function createGuiServer(options: CreateGuiServerOptions = {}): Server {
   const runsDir = resolve(options.runsDir ?? 'out/gui-runs');
-  const runner = options.runExtraction ?? ((input) => runGuiExtraction(input, runsDir));
+  const runner =
+    options.runExtraction ?? ((input) => runGuiExtraction(input, runsDir));
 
   return createServer(async (req, res) => {
     const url = new URL(req.url ?? '/', 'http://127.0.0.1');
@@ -112,13 +152,19 @@ export function createGuiServer(options: CreateGuiServerOptions = {}): Server {
 
     if (req.method === 'POST' && url.pathname === '/api/extract') {
       try {
-        const body = (await readRequestJson(req)) as { url?: unknown; maxPages?: unknown };
+        const body = (await readRequestJson(req)) as {
+          url?: unknown;
+          maxPages?: unknown;
+        };
         const targetUrl = normalizeTargetUrl(body.url);
-        const maxPages = Number.isFinite(Number(body.maxPages)) ? Number(body.maxPages) : 7;
+        const maxPages = Number.isFinite(Number(body.maxPages))
+          ? Number(body.maxPages)
+          : 7;
         const result = await runner({ url: targetUrl, maxPages });
         sendJson(res, 200, result);
       } catch (error) {
-        sendJson(res, 400, { error: error instanceof Error ? error.message : String(error) });
+        const raw = error instanceof Error ? error.message : String(error);
+        sendJson(res, 400, { error: friendlyExtractionError(raw) });
       }
       return;
     }
@@ -128,11 +174,17 @@ export function createGuiServer(options: CreateGuiServerOptions = {}): Server {
   });
 }
 
-export function startGuiServer(input: { port: number; host?: string; runsDir?: string }): Server {
+export function startGuiServer(input: {
+  port: number;
+  host?: string;
+  runsDir?: string;
+}): Server {
   const server = createGuiServer({ runsDir: input.runsDir });
   const host = input.host ?? '127.0.0.1';
   server.listen(input.port, host, () => {
-    console.log(`Design MD Extractor GUI running at http://${host}:${input.port}`);
+    console.log(
+      `Design MD Extractor GUI running at http://${host}:${input.port}`,
+    );
   });
   return server;
 }

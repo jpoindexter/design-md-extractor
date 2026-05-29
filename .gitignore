@@ -1,4 +1,18 @@
+# dependencies / build output
 node_modules/
 dist/
+
+# extraction artifacts (generated runs, screenshots)
 out/
+
+# local tooling / editor / OS
+.claude/
+.vscode/
+.idea/
 .DS_Store
+*.log
+
+# environment / secrets
+.env
+.env.*
+!.env.example

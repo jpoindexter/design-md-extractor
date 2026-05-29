@@ -15,7 +15,11 @@ describe('normalizeEvidence', () => {
           colors: [
             { value: '#ffffff', property: 'backgroundColor', selector: 'body' },
             { value: '#ffffff', property: 'backgroundColor', selector: 'main' },
-            { value: '#ff5900', property: 'backgroundColor', selector: 'a.button' },
+            {
+              value: '#ff5900',
+              property: 'backgroundColor',
+              selector: 'a.button',
+            },
             { value: '#000000', property: 'color', selector: 'body' },
             { value: '#000000', property: 'color', selector: 'h1' },
             { value: '#000000', property: 'color', selector: 'p' },
@@ -36,14 +40,22 @@ describe('normalizeEvidence', () => {
               kind: 'button',
               selector: 'a.button',
               textSample: 'Get started',
-              styles: { backgroundColor: '#ff5900', color: '#ffffff', borderRadius: '8px' },
+              styles: {
+                backgroundColor: '#ff5900',
+                color: '#ffffff',
+                borderRadius: '8px',
+              },
               bounds: { width: 120, height: 40 },
             },
             {
               kind: 'button',
               selector: 'a.button',
               textSample: 'Get started',
-              styles: { backgroundColor: '#ff5900', color: '#ffffff', borderRadius: '8px' },
+              styles: {
+                backgroundColor: '#ff5900',
+                color: '#ffffff',
+                borderRadius: '8px',
+              },
               bounds: { width: 120, height: 40 },
             },
           ],
@@ -57,6 +69,137 @@ describe('normalizeEvidence', () => {
     expect(evidence.components).toHaveLength(1);
     expect(evidence.components[0]?.count).toBe(2);
     expect(evidence.surfaces[0]?.value).toBe('#ffffff');
+  });
+
+  it('strips framework-hashed font tokens and selector classes from evidence', () => {
+    const evidence = normalizeEvidence({
+      primaryUrl: 'https://example.com',
+      pages: [{ url: 'https://example.com', status: 'success' as const }],
+      capturedAt: '2026-05-28T10:00:00.000Z',
+      viewports: [{ name: 'desktop', width: 1440, height: 1000 }],
+      screenshots: [],
+      rawPages: [
+        {
+          viewport: 'desktop',
+          colors: [
+            {
+              value: '#6083ff',
+              property: 'backgroundColor',
+              selector:
+                'html.__variable_c5b537.__variable_2d6016 > body.bg-theme-bg',
+            },
+          ],
+          typography: [
+            {
+              selector: 'html.__variable_c5b537 > body',
+              role: 'body',
+              fontFamily:
+                '__polySans_c5b537, __polySans_Fallback_c5b537, Helvetica, Arial, sans-serif',
+              fontSize: '16px',
+              fontWeight: '400',
+              lineHeight: '24px',
+              letterSpacing: '0px',
+            },
+          ],
+          components: [
+            {
+              kind: 'card',
+              selector: 'div.card.__variable_2d6016',
+              textSample: 'Voices of MAYHEM',
+              styles: {
+                backgroundColor: '#6083ff',
+                color: '#ffffff',
+                borderRadius: '10px',
+                fontFamily: '__polySans_c5b537, Helvetica, Arial, sans-serif',
+                font: '16px / 24px __polySans_c5b537, __polySans_Fallback_c5b537, Helvetica, Arial, sans-serif',
+              },
+              bounds: { width: 320, height: 200 },
+            },
+          ],
+          fontFaces: [
+            {
+              family: '__polySans_c5b537',
+              weight: '400',
+              style: 'normal',
+              src: 'https://yung.studio/_next/static/media/poly400.woff2',
+            },
+            {
+              family: '__polySans_Fallback_c5b537',
+              weight: '400',
+              style: 'normal',
+              src: 'https://yung.studio/_next/static/media/polyfallback.woff2',
+            },
+            {
+              family: '__unused_aa11bb',
+              weight: '400',
+              style: 'normal',
+              src: 'https://yung.studio/_next/static/media/unused.woff2',
+            },
+          ],
+        },
+      ],
+    });
+
+    // Real @font-face for the shown family is captured under the humanized name;
+    // the metric-fallback duplicate and unreferenced families are dropped.
+    expect(evidence.fontFaces).toEqual([
+      {
+        family: 'polySans',
+        weight: '400',
+        style: 'normal',
+        src: 'https://yung.studio/_next/static/media/poly400.woff2',
+      },
+    ]);
+
+    const serialized = JSON.stringify(evidence);
+    // No build-hash noise survives, but the real family name is recovered.
+    expect(serialized).not.toMatch(/__polySans|__[a-zA-Z]+_[a-f0-9]{6}/);
+    expect(evidence.tokens.typography[0]?.fontFamily).toBe(
+      'polySans, Helvetica, Arial, sans-serif',
+    );
+    expect(evidence.components[0]?.styles.fontFamily).toBe(
+      'polySans, Helvetica, Arial, sans-serif',
+    );
+    expect(evidence.components[0]?.styles.font).toBe(
+      '16px / 24px polySans, Helvetica, Arial, sans-serif',
+    );
+    expect(evidence.tokens.colors[0]?.sampleSelectors[0]).toBe(
+      'html > body.bg-theme-bg',
+    );
+    expect(evidence.tokens.typography[0]?.sampleSelectors[0]).toBe(
+      'html > body',
+    );
+    expect(evidence.components[0]?.selector).toBe('div.card');
+  });
+
+  it('passes clean font names through and drops quoted metric fallbacks', () => {
+    const evidence = normalizeEvidence({
+      primaryUrl: 'https://example.com',
+      pages: [{ url: 'https://example.com', status: 'success' as const }],
+      capturedAt: '2026-05-28T10:00:00.000Z',
+      viewports: [{ name: 'desktop', width: 1440, height: 1000 }],
+      screenshots: [],
+      rawPages: [
+        {
+          viewport: 'desktop',
+          colors: [],
+          typography: [
+            {
+              selector: 'body',
+              role: 'body',
+              fontFamily: 'Geist, "Geist Fallback", sans-serif',
+              fontSize: '16px',
+              fontWeight: '400',
+              lineHeight: '24px',
+              letterSpacing: '0px',
+            },
+          ],
+          components: [],
+        },
+      ],
+    });
+
+    expect(evidence.tokens.typography[0]?.fontFamily).toBe('Geist, sans-serif');
   });
 
   it('keeps rare large display typography alongside frequent body text', () => {
@@ -108,6 +251,10 @@ describe('normalizeEvidence', () => {
       ],
     });
 
-    expect(evidence.tokens.typography.some((item) => item.fontSize === '72px' && item.role === 'heading')).toBe(true);
+    expect(
+      evidence.tokens.typography.some(
+        (item) => item.fontSize === '72px' && item.role === 'heading',
+      ),
+    ).toBe(true);
   });
 });

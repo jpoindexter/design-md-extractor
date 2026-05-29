@@ -18,6 +18,12 @@ export type RawPageEvidence = {
     styles: Record<string, string>;
     bounds: { width: number; height: number };
   }>;
+  fontFaces?: Array<{
+    family: string;
+    weight: string;
+    style: string;
+    src: string;
+  }>;
 };
 
 export async function collectPageEvidence(
@@ -30,9 +36,17 @@ export async function collectPageEvidence(
     colorCanvas.height = 1;
     const colorContext = colorCanvas.getContext('2d');
 
-    function rgbToHex(red: number | string, green: number | string, blue: number | string): string {
+    function rgbToHex(
+      red: number | string,
+      green: number | string,
+      blue: number | string,
+    ): string {
       return `#${[red, green, blue]
-        .map((part) => Math.max(0, Math.min(255, Math.round(Number(part)))).toString(16).padStart(2, '0'))
+        .map((part) =>
+          Math.max(0, Math.min(255, Math.round(Number(part))))
+            .toString(16)
+            .padStart(2, '0'),
+        )
         .join('')}`;
     }
 
@@ -47,7 +61,9 @@ export async function collectPageEvidence(
       if (!trimmed) return value;
       if (trimmed === 'transparent') return trimmed;
 
-      const rgbMatch = trimmed.match(/rgba?\(\s*([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?/);
+      const rgbMatch = trimmed.match(
+        /rgba?\(\s*([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?/,
+      );
       if (rgbMatch) {
         const [, red, green, blue, alpha] = rgbMatch;
         if (alpha !== undefined && Number(alpha) === 0) return 'transparent';
@@ -74,7 +90,12 @@ export async function collectPageEvidence(
       colorContext.fillStyle = trimmed;
       colorContext.fillRect(0, 0, 1, 1);
 
-      const [red, green, blue, alpha] = colorContext.getImageData(0, 0, 1, 1).data;
+      const [red, green, blue, alpha] = colorContext.getImageData(
+        0,
+        0,
+        1,
+        1,
+      ).data;
       if (alpha === 0) return 'transparent';
       if (alpha < 255) {
         return `rgba(${red}, ${green}, ${blue}, ${alphaToString(alpha / 255)})`;
@@ -100,7 +121,8 @@ export async function collectPageEvidence(
     function hasVisibleBorder(style: CSSStyleDeclaration): boolean {
       return ['Top', 'Right', 'Bottom', 'Left'].some((side) => {
         const width = style[`border${side}Width` as keyof CSSStyleDeclaration];
-        const borderStyle = style[`border${side}Style` as keyof CSSStyleDeclaration];
+        const borderStyle =
+          style[`border${side}Style` as keyof CSSStyleDeclaration];
         const color = style[`border${side}Color` as keyof CSSStyleDeclaration];
         return (
           typeof width === 'string' &&
@@ -130,15 +152,24 @@ export async function collectPageEvidence(
     function isVisible(element: Element): boolean {
       const rect = element.getBoundingClientRect();
       const style = window.getComputedStyle(element);
-      return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
+      return (
+        rect.width > 0 &&
+        rect.height > 0 &&
+        style.visibility !== 'hidden' &&
+        style.display !== 'none'
+      );
     }
 
     function roleFor(element: Element): string {
       const tag = element.tagName.toLowerCase();
       if (tag.match(/^h[1-6]$/)) return 'heading';
       if (tag === 'p' || tag === 'li') return 'body';
-      if (tag === 'button' || element.getAttribute('role') === 'button') return 'button';
-      if (tag === 'a') return element.className.toString().includes('button') ? 'button' : 'link';
+      if (tag === 'button' || element.getAttribute('role') === 'button')
+        return 'button';
+      if (tag === 'a')
+        return element.className.toString().includes('button')
+          ? 'button'
+          : 'link';
       return 'text';
     }
 
@@ -150,22 +181,33 @@ export async function collectPageEvidence(
       );
     }
 
-    function hasButtonShape(style: CSSStyleDeclaration, rect: DOMRect): boolean {
+    function hasButtonShape(
+      style: CSSStyleDeclaration,
+      rect: DOMRect,
+    ): boolean {
       return (
         rect.width >= 24 &&
         rect.height >= 18 &&
-        (numericPx(style.paddingLeft) + numericPx(style.paddingRight) > 8 || numericPx(style.borderRadius) > 0) &&
+        (numericPx(style.paddingLeft) + numericPx(style.paddingRight) > 8 ||
+          numericPx(style.borderRadius) > 0) &&
         hasVisiblePaint(style)
       );
     }
 
-    function hasCardShape(element: Element, style: CSSStyleDeclaration, rect: DOMRect): boolean {
-      if (element === document.body || element === document.documentElement) return false;
+    function hasCardShape(
+      element: Element,
+      style: CSSStyleDeclaration,
+      rect: DOMRect,
+    ): boolean {
+      if (element === document.body || element === document.documentElement)
+        return false;
       return (
         rect.width >= 120 &&
         rect.height >= 60 &&
         hasVisiblePaint(style) &&
-        (numericPx(style.borderRadius) > 0 || style.boxShadow !== 'none' || normalizeColor(style.borderColor) !== 'transparent')
+        (numericPx(style.borderRadius) > 0 ||
+          style.boxShadow !== 'none' ||
+          normalizeColor(style.borderColor) !== 'transparent')
       );
     }
 
@@ -174,7 +216,11 @@ export async function collectPageEvidence(
       return match ? Number.parseFloat(match[1]) : 0;
     }
 
-    function componentKind(element: Element, style: CSSStyleDeclaration, rect: DOMRect): string | null {
+    function componentKind(
+      element: Element,
+      style: CSSStyleDeclaration,
+      rect: DOMRect,
+    ): string | null {
       const tag = element.tagName.toLowerCase();
       const classText = element.className.toString().toLowerCase();
       if (
@@ -187,16 +233,26 @@ export async function collectPageEvidence(
         return 'button';
       }
       if (['input', 'textarea', 'select'].includes(tag)) return 'input';
-      if (tag === 'nav' || tag === 'header' || classText.includes('nav')) return 'navigation';
-      if (classText.includes('badge') || classText.includes('pill')) return 'badge';
-      if (classText.includes('card') || classText.includes('tile') || classText.includes('panel') || hasCardShape(element, style, rect)) {
+      if (tag === 'nav' || tag === 'header' || classText.includes('nav'))
+        return 'navigation';
+      if (classText.includes('badge') || classText.includes('pill'))
+        return 'badge';
+      if (
+        classText.includes('card') ||
+        classText.includes('tile') ||
+        classText.includes('panel') ||
+        hasCardShape(element, style, rect)
+      ) {
         return 'card';
       }
       return null;
     }
 
     function textSampleFor(element: Element): string {
-      return (element.textContent ?? '').replace(/\s+/g, ' ').trim().slice(0, 80);
+      return (element.textContent ?? '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 80);
     }
 
     function componentStyleScore(
@@ -215,7 +271,13 @@ export async function collectPageEvidence(
       if (hasVisibleBorder(style)) score += 4;
       if (numericPx(style.borderRadius) > 0) score += 4;
       if (style.boxShadow !== 'none') score += 4;
-      if (numericPx(style.paddingTop) + numericPx(style.paddingRight) + numericPx(style.paddingBottom) + numericPx(style.paddingLeft) > 0) {
+      if (
+        numericPx(style.paddingTop) +
+          numericPx(style.paddingRight) +
+          numericPx(style.paddingBottom) +
+          numericPx(style.paddingLeft) >
+        0
+      ) {
         score += 3;
       }
       if (textSample.length > 0) score += 1;
@@ -225,17 +287,23 @@ export async function collectPageEvidence(
       return score;
     }
 
-    const elements = Array.from(document.querySelectorAll('body, body *')).filter(isVisible);
+    const elements = Array.from(
+      document.querySelectorAll('body, body *'),
+    ).filter(isVisible);
     const colors: RawPageEvidence['colors'] = [];
     const typography: RawPageEvidence['typography'] = [];
-    const componentCandidates: Array<RawPageEvidence['components'][number] & { score: number; order: number }> = [];
+    const componentCandidates: Array<
+      RawPageEvidence['components'][number] & { score: number; order: number }
+    > = [];
 
     for (const [order, element] of elements.entries()) {
       const style = window.getComputedStyle(element);
       const selector = selectorPath(element);
 
       for (const property of ['color', 'backgroundColor', 'borderColor']) {
-        const value = (style as CSSStyleDeclaration & Record<string, string>)[property];
+        const value = (style as CSSStyleDeclaration & Record<string, string>)[
+          property
+        ];
         if (value && value !== 'rgba(0, 0, 0, 0)' && value !== 'transparent') {
           colors.push({ value: normalizeColor(value), property, selector });
         }
@@ -273,7 +341,13 @@ export async function collectPageEvidence(
             lineHeight: style.lineHeight,
           },
           bounds: { width: rect.width, height: rect.height },
-          score: componentStyleScore(kind, style, rect, textSample, element.children.length),
+          score: componentStyleScore(
+            kind,
+            style,
+            rect,
+            textSample,
+            element.children.length,
+          ),
           order,
         });
       }
@@ -293,6 +367,52 @@ export async function collectPageEvidence(
         bounds: component.bounds,
       }));
 
-    return { colors, typography, components };
+    // Capture self-hosted @font-face rules so the report can render samples in
+    // the site's real typeface. src URLs are resolved to absolute against their
+    // stylesheet; woff2 is preferred. Cross-origin stylesheets (e.g. Google
+    // Fonts) throw on .cssRules and are skipped — those samples fall back to name.
+    const fontFaces: RawPageEvidence['fontFaces'] = [];
+    const seenFace = new Set<string>();
+    for (const sheet of Array.from(document.styleSheets)) {
+      let rules: CSSRuleList | null = null;
+      try {
+        rules = sheet.cssRules;
+      } catch {
+        continue;
+      }
+      if (!rules) continue;
+      for (const rule of Array.from(rules)) {
+        if (rule.type !== 5) continue; // CSSRule.FONT_FACE_RULE
+        const faceStyle = (rule as CSSFontFaceRule).style;
+        const family = faceStyle
+          .getPropertyValue('font-family')
+          .replace(/['"]/g, '')
+          .trim();
+        const srcRaw = faceStyle.getPropertyValue('src');
+        if (!family || !srcRaw) continue;
+        const urlMatch =
+          srcRaw.match(/url\(\s*['"]?([^'")]+\.woff2)[^)]*\)/i) ||
+          srcRaw.match(/url\(\s*['"]?([^'")]+)['"]?\s*\)/i);
+        if (!urlMatch) continue;
+        let src: string;
+        try {
+          src = new URL(urlMatch[1], sheet.href || location.href).href;
+        } catch {
+          continue;
+        }
+        const weight =
+          faceStyle.getPropertyValue('font-weight').trim() || '400';
+        const fontStyle =
+          faceStyle.getPropertyValue('font-style').trim() || 'normal';
+        const key = `${family}|${weight}|${fontStyle}`;
+        if (seenFace.has(key)) continue;
+        seenFace.add(key);
+        fontFaces.push({ family, weight, style: fontStyle, src });
+        if (fontFaces.length >= 24) break;
+      }
+      if (fontFaces.length >= 24) break;
+    }
+
+    return { colors, typography, components, fontFaces };
   }, options);
 }
