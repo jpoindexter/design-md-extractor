@@ -26,6 +26,7 @@ import {
 } from './client/settings.js';
 import { copyCss, copyJs } from './client/copy.js';
 import { accordionCss, accordionJs } from './client/accordion.js';
+import { clisJs } from './client/clis.js';
 import { apiJs } from './client/api.js';
 
 function css(): string {
@@ -63,6 +64,7 @@ function js(): string {
     componentsJs(),
     coverageJs(),
     settingsJs(),
+    clisJs(),
     copyJs(),
     accordionJs(),
     apiJs(),

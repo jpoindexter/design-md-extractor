@@ -100,6 +100,12 @@ export function profileJs(): string {
       }
 
       function aiTargetLabel(target) {
+        if (target && target.indexOf('cli:') === 0) {
+          var cliId = target.slice(4);
+          var clis = typeof detectedClis !== 'undefined' ? detectedClis : [];
+          var cli = clis.find(function(t) { return t.id === cliId; });
+          return cli ? cli.label : 'CLI';
+        }
         if (target && target.indexOf('custom:') === 0) {
           var id = target.slice(7);
           var list = typeof customTargets !== 'undefined' ? customTargets : [];

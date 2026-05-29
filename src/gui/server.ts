@@ -8,6 +8,7 @@ import {
 } from 'node:http';
 import { extname, resolve, sep } from 'node:path';
 import { renderAppHtml } from './appHtml.js';
+import { detectClis } from './detectClis.js';
 import { runGuiExtraction } from './runGuiExtraction.js';
 import type { GuiRunner } from './types.js';
 
@@ -147,6 +148,15 @@ export function createGuiServer(options: CreateGuiServerOptions = {}): Server {
 
     if (req.method === 'GET' && url.pathname.startsWith('/runs/')) {
       await serveRunFile(res, runsDir, url.pathname);
+      return;
+    }
+
+    if (req.method === 'GET' && url.pathname === '/api/clis') {
+      try {
+        sendJson(res, 200, { clis: await detectClis() });
+      } catch {
+        sendJson(res, 200, { clis: [] });
+      }
       return;
     }
 
