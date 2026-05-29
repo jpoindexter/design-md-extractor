@@ -6,7 +6,7 @@ Point it at a URL. It loads the site in a real browser across desktop/tablet/mob
 
 > Fully local. It never calls an AI or needs an API key — the "AI Assistant" picker only chooses which prompt template you copy into your own agent.
 
-![The Design MD Extractor GUI — extracting a site's design system into tokens and a DESIGN.md](docs/images/screenshot.png)
+![Design MD Extractor — extracting a site's design system into tokens, exports, and a DESIGN.md](docs/images/demo.gif)
 
 ## What you get
 
