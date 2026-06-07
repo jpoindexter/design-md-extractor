@@ -1,0 +1,65 @@
+import type { Evidence } from '../types/evidence.js';
+
+type TokenEntry = { $value: string; $type: string; $description?: string };
+interface TokenGroup {
+  [key: string]: TokenEntry | TokenGroup;
+}
+
+export function generateTokensJson(evidence: Evidence): string {
+  const tokens: TokenGroup = {
+    color: (() => {
+      const keySeen = new Map<string, number>();
+      return Object.fromEntries(
+        evidence.tokens.colors.map((c) => {
+          const base = c.name.toLowerCase().replace(/\s+/g, '-');
+          const count = keySeen.get(base) ?? 0;
+          keySeen.set(base, count + 1);
+          const key = count === 0 ? base : `${base}-${count}`;
+          return [
+            key,
+            {
+              $value: c.value,
+              $type: 'color',
+              $description: c.role,
+            } satisfies TokenEntry,
+          ];
+        }),
+      );
+    })(),
+    typography: (() => {
+      const keySeen = new Map<string, number>();
+      return Object.fromEntries(
+        evidence.tokens.typography.map((t) => {
+          const base = t.role;
+          const count = keySeen.get(base) ?? 0;
+          keySeen.set(base, count + 1);
+          const key = count === 0 ? base : `${base}-${count}`;
+          return [
+            key,
+            {
+              'font-family': { $value: t.fontFamily, $type: 'fontFamily' },
+              'font-size': { $value: t.fontSize, $type: 'dimension' },
+              'font-weight': { $value: t.fontWeight, $type: 'fontWeight' },
+              'line-height': { $value: t.lineHeight, $type: 'dimension' },
+              'letter-spacing': { $value: t.letterSpacing, $type: 'dimension' },
+            } as TokenGroup,
+          ];
+        }),
+      );
+    })(),
+    spacing: Object.fromEntries(
+      evidence.tokens.spacing.map((s, i) => [
+        `space-${i + 1}`,
+        { $value: s.value, $type: 'dimension' } satisfies TokenEntry,
+      ]),
+    ),
+    'border-radius': Object.fromEntries(
+      evidence.tokens.radii.map((r, i) => [
+        `radius-${i + 1}`,
+        { $value: r.value, $type: 'dimension' } satisfies TokenEntry,
+      ]),
+    ),
+  };
+
+  return `${JSON.stringify(tokens, null, 2)}\n`;
+}

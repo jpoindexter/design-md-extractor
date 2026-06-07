@@ -27,12 +27,34 @@ describe('writeArtifacts', () => {
   it('writes evidence, markdown, and preview files', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'design-md-'));
     try {
-      await writeArtifacts({ outDir: dir, evidence, designMd: '# Design', previewHtml: '<html></html>' });
+      await writeArtifacts({
+        outDir: dir,
+        evidence,
+        designMd: '# Design',
+        previewHtml: '<html></html>',
+      });
 
-      await expect(readFile(join(dir, 'evidence.json'), 'utf8')).resolves.toContain('"version": "0.1.0"');
-      await expect(readFile(join(dir, 'DESIGN.md'), 'utf8')).resolves.toContain('# Design');
-      await expect(readFile(join(dir, 'tokens.css'), 'utf8')).resolves.toContain(':root');
-      await expect(readFile(join(dir, 'preview.html'), 'utf8')).resolves.toContain('<html>');
+      await expect(
+        readFile(join(dir, 'evidence.json'), 'utf8'),
+      ).resolves.toContain('"version": "0.1.0"');
+      await expect(readFile(join(dir, 'DESIGN.md'), 'utf8')).resolves.toContain(
+        '# Design',
+      );
+      await expect(
+        readFile(join(dir, 'tokens.css'), 'utf8'),
+      ).resolves.toContain(':root');
+      await expect(
+        readFile(join(dir, 'tailwind-theme.js'), 'utf8'),
+      ).resolves.toBeTruthy();
+      await expect(
+        readFile(join(dir, 'design-tokens.json'), 'utf8'),
+      ).resolves.toBeTruthy();
+      await expect(
+        readFile(join(dir, 'ai-prompt.txt'), 'utf8'),
+      ).resolves.toBeTruthy();
+      await expect(
+        readFile(join(dir, 'preview.html'), 'utf8'),
+      ).resolves.toContain('<html>');
     } finally {
       await rm(dir, { recursive: true, force: true });
     }

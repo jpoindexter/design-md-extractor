@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en" data-theme="studio">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>design-md-extractor — full fix plan</title>
+<style>
+:root{
+  --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:20px;--s-6:28px;--s-7:40px;--s-8:64px;
+  --r-xs:5px;--r-sm:8px;--r:11px;--r-lg:16px;--r-pill:999px;
+  --t-xl:21px;--t-lg:16px;--t-name:14px;--t-body:13.5px;--t-meta:12px;--t-label:11px;--t-micro:10.5px;
+  --maxw:940px;
+  --font:-apple-system,"SF Pro Text","SF Pro Display",system-ui,"Segoe UI",Roboto,sans-serif;
+  --mono:"SF Mono",ui-monospace,"Geist Mono",Menlo,monospace;
+}
+:root[data-theme="studio"]{
+  --app-bg:oklch(.966 .007 305);--canvas:#fff;--panel-2:oklch(.982 .006 305);
+  --fill:oklch(.955 .012 305);--line:oklch(.922 .009 305);--line-2:oklch(.952 .006 305);
+  --ink:oklch(.245 .012 300);--text:oklch(.40 .013 300);--muted:oklch(.575 .013 300);--soft:oklch(.71 .011 300);
+  --brand:oklch(.52 .20 300);--brand-2:oklch(.45 .20 300);--brand-soft:oklch(.952 .035 305);
+  --grad:linear-gradient(135deg,oklch(.56 .21 298),oklch(.58 .23 348));
+  --green:oklch(.55 .12 150);--green-soft:oklch(.93 .05 150);
+  --amber:oklch(.66 .14 70);--amber-soft:oklch(.95 .05 75);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{overflow-x:clip}
+body{background:var(--app-bg);color:var(--text);font-family:var(--font);font-size:var(--t-body);
+  line-height:1.6;-webkit-font-smoothing:antialiased;letter-spacing:-.005em}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:var(--s-7) var(--s-5) var(--s-8)}
+code{font-family:var(--mono);font-size:.84em;background:var(--fill);color:var(--brand-2);padding:1px 6px;border-radius:5px;white-space:nowrap}
+strong{color:var(--ink);font-weight:650}
+.kicker{font-family:var(--mono);font-size:var(--t-label);font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--soft)}
+
+.head{display:flex;align-items:center;gap:var(--s-3);margin-bottom:var(--s-4)}
+.mk{width:40px;height:40px;border-radius:var(--r);background:var(--grad);color:#fff;display:grid;place-items:center;font-weight:800;font-size:19px;flex:none}
+.head h1{font-size:var(--t-xl);font-weight:700;color:var(--ink);letter-spacing:-.02em;line-height:1.1}
+.head .sub{font-size:var(--t-meta);color:var(--muted);margin-top:2px}
+.head .sp{flex:1}
+.chip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 11px;border-radius:var(--r-pill);
+  background:var(--green-soft);color:var(--green);font-family:var(--mono);font-size:var(--t-micro);font-weight:600;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.chip .d{width:7px;height:7px;border-radius:50%;background:var(--green)}
+.lede{font-size:var(--t-lg);color:var(--ink);line-height:1.55;margin:var(--s-4) 0;font-weight:500;letter-spacing:-.01em}
+.rule{height:1px;background:var(--line);border:0;margin:var(--s-6) 0 var(--s-5)}
+h2{font-size:var(--t-lg);font-weight:700;color:var(--ink);letter-spacing:-.01em;margin:0 0 var(--s-3)}
+
+/* time table */
+.tcard{background:var(--canvas);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:var(--s-3)}
+table{width:100%;border-collapse:collapse;font-size:var(--t-meta)}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line-2)}
+th{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--soft);font-weight:600}
+td b{color:var(--ink)} td.num{font-family:var(--mono);text-align:right;white-space:nowrap}
+tr.total td{border-bottom:0;background:var(--brand-soft)} tr.total td b{color:var(--brand-2)}
+.hidden{display:flex;gap:var(--s-3);background:var(--amber-soft);border-left:3px solid var(--amber);border-radius:var(--r-sm);padding:var(--s-3) var(--s-4)}
+.hidden .nc{font-size:var(--t-meta);color:var(--text)}
+
+/* phases */
+.phase{background:var(--canvas);border:1px solid var(--line);border-left:3px solid var(--brand);border-radius:var(--r);padding:var(--s-4) var(--s-5);margin-bottom:var(--s-3)}
+.phase .ph{display:flex;align-items:baseline;gap:var(--s-2);margin-bottom:6px}
+.phase .pn{font-family:var(--mono);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#fff;background:var(--brand);border-radius:var(--r-pill);padding:3px 8px}
+.phase h3{font-size:var(--t-name);font-weight:700;color:var(--ink)}
+.phase .ws{font-family:var(--mono);font-size:var(--t-micro);color:var(--muted)}
+.phase p{font-size:var(--t-body);color:var(--text);margin-top:4px}
+.phase .ck{font-size:var(--t-meta);color:var(--muted);margin-top:6px;padding-left:var(--s-4);position:relative}
+.phase .ck::before{content:"✓";position:absolute;left:0;color:var(--green);font-weight:700}
+.phase .ck b{color:var(--ink)}
+
+/* workstreams */
+.ws-grid{margin-top:var(--s-2)}
+.w{display:grid;grid-template-columns:30px 1fr;gap:var(--s-3);padding:var(--s-3) 0;border-bottom:1px solid var(--line-2)}
+.w:last-child{border-bottom:0}
+.w .id{width:30px;height:30px;border-radius:var(--r-xs);background:var(--brand-soft);color:var(--brand-2);display:grid;place-items:center;font-weight:800;font-size:13px;flex:none}
+.w .wc h4{font-size:var(--t-name);font-weight:700;color:var(--ink);display:flex;align-items:baseline;gap:var(--s-2);flex-wrap:wrap}
+.w .wc .gaps{font-family:var(--mono);font-size:9px;color:var(--soft);background:var(--fill);border-radius:var(--r-pill);padding:2px 7px}
+.w .wc p{font-size:var(--t-body);color:var(--text);margin-top:3px}
+.w .wc .files{font-family:var(--mono);font-size:var(--t-micro);color:var(--soft);margin-top:5px}
+
+.sec{margin-bottom:var(--s-6)}
+ul{list-style:none;margin:var(--s-2) 0 0;padding:0}
+li{position:relative;padding-left:var(--s-4);margin:4px 0;font-size:var(--t-body)}
+li::before{content:"";position:absolute;left:2px;top:9px;width:5px;height:5px;border-radius:50%;background:var(--soft)}
+.foot{margin-top:var(--s-7);padding-top:var(--s-5);border-top:1px solid var(--line);font-family:var(--mono);font-size:var(--t-label);color:var(--soft);line-height:1.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="head">
+    <span class="mk">D</span>
+    <div>
+      <h1>design-md-extractor — full quality fix</h1>
+      <div class="sub">canvas · confidence · complete exports · + all 8 audit gaps</div>
+    </div>
+    <span class="sp"></span>
+    <span class="chip"><span class="d"></span> Approved</span>
+  </header>
+
+  <p class="lede">Everything in one pass: the canvas/confidence/exports fixes <strong>and</strong> the audit gaps. Sequenced so the highest-value, lowest-risk wins land first — Phase 1 alone delivers ~80%.</p>
+
+  <!-- TIME FIRST -->
+  <div class="sec">
+    <span class="kicker">How long</span>
+    <div class="tcard" style="margin-top:var(--s-2)">
+      <table>
+        <tr><th>Phase</th><th>Scope</th><th class="num">Best</th><th class="num">Realistic</th><th class="num">Worst</th></tr>
+        <tr><td><b>1</b> · Core quality</td><td>canvas, confidence, value-normalization, token-names, polish</td><td class="num">45m</td><td class="num">1.5h</td><td class="num">2.5h</td></tr>
+        <tr><td><b>2</b> · Exports</td><td>one generator set · full bundle w/ screenshots</td><td class="num">45m</td><td class="num">1.5h</td><td class="num">3h</td></tr>
+        <tr><td><b>3</b> · Depth</td><td>type/component viewport normalization</td><td class="num">20m</td><td class="num">40m</td><td class="num">1.5h</td></tr>
+        <tr><td><b>4</b> · Feature</td><td>layout extraction (containers, rhythm)</td><td class="num">30m</td><td class="num">1h</td><td class="num">2.5h</td></tr>
+        <tr class="total"><td><b>Total</b></td><td><b>everything</b></td><td class="num"><b>~2.5h</b></td><td class="num"><b>~4–5h</b></td><td class="num"><b>~8h+</b></td></tr>
+      </table>
+    </div>
+    <div class="hidden">
+      <div class="nc"><strong>Why realistic &gt; best:</strong> the re-ranking changes many <em>existing</em> test expectations (real work to update); the GUI client is inline JS with no test seam (Phase 2 swing); layout heuristics need 2–3 tuning passes (Phase 4 swing); live re-extraction needs eyeballing. <strong>Phase 1 only is the safe bet (~1.5h).</strong></div>
+    </div>
+  </div>
+
+  <!-- HOW -->
+  <div class="sec">
+    <span class="kicker">How I'll do it</span>
+    <p style="margin:var(--s-2) 0 var(--s-3);font-size:var(--t-body)">Branch <code>fix/extraction-quality</code>. Test-first where the change is value-shaped. Build + <code>vitest</code> after each phase, then re-extract monarque + a dark site + the GUI to verify behaviour, not just green tests. You can stop after any checkpoint.</p>
+    <div class="phase">
+      <div class="ph"><span class="pn">Phase 1</span><h3>Core quality</h3><span class="ws">A · B · C · E · H</span></div>
+      <p>The worst output problems: wrong canvas, junk spacing/radii, colliding tokens, dishonest confidence.</p>
+      <div class="ck"><b>Checkpoint:</b> re-extract monarque → light canvas, clean integer spacing/radii, valid non-colliding tokens, ambiguity warning when due.</div>
+    </div>
+    <div class="phase">
+      <div class="ph"><span class="pn">Phase 2</span><h3>Exports</h3><span class="ws">D</span></div>
+      <p>One generator set, write the full bundle to disk every run, complete GUI download.</p>
+      <div class="ck"><b>Checkpoint:</b> CLI + GUI produce complete bundles including <code>screenshots/</code>.</div>
+    </div>
+    <div class="phase">
+      <div class="ph"><span class="pn">Phase 3</span><h3>Depth</h3><span class="ws">F</span></div>
+      <p>Type + component viewport normalization.</p>
+      <div class="ck"><b>Checkpoint:</b> no duplicate type rows; components listed once with <code>viewports[]</code>.</div>
+    </div>
+    <div class="phase">
+      <div class="ph"><span class="pn">Phase 4</span><h3>Feature</h3><span class="ws">G</span></div>
+      <p>Layout extraction — container widths + section rhythm (currently always "No strong evidence").</p>
+      <div class="ck"><b>Checkpoint:</b> layout populated on a real site.</div>
+    </div>
+  </div>
+
+  <hr class="rule" />
+
+  <!-- WORKSTREAMS -->
+  <div class="sec">
+    <h2>The 8 workstreams</h2>
+    <div class="ws-grid">
+      <div class="w"><span class="id">A</span><div class="wc"><h4>Value-normalization layer <span class="gaps">keystone · gaps 1,7</span></h4><p>One canonicalizer: round px, cluster near-equal, normalize shadow syntax, prefer the desktop value. Kills <code>67.1635px</code> / <code>4.88002px</code> junk; feeds type/component dedup.</p><div class="files">new src/evidence/normalizeValues.ts → normalizeHelpers.ts</div></div></div>
+      <div class="w"><span class="id">B</span><div class="wc"><h4>Canvas detection + area de-nest <span class="gaps">fix 1 · gap 0</span></h4><p>Read the real <code>body/html</code> background; rank by page-background dominance + above-fold area; <strong>de-nest</strong> so nested backgrounds aren't double-counted.</p><div class="files">collectPageEvidence.ts · normalizeEvidence.ts · generateDesignMd.ts</div></div></div>
+      <div class="w"><span class="id">C</span><div class="wc"><h4>Honest confidence + ambiguity <span class="gaps">fix 2</span></h4><p>Near-tied canvases → <code>AMBIGUOUS_CANVAS</code> warning + confidence capped to medium. Guarded so legacy data stays silent.</p><div class="files">normalizeEvidence.ts (warnings)</div></div></div>
+      <div class="w"><span class="id">D</span><div class="wc"><h4>One generator set + complete bundle <span class="gaps">fix 3 · biggest</span></h4><p>Port the 4 client generators server-side; write all artifacts to disk every run; GUI bundle = server zip of the whole run dir (incl. screenshots). No new dependency.</p><div class="files">src/generate/* · writeArtifacts.ts · gui/server.ts · new src/io/zip.ts</div></div></div>
+      <div class="w"><span class="id">E</span><div class="wc"><h4>Token-name collisions <span class="gaps">gap 2</span></h4><p>Unique typography variable names so <code>--font-size-text</code> stops overwriting itself — invalid token CSS becomes valid.</p><div class="files">the canonical generators (from D) + DESIGN.md token starter</div></div></div>
+      <div class="w"><span class="id">F</span><div class="wc"><h4>Type / component viewport normalization <span class="gaps">gaps 3,4</span></h4><p>Normalize units before dedup; track <code>viewports[]</code> so a Card/Button isn't split or count-inflated across viewports.</p><div class="files">collectPageEvidence.ts · normalizeEvidence.ts</div></div></div>
+      <div class="w"><span class="id">G</span><div class="wc"><h4>Layout extraction <span class="gaps">gap 5 · feature</span></h4><p>Detect container max-widths + section rhythm; replace the hardcoded <code>density</code> and empty layout fields.</p><div class="files">normalizeHelpers.ts · normalizeEvidence.ts</div></div></div>
+      <div class="w"><span class="id">H</span><div class="wc"><h4>Polish <span class="gaps">gaps 6,8</span></h4><p>Colour naming heuristics (Red/Blue/Gray); stricter transparent/<code>CSS.supports</code> validation.</p><div class="files">normalizeHelpers.ts · collectPageEvidence.ts</div></div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>Tests &amp; verification</h2>
+    <ul>
+      <li>New: <code>normalizeValues.test.ts</code>, <code>zip.test.ts</code> (binary round-trip), generator unit tests, <code>writeArtifacts</code> writes all 7, bundle contains <code>screenshots/</code>.</li>
+      <li><code>normalizeEvidence.test.ts</code>: dark-footer→white canvas, transparent-body, palette prominence, ambiguity + cap; update legacy spacing/radii/order expectations; keep the simple guard test green.</li>
+      <li><code>generateStyleCss.test.ts</code>: assert <strong>no duplicate <code>--*</code> names</strong>.</li>
+      <li>End-to-end: re-extract monarque → light canvas, <code>surfaces[0]=#ffffff</code>, clean tokens, all artifacts + screenshots; regression on a dark site; GUI "Download all" contains screenshots.</li>
+    </ul>
+  </div>
+
+  <div class="sec">
+    <h2>Constraints</h2>
+    <ul>
+      <li><strong>No new runtime dependencies</strong> (port the store-zip to Node).</li>
+      <li><code>Evidence</code> public shape stays compatible (new fields optional); collection stays serializable.</li>
+      <li>Re-ranking intentionally changes token names/values → update those tests; canvas stays right via <code>surfaces[0]</code>.</li>
+    </ul>
+  </div>
+
+  <hr class="rule" />
+
+  <div class="sec">
+    <h2>Not in this round — missing capabilities</h2>
+    <div class="hidden" style="margin-bottom:var(--s-3)">
+      <div class="nc">This plan makes what the extractor <em>does</em> <strong>correct and complete</strong>. It does <strong>not</strong> add things the extractor never attempts — those are net-new features (real value for rebuild fidelity, but not fixes), a separate larger track.</div>
+    </div>
+    <ul>
+      <li><strong>Interaction states</strong> — hover / focus / active / disabled. Reads static computed styles only; never triggers interactions → a rebuild has no state info.</li>
+      <li><strong>Gradients</strong> — the colour collector reads solid <code>backgroundColor</code> only; <code>background-image: linear-gradient()</code> is ignored.</li>
+      <li><strong>Motion</strong> — transitions, animations, durations, easings: not captured.</li>
+      <li><strong>Imagery &amp; icons</strong> — "Imagery strategy: unknown" every run; no icon / illustration / photo detection.</li>
+      <li><strong>Component classification quality</strong> — dedupes components but doesn't fix the shallow card/button/badge heuristic (over-labeled 30+ "Cards" on monarque).</li>
+      <li><strong>Crawl robustness</strong> — page discovery, JS-heavy SPAs, lazy-loaded / late-settling content, infinite scroll (isomeet yielded only 1 page).</li>
+    </ul>
+  </div>
+
+  <p class="foot">
+    Plan source: ~/.claude/plans/purrfect-pondering-garden.md · Target: ~/Documents/GitHub/design-md-extractor<br/>
+    Status: approved — awaiting your go. Say "go" (all phases) or "go Phase 1" to stop after the core wins.
+  </p>
+
+</div>
+</body>
+</html>

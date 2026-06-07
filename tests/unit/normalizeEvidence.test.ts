@@ -71,6 +71,54 @@ describe('normalizeEvidence', () => {
     expect(evidence.surfaces[0]?.value).toBe('#ffffff');
   });
 
+  it('ranks white rootBackground above a dark color with larger area and more occurrences', () => {
+    const evidence = normalizeEvidence({
+      primaryUrl: 'https://example.com',
+      pages: [{ url: 'https://example.com', status: 'success' as const }],
+      capturedAt: '2026-05-28T10:00:00.000Z',
+      viewports: [{ name: 'desktop', width: 1440, height: 1000 }],
+      screenshots: [],
+      rawPages: [
+        {
+          viewport: 'desktop',
+          rootBackground: '#ffffff',
+          colors: [
+            // Dark color — larger above-fold area + more occurrences than white
+            {
+              value: '#0a0a0a',
+              property: 'backgroundColor' as const,
+              selector: 'div.hero-dark',
+              area: 1440 * 800,
+              aboveFold: true,
+            },
+            ...Array.from({ length: 8 }, (_, i) => ({
+              value: '#0a0a0a',
+              property: 'backgroundColor' as const,
+              selector: `.section-${i}`,
+              area: 500,
+              aboveFold: true,
+            })),
+            // White — small area, not above fold (except the synthetic html push)
+            {
+              value: '#ffffff',
+              property: 'backgroundColor' as const,
+              selector: 'footer',
+              area: 100,
+              aboveFold: false,
+            },
+          ],
+          typography: [],
+          components: [],
+        },
+      ],
+    });
+
+    // White wins ONLY because rootBackground pushed a synthetic html entry
+    // giving it pageBackgroundCount=1 vs dark's pageBackgroundCount=0.
+    // Without the synthetic push, dark would win on aboveFoldArea.
+    expect(evidence.surfaces[0]?.value).toBe('#ffffff');
+  });
+
   it('strips framework-hashed font tokens and selector classes from evidence', () => {
     const evidence = normalizeEvidence({
       primaryUrl: 'https://example.com',
@@ -256,5 +304,240 @@ describe('normalizeEvidence', () => {
         (item) => item.fontSize === '72px' && item.role === 'heading',
       ),
     ).toBe(true);
+  });
+
+  it('adds AMBIGUOUS_CANVAS warning and caps confidence from high to medium', () => {
+    // Each rawPage contributes backgroundCount to its rootBackground color.
+    // 6 viewport observations of '#ffffff' → backgroundCount=6 → normally 'high' confidence.
+    // 5 viewport observations of '#fafafa' → pageBackgroundCount=5 → ratio=5/6=0.83 ≥ 0.75 → ambiguous.
+    const rawPages = [
+      ...Array.from({ length: 6 }, (_, i) => ({
+        viewport: i % 2 === 0 ? 'desktop' : 'mobile',
+        rootBackground: '#ffffff' as const,
+        colors: [
+          {
+            value: '#ffffff',
+            property: 'backgroundColor' as const,
+            selector: 'body',
+            area: 1440 * 900,
+            aboveFold: true,
+          },
+        ],
+        typography: [] as never[],
+        components: [] as never[],
+      })),
+      ...Array.from({ length: 5 }, (_, i) => ({
+        viewport: i % 2 === 0 ? 'desktop' : 'mobile',
+        rootBackground: '#fafafa' as const,
+        colors: [
+          {
+            value: '#fafafa',
+            property: 'backgroundColor' as const,
+            selector: 'body',
+            area: 1440 * 900,
+            aboveFold: true,
+          },
+        ],
+        typography: [] as never[],
+        components: [] as never[],
+      })),
+    ];
+
+    const evidence = normalizeEvidence({
+      primaryUrl: 'https://example.com',
+      pages: [
+        { url: 'https://example.com', status: 'success' as const },
+        { url: 'https://example.com/about', status: 'success' as const },
+      ],
+      capturedAt: '2026-05-28T10:00:00.000Z',
+      viewports: [
+        { name: 'desktop', width: 1440, height: 1000 },
+        { name: 'mobile', width: 375, height: 812 },
+      ],
+      screenshots: [],
+      rawPages,
+    });
+
+    // Ambiguity warning must be present
+    const ambiguous = evidence.warnings.find(
+      (w) => w.code === 'AMBIGUOUS_CANVAS',
+    );
+    expect(ambiguous).toBeDefined();
+
+    // surfaces[0] would have 'high' confidence from backgroundCount=6,
+    // but the ambiguity cap must have downgraded it to 'medium'
+    expect(evidence.surfaces[0]?.confidence).toBe('medium');
+  });
+
+  it('does NOT emit AMBIGUOUS_CANVAS when one page background is clearly dominant', () => {
+    const evidence = normalizeEvidence({
+      primaryUrl: 'https://example.com',
+      pages: [{ url: 'https://example.com', status: 'success' as const }],
+      capturedAt: '2026-05-28T10:00:00.000Z',
+      viewports: [{ name: 'desktop', width: 1440, height: 1000 }],
+      screenshots: [],
+      rawPages: [
+        {
+          viewport: 'desktop',
+          rootBackground: '#ffffff',
+          colors: [
+            {
+              value: '#ffffff',
+              property: 'backgroundColor' as const,
+              selector: 'body',
+              area: 1440 * 900,
+              aboveFold: true,
+            },
+            {
+              value: '#111111',
+              property: 'backgroundColor' as const,
+              selector: 'footer',
+              area: 1440 * 100,
+              aboveFold: false,
+            },
+          ],
+          typography: [],
+          components: [],
+        },
+      ],
+    });
+
+    expect(
+      evidence.warnings.find((w) => w.code === 'AMBIGUOUS_CANVAS'),
+    ).toBeUndefined();
+  });
+
+  it('deduplicates typography rows that differ only by viewport sub-pixel scaling', () => {
+    const evidence = normalizeEvidence({
+      primaryUrl: 'https://example.com',
+      pages: [{ url: 'https://example.com', status: 'success' as const }],
+      capturedAt: '2026-05-28T10:00:00.000Z',
+      viewports: [
+        { name: 'desktop', width: 1440, height: 1000 },
+        { name: 'mobile', width: 375, height: 812 },
+      ],
+      screenshots: [],
+      rawPages: [
+        {
+          viewport: 'desktop',
+          colors: [],
+          typography: [
+            {
+              selector: 'h1',
+              role: 'heading',
+              fontFamily: 'Inter',
+              fontSize: '48.0001px',
+              fontWeight: '700',
+              lineHeight: '57.6001px',
+              letterSpacing: '0px',
+            },
+          ],
+          components: [],
+        },
+        {
+          viewport: 'mobile',
+          colors: [],
+          typography: [
+            {
+              selector: 'h1',
+              role: 'heading',
+              fontFamily: 'Inter',
+              fontSize: '47.9999px',
+              fontWeight: '700',
+              lineHeight: '57.5999px',
+              letterSpacing: '0px',
+            },
+          ],
+          components: [],
+        },
+      ],
+    });
+
+    const headingEntries = evidence.tokens.typography.filter(
+      (t) => t.role === 'heading' && t.fontFamily === 'Inter',
+    );
+    expect(headingEntries).toHaveLength(1);
+  });
+
+  it('tracks viewports[] on components that appear across multiple viewports', () => {
+    const evidence = normalizeEvidence({
+      primaryUrl: 'https://example.com',
+      pages: [{ url: 'https://example.com', status: 'success' as const }],
+      capturedAt: '2026-05-28T10:00:00.000Z',
+      viewports: [
+        { name: 'desktop', width: 1440, height: 1000 },
+        { name: 'mobile', width: 375, height: 812 },
+      ],
+      screenshots: [],
+      rawPages: [
+        {
+          viewport: 'desktop',
+          colors: [],
+          typography: [],
+          components: [
+            {
+              kind: 'button',
+              selector: 'a.cta',
+              textSample: 'Get started',
+              styles: {
+                backgroundColor: '#ff5900',
+                borderRadius: '8px',
+                padding: '12px 24px',
+                color: '#fff',
+              },
+              bounds: { width: 140, height: 44 },
+            },
+          ],
+        },
+        {
+          viewport: 'mobile',
+          colors: [],
+          typography: [],
+          components: [
+            {
+              kind: 'button',
+              selector: 'a.cta',
+              textSample: 'Get started',
+              styles: {
+                backgroundColor: '#ff5900',
+                borderRadius: '8px',
+                padding: '12px 24px',
+                color: '#fff',
+              },
+              bounds: { width: 140, height: 44 },
+            },
+          ],
+        },
+      ],
+    });
+
+    const btn = evidence.components.find((c) => c.kind === 'button');
+    expect(btn?.viewports).toBeDefined();
+    expect(btn?.viewports).toHaveLength(2);
+    expect(btn?.viewports).toContain('desktop');
+    expect(btn?.viewports).toContain('mobile');
+  });
+
+  it('populates layout containerWidths and derives density from section gaps', () => {
+    const evidence = normalizeEvidence({
+      primaryUrl: 'https://example.com',
+      pages: [{ url: 'https://example.com', status: 'success' as const }],
+      capturedAt: '2026-05-28T10:00:00.000Z',
+      viewports: [{ name: 'desktop', width: 1440, height: 1000 }],
+      screenshots: [],
+      rawPages: [
+        {
+          viewport: 'desktop',
+          colors: [],
+          typography: [],
+          components: [],
+          containerWidths: [1120, 1120, 1120, 768],
+          sectionGaps: [80, 80, 64, 80],
+        },
+      ],
+    });
+
+    expect(evidence.layout.containerWidths).toContain(1120);
+    expect(evidence.layout.density).toBe('spacious');
   });
 });

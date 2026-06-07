@@ -1,8 +1,50 @@
 import { confidenceFromFrequency } from './confidence.js';
+import { roundPxValue } from './normalizeValues.js';
 
 export function tokenNameFromColor(value: string, index: number): string {
   if (value === '#ffffff') return 'Canvas White';
   if (value === '#000000') return 'Rich Black';
+
+  const hex =
+    value.startsWith('#') && value.length === 7 ? value.slice(1) : null;
+  if (hex) {
+    const r = parseInt(hex.slice(0, 2), 16) / 255;
+    const g = parseInt(hex.slice(2, 4), 16) / 255;
+    const b = parseInt(hex.slice(4, 6), 16) / 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const l = (max + min) / 2;
+    const s =
+      max === min
+        ? 0
+        : l > 0.5
+          ? (max - min) / (2 - max - min)
+          : (max - min) / (max + min);
+
+    if (l > 0.93) return 'Off White';
+    if (l < 0.08) return 'Near Black';
+    if (s < 0.12)
+      return l > 0.6 ? 'Light Gray' : l > 0.35 ? 'Gray' : 'Dark Gray';
+
+    const d = max - min;
+    const h =
+      max === r
+        ? ((g - b) / d + (g < b ? 6 : 0)) / 6
+        : max === g
+          ? ((b - r) / d + 2) / 6
+          : ((r - g) / d + 4) / 6;
+    const hDeg = h * 360;
+
+    if (hDeg < 15 || hDeg >= 345) return 'Red';
+    if (hDeg < 45) return 'Orange';
+    if (hDeg < 75) return 'Yellow';
+    if (hDeg < 150) return 'Green';
+    if (hDeg < 195) return 'Teal';
+    if (hDeg < 255) return 'Blue';
+    if (hDeg < 300) return 'Purple';
+    return 'Pink';
+  }
+
   return `Color ${index + 1}`;
 }
 
@@ -157,7 +199,8 @@ export function styleTokensFromComponents(
   for (const component of components) {
     const value = component.styles[property];
     if (!isUsefulTokenValue(value, rejected)) continue;
-    counts.set(value, (counts.get(value) ?? 0) + 1);
+    const normalized = roundPxValue(value);
+    counts.set(normalized, (counts.get(normalized) ?? 0) + 1);
   }
 
   return Array.from(counts.entries())
@@ -170,9 +213,12 @@ export function styleTokensFromComponents(
     }));
 }
 
-type ColorCountData = {
+export type ColorCountData = {
   frequency: number;
   backgroundCount: number;
+  pageBackgroundCount: number;
+  aboveFoldArea: number;
+  totalArea: number;
   properties: Set<string>;
   selectors: Set<string>;
 };
@@ -198,11 +244,17 @@ export function buildSurfaces(
 ): SurfaceToken[] {
   const candidates = Array.from(colorCounts.entries())
     .filter(([, data]) => data.backgroundCount > 0)
-    .sort((a, b) =>
-      b[1].backgroundCount !== a[1].backgroundCount
-        ? b[1].backgroundCount - a[1].backgroundCount
-        : b[1].frequency - a[1].frequency,
-    )
+    .sort((a, b) => {
+      const [, ad] = a;
+      const [, bd] = b;
+      if (bd.pageBackgroundCount !== ad.pageBackgroundCount)
+        return bd.pageBackgroundCount - ad.pageBackgroundCount;
+      if (bd.aboveFoldArea !== ad.aboveFoldArea)
+        return bd.aboveFoldArea - ad.aboveFoldArea;
+      if (bd.backgroundCount !== ad.backgroundCount)
+        return bd.backgroundCount - ad.backgroundCount;
+      return bd.frequency - ad.frequency;
+    })
     .slice(0, 4)
     .map(([value, data], index) => ({
       level: index,

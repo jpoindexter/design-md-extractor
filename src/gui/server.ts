@@ -1,12 +1,13 @@
 import { createReadStream } from 'node:fs';
-import { stat } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import {
   createServer,
   type IncomingMessage,
   type Server,
   type ServerResponse,
 } from 'node:http';
-import { extname, resolve, sep } from 'node:path';
+import { extname, join, resolve, sep } from 'node:path';
+import { writeZip } from '../io/zip.js';
 import { renderAppHtml } from './appHtml.js';
 import { detectClis } from './detectClis.js';
 import { runGuiExtraction } from './runGuiExtraction.js';
@@ -99,6 +100,45 @@ export function friendlyExtractionError(message: string): string {
   return message.split(/\n?Call log:/)[0].trim() || message;
 }
 
+// Zip an entire run directory on demand and stream it as a download. The runId
+// pattern is restricted to safe filename chars, and the resolved run directory
+// is confirmed to sit inside runsDir before any filesystem work (same guard as
+// serveRunFile) to block path traversal.
+export async function serveRunBundle(
+  res: ServerResponse,
+  runsDir: string,
+  runId: string,
+): Promise<void> {
+  const root = resolve(runsDir);
+  const runDir = resolve(root, runId);
+  if (!runDir.startsWith(`${root}${sep}`)) {
+    res.writeHead(403);
+    res.end('Forbidden');
+    return;
+  }
+
+  try {
+    const runStat = await stat(runDir);
+    if (!runStat.isDirectory()) {
+      res.writeHead(404);
+      res.end('Not found');
+      return;
+    }
+    const zipPath = join(runDir, 'bundle.zip');
+    await writeZip(runDir, zipPath);
+    const zipData = await readFile(zipPath);
+    res.writeHead(200, {
+      'content-type': 'application/zip',
+      'content-disposition': `attachment; filename="${runId}.zip"`,
+      'content-length': zipData.length,
+    });
+    res.end(zipData);
+  } catch {
+    res.writeHead(404);
+    res.end('Not found');
+  }
+}
+
 async function serveRunFile(
   res: ServerResponse,
   runsDir: string,
@@ -143,6 +183,15 @@ export function createGuiServer(options: CreateGuiServerOptions = {}): Server {
         'content-length': Buffer.byteLength(html),
       });
       res.end(html);
+      return;
+    }
+
+    // Bundle ZIP — must be matched before the generic /runs/ static handler.
+    const bundleMatch = url.pathname.match(
+      /^\/runs\/([a-zA-Z0-9._-]+)\/bundle\.zip$/,
+    );
+    if (req.method === 'GET' && bundleMatch) {
+      await serveRunBundle(res, runsDir, bundleMatch[1] as string);
       return;
     }
 
