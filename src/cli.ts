@@ -4,6 +4,9 @@ import { runExtraction } from './crawl/runExtraction.js';
 
 async function main(): Promise<void> {
   const config = parseExtractArgs(process.argv.slice(2));
+  for (const warning of config.sessionWarnings ?? []) {
+    console.warn(`warning: ${warning}`);
+  }
   await runExtraction(config);
   console.log(`Design artifacts written to ${config.outDir}`);
 }

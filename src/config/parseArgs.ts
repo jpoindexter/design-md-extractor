@@ -1,4 +1,5 @@
 import { Command } from 'commander';
+import { resolveSessionConfig } from './sessionConfig.js';
 import type { SessionConfig } from './sessionConfig.js';
 import { defaultViewports, type ViewportConfig } from './viewports.js';
 
@@ -11,6 +12,7 @@ export type ExtractConfig = {
   preview: boolean;
   timeoutMs: number;
   session?: SessionConfig;
+  sessionWarnings?: string[];
 };
 
 export function parseExtractArgs(argv: string[]): ExtractConfig {
@@ -33,6 +35,18 @@ export function parseExtractArgs(argv: string[]): ExtractConfig {
     .option('--max-components <number>', 'maximum component samples', '80')
     .option('--no-preview', 'skip preview.html')
     .option('--timeout <ms>', 'page load timeout', '30000')
+    .option(
+      '--cookies <path>',
+      'cookie file (Playwright JSON or Netscape cookies.txt) to inject',
+    )
+    .option(
+      '--user-agent <ua>',
+      'User-Agent to match the browser that obtained the cookies',
+    )
+    .option(
+      '--profile <dir>',
+      'persistent Chrome profile dir; opens a real headed window so you can clear Cloudflare/login once, then reuses the session',
+    )
     .action((url: string, options: Record<string, unknown>) => {
       if (!String(options.out ?? '').trim()) {
         throw new Error('--out is required');
@@ -46,6 +60,12 @@ export function parseExtractArgs(argv: string[]): ExtractConfig {
         selectedNames.includes(viewport.name),
       );
 
+      const { session, warnings: sessionWarnings } = resolveSessionConfig({
+        profile: options.profile as string | undefined,
+        cookies: options.cookies as string | undefined,
+        userAgent: options.userAgent as string | undefined,
+      });
+
       config = {
         url: new URL(url).toString(),
         outDir: String(options.out),
@@ -57,6 +77,8 @@ export function parseExtractArgs(argv: string[]): ExtractConfig {
         maxComponents: Number.parseInt(String(options.maxComponents), 10),
         preview: options.preview !== false,
         timeoutMs: Number.parseInt(String(options.timeout), 10),
+        session,
+        sessionWarnings,
       };
     });
 
