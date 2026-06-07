@@ -124,6 +124,12 @@ export const EvidenceSchema = z.object({
       }),
     )
     .optional(),
+  motion: z
+    .object({
+      durations: z.array(z.string()),
+      easings: z.array(z.string()),
+    })
+    .optional(),
   layout: z.object({
     density: z.string(),
     containerWidths: z.array(z.number()).optional(),

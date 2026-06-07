@@ -277,6 +277,24 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
     4,
   );
 
+  const durationCounts = new Map<string, number>();
+  const easingCounts = new Map<string, number>();
+  for (const page of input.rawPages) {
+    for (const d of page.motion?.durations ?? [])
+      durationCounts.set(d, (durationCounts.get(d) ?? 0) + 1);
+    for (const e of page.motion?.easings ?? [])
+      easingCounts.set(e, (easingCounts.get(e) ?? 0) + 1);
+  }
+  const topByCount = (counts: Map<string, number>, n: number): string[] =>
+    [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, n)
+      .map(([v]) => v);
+  const motion = {
+    durations: topByCount(durationCounts, 8),
+    easings: topByCount(easingCounts, 8),
+  };
+
   const evidence: Evidence = {
     version: '0.1.0',
     source: {
@@ -297,6 +315,7 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
     surfaces,
     components,
     fontFaces,
+    motion,
     layout: {
       density,
       containerWidths: containerWidths.length > 0 ? containerWidths : undefined,

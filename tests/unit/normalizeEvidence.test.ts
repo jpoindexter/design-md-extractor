@@ -559,6 +559,28 @@ describe('normalizeEvidence', () => {
     expect(evidence.tokens.gradients).toHaveLength(1);
   });
 
+  it('aggregates motion durations and easings across pages', () => {
+    const evidence = normalizeEvidence({
+      primaryUrl: 'https://example.com',
+      pages: [{ url: 'https://example.com', status: 'success' as const }],
+      capturedAt: '2026-05-28T10:00:00.000Z',
+      viewports: [{ name: 'desktop', width: 1440, height: 1000 }],
+      screenshots: [],
+      rawPages: [
+        {
+          viewport: 'desktop',
+          colors: [],
+          typography: [],
+          components: [],
+          motion: { durations: ['0.3s'], easings: ['ease-out'] },
+        },
+      ],
+    });
+
+    expect(evidence.motion?.durations).toContain('0.3s');
+    expect(evidence.motion?.easings).toContain('ease-out');
+  });
+
   it('populates layout containerWidths and derives density from section gaps', () => {
     const evidence = normalizeEvidence({
       primaryUrl: 'https://example.com',

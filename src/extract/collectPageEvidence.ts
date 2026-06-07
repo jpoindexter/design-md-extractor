@@ -32,6 +32,7 @@ export type RawPageEvidence = {
     src: string;
   }>;
   gradients?: Array<{ value: string; selector: string }>;
+  motion?: { durations: string[]; easings: string[] };
   containerWidths?: number[];
   sectionGaps?: number[];
 };
@@ -400,6 +401,9 @@ export async function collectPageEvidence(
       });
     }
 
+    const motionDurations = new Set<string>();
+    const motionEasings = new Set<string>();
+
     const elements = Array.from(
       document.querySelectorAll('body, body *'),
     ).filter(isVisible);
@@ -408,6 +412,25 @@ export async function collectPageEvidence(
       const style = window.getComputedStyle(element);
       const selector = selectorPath(element);
       const rect = element.getBoundingClientRect();
+
+      const transitionDuration = style.transitionDuration;
+      const animationDuration = style.animationDuration;
+      const hasMotion =
+        /[1-9]/.test(transitionDuration) || /[1-9]/.test(animationDuration);
+      if (hasMotion) {
+        for (const dur of `${transitionDuration}, ${animationDuration}`.split(
+          ',',
+        )) {
+          const d = dur.trim();
+          if (d && d !== '0s' && d !== '0ms') motionDurations.add(d);
+        }
+        for (const ease of `${style.transitionTimingFunction}, ${style.animationTimingFunction}`.split(
+          /,(?![^(]*\))/, // split on commas NOT inside cubic-bezier(...)
+        )) {
+          const e = ease.trim();
+          if (e && e !== 'ease') motionEasings.add(e);
+        }
+      }
 
       for (const property of ['color', 'backgroundColor', 'borderColor']) {
         const value = (style as CSSStyleDeclaration & Record<string, string>)[
@@ -568,6 +591,10 @@ export async function collectPageEvidence(
       typography,
       components,
       fontFaces,
+      motion: {
+        durations: Array.from(motionDurations).slice(0, 16),
+        easings: Array.from(motionEasings).slice(0, 16),
+      },
       containerWidths,
       sectionGaps,
       rootBackground: rootBackground || undefined,

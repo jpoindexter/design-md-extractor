@@ -128,6 +128,30 @@ describe('collectPageEvidence', () => {
     expect(gradient?.value).not.toMatch(/rgb\(/);
   });
 
+  it('captures transition/animation durations and keeps cubic-bezier easings intact', async () => {
+    const browser = await chromium.launch();
+    const page = await browser.newPage({
+      viewport: { width: 1440, height: 1000 },
+    });
+    await page.setContent(
+      '<button style="transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)">Hover me</button>',
+    );
+
+    const evidence = await collectPageEvidence(page, {
+      viewport: 'desktop',
+      maxComponents: 20,
+    });
+    await browser.close();
+
+    expect(evidence.motion?.durations.includes('0.3s')).toBe(true);
+    const cubicEasing = evidence.motion?.easings.find((easing) =>
+      easing.includes('cubic-bezier'),
+    );
+    expect(cubicEasing).toBeDefined();
+    // The bezier's internal commas must NOT split it into fragments.
+    expect(cubicEasing).toBe('cubic-bezier(0.4, 0, 0.2, 1)');
+  });
+
   it('prioritizes styled controls and cards over unstyled wrappers when capped', async () => {
     const browser = await chromium.launch();
     const page = await browser.newPage({

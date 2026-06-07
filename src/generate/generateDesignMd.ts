@@ -169,6 +169,25 @@ function componentSection(evidence: Evidence): string {
     .join('\n\n');
 }
 
+function motionSection(evidence: Evidence): string {
+  const motion = evidence.motion;
+  if (
+    !motion ||
+    (motion.durations.length === 0 && motion.easings.length === 0)
+  ) {
+    return 'No motion (transitions or animations) detected.';
+  }
+  const durations =
+    motion.durations.length > 0
+      ? motion.durations.map((d) => `\`${d}\``).join(', ')
+      : 'none observed';
+  const easings =
+    motion.easings.length > 0
+      ? motion.easings.map((e) => `\`${e}\``).join(', ')
+      : 'none observed';
+  return `Transition/animation durations: ${durations}.\n\nEasing curves: ${easings}.`;
+}
+
 function warningsSection(evidence: Evidence): string {
   const warnings =
     evidence.warnings.length === 0
@@ -307,6 +326,10 @@ Use the color, typography, surface, and component tables above as the source of 
 \`\`\`css
 ${generateStyleCss(evidence).trim()}
 \`\`\`
+
+## Motion
+
+${motionSection(evidence)}
 
 ## 11. Known Gaps
 
