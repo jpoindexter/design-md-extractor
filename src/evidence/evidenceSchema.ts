@@ -94,6 +94,7 @@ export const EvidenceSchema = z.object({
       role: z.string(),
       textSample: z.string().optional(),
       viewport: z.string(),
+      viewports: z.array(z.string()).optional(),
       selector: z.string(),
       count: z.number().int().positive(),
       styles: z.record(z.string(), z.string()),

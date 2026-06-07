@@ -15,6 +15,7 @@ import {
   tokenNameFromColor,
   typographySignalScore,
 } from './normalizeHelpers.js';
+import { normalizeTypographyKey } from './normalizeValues.js';
 
 type NormalizeInput = {
   primaryUrl: string;
@@ -103,14 +104,14 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
   for (const sample of input.rawPages.flatMap((page) => page.typography)) {
     const cleanFamily = cleanFontFamily(sample.fontFamily);
     const cleanSel = cleanSelector(sample.selector);
-    const key = [
-      sample.role,
-      cleanFamily,
-      sample.fontSize,
-      sample.fontWeight,
-      sample.lineHeight,
-      sample.letterSpacing,
-    ].join('|');
+    const key = normalizeTypographyKey({
+      role: sample.role,
+      fontFamily: cleanFamily,
+      fontSize: sample.fontSize,
+      fontWeight: sample.fontWeight,
+      lineHeight: sample.lineHeight,
+      letterSpacing: sample.letterSpacing,
+    });
     const current = typographyMap.get(key);
     if (current) {
       current.seen += 1;
@@ -163,6 +164,7 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
       role: string;
       textSample: string;
       viewport: string;
+      viewports: Set<string>;
       selector: string;
       count: number;
       styles: Record<string, string>;
@@ -186,6 +188,7 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
       const existing = componentMap.get(key);
       if (existing) {
         existing.count += 1;
+        existing.viewports.add(page.viewport);
         if (component.textSample.length > existing.textSample.length) {
           existing.textSample = component.textSample;
         }
@@ -205,6 +208,7 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
         role: `${componentName(component.kind)} component`,
         textSample: component.textSample,
         viewport: page.viewport,
+        viewports: new Set([page.viewport]),
         selector: component.selector,
         count: 1,
         styles: component.styles,
@@ -226,6 +230,7 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
     .slice(0, 80)
     .map((component) => ({
       ...component,
+      viewports: [...component.viewports],
       confidence: confidenceFromFrequency(component.count),
     }));
 
@@ -245,9 +250,82 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
   ]);
 
   const surfaces = buildSurfaces(colorCounts, colors);
+
+  const top1 = surfaces[0];
+  const top2 = surfaces[1];
+  const d1 = top1 ? colorCounts.get(top1.value) : undefined;
+  const d2 = top2 ? colorCounts.get(top2.value) : undefined;
+  const ambiguityWarnings: Array<{
+    code: string;
+    message: string;
+    severity: 'info' | 'warning' | 'error';
+  }> = [];
+
+  if (
+    top1 &&
+    top2 &&
+    d1 &&
+    d2 &&
+    d1.pageBackgroundCount > 0 &&
+    d2.pageBackgroundCount > 0
+  ) {
+    const ratio = d2.pageBackgroundCount / d1.pageBackgroundCount;
+    if (ratio >= 0.75) {
+      ambiguityWarnings.push({
+        code: 'AMBIGUOUS_CANVAS',
+        message: `Canvas is ambiguous: ${top1.value} and ${top2.value} appear as the root background on similar numbers of pages. Confirm the base surface manually.`,
+        severity: 'warning',
+      });
+      if (top1.confidence === 'high') {
+        top1.confidence = 'medium';
+      }
+    }
+  }
+
   const fontFaces = buildFontFaces(input.rawPages, typography, components);
 
   const uniquePageUrls = new Set(input.pages.map((page) => page.url));
+
+  // Aggregate layout signals from all raw pages.
+  const allContainerWidths = input.rawPages.flatMap(
+    (p) => p.containerWidths ?? [],
+  );
+  const allSectionGaps = input.rawPages.flatMap((p) => p.sectionGaps ?? []);
+
+  function topNValues<T extends string | number>(values: T[], n: number): T[] {
+    const counts = new Map<string, number>();
+    for (const v of values)
+      counts.set(String(v), (counts.get(String(v)) ?? 0) + 1);
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, n)
+      .map(([k]) => values.find((v) => String(v) === k) as T);
+  }
+
+  const containerWidths = [...new Set(topNValues(allContainerWidths, 4))].sort(
+    (a, b) => b - a,
+  );
+
+  const medianGap =
+    allSectionGaps.length > 0
+      ? allSectionGaps.slice().sort((a, b) => a - b)[
+          Math.floor(allSectionGaps.length / 2)
+        ]
+      : undefined;
+
+  const density =
+    medianGap === undefined
+      ? 'comfortable'
+      : medianGap < 24
+        ? 'compact'
+        : medianGap > 64
+          ? 'spacious'
+          : 'comfortable';
+
+  const sectionGapTokens = topNValues(
+    allSectionGaps.map((g) => `${g}px`),
+    4,
+  );
 
   const evidence: Evidence = {
     version: '0.1.0',
@@ -269,7 +347,9 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
     components,
     fontFaces,
     layout: {
-      density: 'comfortable',
+      density,
+      containerWidths: containerWidths.length > 0 ? containerWidths : undefined,
+      sectionGaps: sectionGapTokens.length > 0 ? sectionGapTokens : undefined,
     },
     imagery: {
       strategy: 'unknown',
@@ -281,8 +361,9 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
           `${viewport.name} captured at ${viewport.width}x${viewport.height}.`,
       ),
     },
-    warnings:
-      uniquePageUrls.size <= 1
+    warnings: [
+      ...ambiguityWarnings,
+      ...(uniquePageUrls.size <= 1
         ? [
             {
               code: 'limited-pages',
@@ -291,7 +372,8 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
               severity: 'info' as const,
             },
           ]
-        : [],
+        : []),
+    ],
   };
 
   return EvidenceSchema.parse(evidence);

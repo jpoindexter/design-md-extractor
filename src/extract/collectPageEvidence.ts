@@ -305,16 +305,27 @@ export async function collectPageEvidence(
         window.getComputedStyle(document.documentElement).backgroundColor,
       );
     }
-    const rootBackground = rootBgColor();
-
-    const elements = Array.from(
-      document.querySelectorAll('body, body *'),
-    ).filter(isVisible);
     const colors: RawPageEvidence['colors'] = [];
     const typography: RawPageEvidence['typography'] = [];
     const componentCandidates: Array<
       RawPageEvidence['components'][number] & { score: number; order: number }
     > = [];
+
+    const rootBackground = rootBgColor();
+
+    if (rootBackground && rootBackground !== 'transparent') {
+      colors.push({
+        value: rootBackground,
+        property: 'backgroundColor',
+        selector: 'html',
+        area: Math.round(window.innerWidth * window.innerHeight),
+        aboveFold: true,
+      });
+    }
+
+    const elements = Array.from(
+      document.querySelectorAll('body, body *'),
+    ).filter(isVisible);
 
     for (const [order, element] of elements.entries()) {
       const style = window.getComputedStyle(element);
