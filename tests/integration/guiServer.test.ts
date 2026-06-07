@@ -1,8 +1,43 @@
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { request } from 'node:http';
-import { describe, expect, it } from 'vitest';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, describe, expect, it } from 'vitest';
 import { createGuiServer } from '../../src/gui/server.js';
 
-function postJson(port: number, path: string, body: unknown): Promise<{ status: number; json: unknown }> {
+function getRaw(
+  port: number,
+  path: string,
+): Promise<{
+  status: number;
+  headers: Record<string, string | string[] | undefined>;
+  body: Buffer;
+}> {
+  return new Promise((resolve, reject) => {
+    const req = request(
+      { hostname: '127.0.0.1', port, path, method: 'GET' },
+      (res) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (chunk: Buffer) => chunks.push(chunk));
+        res.on('end', () =>
+          resolve({
+            status: res.statusCode ?? 0,
+            headers: res.headers,
+            body: Buffer.concat(chunks),
+          }),
+        );
+      },
+    );
+    req.on('error', reject);
+    req.end();
+  });
+}
+
+function postJson(
+  port: number,
+  path: string,
+  body: unknown,
+): Promise<{ status: number; json: unknown }> {
   return new Promise((resolve, reject) => {
     const payload = JSON.stringify(body);
     const req = request(
@@ -77,7 +112,9 @@ describe('createGuiServer', () => {
     try {
       const address = server.address();
       const port = typeof address === 'object' && address ? address.port : 0;
-      const response = await postJson(port, '/api/extract', { url: 'www.example.com' });
+      const response = await postJson(port, '/api/extract', {
+        url: 'www.example.com',
+      });
 
       expect(response.status).toBe(200);
       expect(receivedUrl).toBe('https://www.example.com/');
@@ -110,7 +147,8 @@ describe('createGuiServer', () => {
           },
           styleThesis:
             'sparse density, #111111 primary and #f5f5f5 secondary, Inter as the main typeface, and 2 distinct surface levels across 1 inspected pages.',
-          bestScreenshotHref: '/runs/example-com-123/screenshots/example-com-desktop.png',
+          bestScreenshotHref:
+            '/runs/example-com-123/screenshots/example-com-desktop.png',
           pages: [{ url: 'https://example.com/', status: 'success' }],
           colors: [
             {
@@ -134,7 +172,13 @@ describe('createGuiServer', () => {
           ],
           spacing: [{ name: 'Space 1', value: '8px', confidence: 'high' }],
           radii: [{ name: 'Radius 1', value: '8px', confidence: 'high' }],
-          shadows: [{ name: 'Shadow 1', value: '0 4px 16px rgba(0,0,0,.12)', confidence: 'medium' }],
+          shadows: [
+            {
+              name: 'Shadow 1',
+              value: '0 4px 16px rgba(0,0,0,.12)',
+              confidence: 'medium',
+            },
+          ],
           surfaces: [
             {
               level: 1,
@@ -144,7 +188,13 @@ describe('createGuiServer', () => {
               confidence: 'high',
             },
           ],
-          warnings: [{ code: 'PARTIAL_SCAN', message: 'Only one page inspected.', severity: 'info' }],
+          warnings: [
+            {
+              code: 'PARTIAL_SCAN',
+              message: 'Only one page inspected.',
+              severity: 'info',
+            },
+          ],
           components: [],
           screenshots: [],
         },
@@ -158,7 +208,9 @@ describe('createGuiServer', () => {
     try {
       const address = server.address();
       const port = typeof address === 'object' && address ? address.port : 0;
-      const response = await postJson(port, '/api/extract', { url: 'https://example.com' });
+      const response = await postJson(port, '/api/extract', {
+        url: 'https://example.com',
+      });
 
       expect(response.status).toBe(200);
       expect(response.json).toMatchObject({
@@ -172,7 +224,8 @@ describe('createGuiServer', () => {
             capturedAt: '2026-05-28T12:00:00.000Z',
           },
           styleThesis: expect.stringContaining('sparse density'),
-          bestScreenshotHref: '/runs/example-com-123/screenshots/example-com-desktop.png',
+          bestScreenshotHref:
+            '/runs/example-com-123/screenshots/example-com-desktop.png',
           colors: [{ cssVariable: '--color-rich-black' }],
           typography: [{ lineHeight: '24px', letterSpacing: '0px' }],
           spacing: [{ name: 'Space 1' }],
@@ -182,6 +235,81 @@ describe('createGuiServer', () => {
           warnings: [{ code: 'PARTIAL_SCAN', severity: 'info' }],
         },
       });
+    } finally {
+      await new Promise<void>((resolve, reject) => {
+        server.close((error) => (error ? reject(error) : resolve()));
+      });
+    }
+  });
+});
+
+describe('GET /runs/:id/bundle.zip', () => {
+  let runsDir = '';
+
+  afterEach(async () => {
+    if (runsDir) {
+      await rm(runsDir, { recursive: true, force: true });
+      runsDir = '';
+    }
+  });
+
+  it('streams a valid zip of the run directory', async () => {
+    runsDir = join(tmpdir(), `gui-runs-${process.pid}-${Date.now()}`);
+    const runDir = join(runsDir, 'example-com-123');
+    await mkdir(runDir, { recursive: true });
+    await writeFile(join(runDir, 'DESIGN.md'), '# Design');
+    await writeFile(join(runDir, 'evidence.json'), '{"ok":true}');
+
+    const server = createGuiServer({
+      runsDir,
+      runExtraction: async (input) => ({
+        runId: 'unused',
+        url: input.url,
+        outDir: runDir,
+        discoveredPages: [],
+        artifacts: {
+          designMd: '',
+          evidenceJson: '',
+          previewHtml: '',
+        },
+        summary: {
+          source: { primaryUrl: input.url, capturedAt: '' },
+          styleThesis: '',
+          bestScreenshotHref: null,
+          pages: [],
+          colors: [],
+          typography: [],
+          spacing: [],
+          radii: [],
+          shadows: [],
+          surfaces: [],
+          warnings: [],
+          components: [],
+          screenshots: [],
+        },
+      }),
+    });
+
+    await new Promise<void>((resolve) => {
+      server.listen(0, '127.0.0.1', resolve);
+    });
+
+    try {
+      const address = server.address();
+      const port = typeof address === 'object' && address ? address.port : 0;
+
+      const ok = await getRaw(port, '/runs/example-com-123/bundle.zip');
+      expect(ok.status).toBe(200);
+      expect(ok.headers['content-type']).toBe('application/zip');
+      expect(ok.headers['content-disposition']).toBe(
+        'attachment; filename="example-com-123.zip"',
+      );
+      expect(ok.body[0]).toBe(0x50);
+      expect(ok.body[1]).toBe(0x4b);
+      expect(ok.body.length).toBeGreaterThan(100);
+
+      const missing = await getRaw(port, '/runs/does-not-exist/bundle.zip');
+      expect(missing.status).toBe(404);
     } finally {
       await new Promise<void>((resolve, reject) => {
         server.close((error) => (error ? reject(error) : resolve()));
