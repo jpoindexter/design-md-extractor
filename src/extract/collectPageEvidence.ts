@@ -203,6 +203,28 @@ export async function collectPageEvidence(
       );
     }
 
+    const MEDIA_TAGS = [
+      'img',
+      'svg',
+      'picture',
+      'video',
+      'canvas',
+      'source',
+      'iframe',
+    ];
+
+    // A real card carries content — readable text or a structure of several
+    // non-media children. A painted box that only frames a single image/decoration
+    // is a media container, not a reusable component, so it must not count.
+    function hasCardSubstance(element: Element): boolean {
+      const text = (element.textContent ?? '').replace(/\s+/g, ' ').trim();
+      if (text.length >= 10) return true;
+      const meaningfulChildren = Array.from(element.children).filter(
+        (child) => !MEDIA_TAGS.includes(child.tagName.toLowerCase()),
+      );
+      return meaningfulChildren.length >= 2;
+    }
+
     function hasCardShape(
       element: Element,
       style: CSSStyleDeclaration,
@@ -214,6 +236,7 @@ export async function collectPageEvidence(
         rect.width >= 120 &&
         rect.height >= 60 &&
         hasVisiblePaint(style) &&
+        hasCardSubstance(element) &&
         (numericPx(style.borderRadius) > 0 ||
           style.boxShadow !== 'none' ||
           normalizeColor(style.borderColor) !== 'transparent')
@@ -231,6 +254,9 @@ export async function collectPageEvidence(
       rect: DOMRect,
     ): string | null {
       const tag = element.tagName.toLowerCase();
+      // Media/leaf elements are content, not reusable components — even when their
+      // class names contain "card"/"btn" (e.g. Webflow's `img.f-card-1-img`).
+      if (MEDIA_TAGS.includes(tag)) return null;
       const classText = element.className.toString().toLowerCase();
       if (
         tag === 'button' ||
@@ -242,7 +268,14 @@ export async function collectPageEvidence(
         return 'button';
       }
       if (['input', 'textarea', 'select'].includes(tag)) return 'input';
-      if (tag === 'nav' || tag === 'header' || classText.includes('nav'))
+      // Navbar-level containers only — not every `nav-link`/`nav-logo` sub-part,
+      // which are links/decoration, not a distinct navigation component.
+      if (
+        tag === 'nav' ||
+        tag === 'header' ||
+        element.getAttribute('role') === 'navigation' ||
+        /\bnavbar\b/.test(classText)
+      )
         return 'navigation';
       if (classText.includes('badge') || classText.includes('pill'))
         return 'badge';
