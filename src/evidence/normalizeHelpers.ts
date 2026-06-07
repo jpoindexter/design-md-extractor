@@ -1,4 +1,5 @@
 import { confidenceFromFrequency } from './confidence.js';
+import { roundPxValue } from './normalizeValues.js';
 
 export function tokenNameFromColor(value: string, index: number): string {
   if (value === '#ffffff') return 'Canvas White';
@@ -198,7 +199,8 @@ export function styleTokensFromComponents(
   for (const component of components) {
     const value = component.styles[property];
     if (!isUsefulTokenValue(value, rejected)) continue;
-    counts.set(value, (counts.get(value) ?? 0) + 1);
+    const normalized = roundPxValue(value);
+    counts.set(normalized, (counts.get(normalized) ?? 0) + 1);
   }
 
   return Array.from(counts.entries())
