@@ -8,13 +8,11 @@ import {
   type ColorCountData,
   cleanFontFamily,
   cleanSelector,
-  componentName,
-  styleSignalScore,
-  styleSignature,
   styleTokensFromComponents,
   tokenNameFromColor,
   typographySignalScore,
 } from './normalizeHelpers.js';
+import { normalizeComponents } from './normalizeComponents.js';
 import { normalizeTypographyKey } from './normalizeValues.js';
 
 type NormalizeInput = {
@@ -156,83 +154,7 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
       confidence: confidenceFromFrequency(item.seen),
     }));
 
-  const componentMap = new Map<
-    string,
-    {
-      name: string;
-      kind: string;
-      role: string;
-      textSample: string;
-      viewport: string;
-      viewports: Set<string>;
-      selector: string;
-      count: number;
-      styles: Record<string, string>;
-      bounds: { width: number; height: number };
-      signalScore: number;
-    }
-  >();
-
-  for (const page of input.rawPages) {
-    for (const component of page.components) {
-      if (component.styles.fontFamily) {
-        component.styles.fontFamily = cleanFontFamily(
-          component.styles.fontFamily,
-        );
-      }
-      if (component.styles.font) {
-        component.styles.font = cleanFontFamily(component.styles.font);
-      }
-      component.selector = cleanSelector(component.selector);
-      const key = [component.kind, styleSignature(component.styles)].join('|');
-      const existing = componentMap.get(key);
-      if (existing) {
-        existing.count += 1;
-        existing.viewports.add(page.viewport);
-        if (component.textSample.length > existing.textSample.length) {
-          existing.textSample = component.textSample;
-        }
-        if (styleSignalScore(component) > existing.signalScore) {
-          existing.selector = component.selector;
-          existing.viewport = page.viewport;
-          existing.bounds = component.bounds;
-          existing.signalScore = styleSignalScore(component);
-        }
-        continue;
-      }
-
-      const signalScore = styleSignalScore(component);
-      componentMap.set(key, {
-        name: componentName(component.kind),
-        kind: component.kind,
-        role: `${componentName(component.kind)} component`,
-        textSample: component.textSample,
-        viewport: page.viewport,
-        viewports: new Set([page.viewport]),
-        selector: component.selector,
-        count: 1,
-        styles: component.styles,
-        bounds: component.bounds,
-        signalScore,
-      });
-    }
-  }
-
-  const components = Array.from(componentMap.values())
-    .filter(
-      (component) =>
-        component.signalScore > 0 || component.textSample.trim().length > 0,
-    )
-    .sort((a, b) => {
-      if (b.signalScore !== a.signalScore) return b.signalScore - a.signalScore;
-      return b.count - a.count;
-    })
-    .slice(0, 80)
-    .map((component) => ({
-      ...component,
-      viewports: [...component.viewports],
-      confidence: confidenceFromFrequency(component.count),
-    }));
+  const components = normalizeComponents(input.rawPages, input.viewports);
 
   const spacing = styleTokensFromComponents(components, 'padding', 'Padding', [
     '0px',

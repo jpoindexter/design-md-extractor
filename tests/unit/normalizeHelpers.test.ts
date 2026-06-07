@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { tokenNameFromColor } from '../../src/evidence/normalizeHelpers.js';
+import {
+  tokenNameFromColor,
+  structuralSignature,
+} from '../../src/evidence/normalizeHelpers.js';
 
 describe('tokenNameFromColor', () => {
   it('returns canonical names for pure black and white', () => {
@@ -29,5 +32,36 @@ describe('tokenNameFromColor', () => {
   it('falls back to Color N for rgba and malformed values', () => {
     expect(tokenNameFromColor('rgba(255,0,0,0.5)', 2)).toBe('Color 3');
     expect(tokenNameFromColor('transparent', 0)).toBe('Color 1');
+  });
+});
+
+describe('structuralSignature', () => {
+  it('is stable across viewport-scaled size values', () => {
+    const desktop = structuralSignature('button', 'a.cta', {
+      fontFamily: 'Inter',
+      fontSize: '16px',
+      padding: '6px 24px',
+      borderRadius: '160px',
+    });
+    const mobile = structuralSignature('button', 'a.cta', {
+      fontFamily: 'Inter',
+      fontSize: '13.0134px',
+      padding: '4.88002px 19.5201px',
+      borderRadius: '130.134px',
+    });
+    expect(desktop).toBe(mobile);
+  });
+
+  it('discriminates by kind, selector, and fontFamily', () => {
+    const a = structuralSignature('button', 'a.cta', { fontFamily: 'Inter' });
+    expect(
+      structuralSignature('card', 'a.cta', { fontFamily: 'Inter' }),
+    ).not.toBe(a);
+    expect(
+      structuralSignature('button', 'a.other', { fontFamily: 'Inter' }),
+    ).not.toBe(a);
+    expect(
+      structuralSignature('button', 'a.cta', { fontFamily: 'Roboto' }),
+    ).not.toBe(a);
   });
 });

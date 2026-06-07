@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   roundPxValue,
+  roundStyleValues,
   normalizeShadowValue,
   normalizeTypographyKey,
 } from '../../src/evidence/normalizeValues.js';
@@ -26,6 +27,21 @@ describe('roundPxValue', () => {
     expect(roundPxValue('1.5rem')).toBe('1.5rem');
     expect(roundPxValue('none')).toBe('none');
     expect(roundPxValue('')).toBe('');
+  });
+});
+
+describe('roundStyleValues', () => {
+  it('rounds px values across a styles record and leaves non-px untouched', () => {
+    const result = roundStyleValues({
+      padding: '40.4px 48.6px',
+      borderRadius: '67.1635px',
+      backgroundColor: '#ff5900',
+      fontFamily: 'Inter, sans-serif',
+    });
+    expect(result.padding).toBe('40px 49px');
+    expect(result.borderRadius).toBe('67px');
+    expect(result.backgroundColor).toBe('#ff5900');
+    expect(result.fontFamily).toBe('Inter, sans-serif');
   });
 });
 

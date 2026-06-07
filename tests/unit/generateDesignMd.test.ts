@@ -49,7 +49,13 @@ const evidence: Evidence = {
     ],
     spacing: [{ name: 'Space 1', value: '8px', confidence: 'high' }],
     radii: [{ name: 'Radius 1', value: '6px', confidence: 'medium' }],
-    shadows: [{ name: 'Shadow 1', value: '0 8px 24px rgba(0,0,0,.12)', confidence: 'medium' }],
+    shadows: [
+      {
+        name: 'Shadow 1',
+        value: '0 8px 24px rgba(0,0,0,.12)',
+        confidence: 'medium',
+      },
+    ],
   },
   surfaces: [
     {
@@ -84,7 +90,11 @@ const evidence: Evidence = {
       confidence: 'high',
     },
   ],
-  layout: { density: 'comfortable', containerWidths: [1120], sectionGaps: ['64px'] },
+  layout: {
+    density: 'comfortable',
+    containerWidths: [1120],
+    sectionGaps: ['64px'],
+  },
   imagery: { strategy: 'product-focused', notes: ['No photography observed.'] },
   responsive: { notes: ['Desktop captured.'] },
   warnings: [],
@@ -97,18 +107,41 @@ describe('generateDesignMd', () => {
     expect(markdown).toContain('# Design System: example.com');
     expect(markdown).toContain('## 1. Style Thesis');
     expect(markdown).toContain('## 3. Tokens');
-    expect(markdown).toContain('| Canvas White | `#ffffff` | `--color-canvas-white` | Page background | high |');
+    expect(markdown).toContain(
+      '| Canvas White | `#ffffff` | `--color-canvas-white` | Page background | high |',
+    );
     expect(markdown).toContain('### Spacing');
     expect(markdown).toContain('| Space 1 | `8px` | high |');
     expect(markdown).toContain('### Radii');
     expect(markdown).toContain('### Shadows');
     expect(markdown).toContain('### Button');
-    expect(markdown).toContain('- Color: background `#111111`, text `#ffffff`.');
+    expect(markdown).toContain(
+      '- Color: background `#111111`, text `#ffffff`.',
+    );
     expect(markdown).toContain('- Radius: `6px`.');
     expect(markdown).toContain('### CSS Token Starter');
     expect(markdown).toContain('--color-ink-black: #111111;');
     expect(markdown).toContain('Container widths: `1120px`.');
     expect(markdown).toContain('- Preserve the comfortable density');
     expect(markdown).toContain('## 11. Known Gaps');
+  });
+
+  it('renders the viewport list when a component carries viewports[]', () => {
+    const multiViewport: Evidence = {
+      ...evidence,
+      components: [
+        {
+          ...evidence.components[0]!,
+          viewports: ['desktop', 'tablet', 'mobile'],
+        },
+      ],
+    };
+    const markdown = generateDesignMd(multiViewport);
+    expect(markdown).toContain('across desktop, tablet, mobile; count 2.');
+  });
+
+  it('falls back to the singular viewport when viewports[] is absent', () => {
+    const markdown = generateDesignMd(evidence);
+    expect(markdown).toContain('in desktop; count 2.');
   });
 });

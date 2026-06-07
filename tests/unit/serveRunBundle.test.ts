@@ -1,7 +1,7 @@
 import { ServerResponse } from 'node:http';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
-import { describe, expect, it, vi } from 'vitest';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
 import { serveRunBundle } from '../../src/gui/server.js';
 
 // Minimal ServerResponse stub — only the methods serveRunBundle calls.

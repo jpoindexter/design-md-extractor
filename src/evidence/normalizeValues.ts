@@ -5,6 +5,16 @@ export function roundPxValue(value: string): string {
   );
 }
 
+export function roundStyleValues(
+  styles: Record<string, string>,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(styles)) {
+    out[key] = roundPxValue(value);
+  }
+  return out;
+}
+
 export function normalizeShadowValue(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
 }
