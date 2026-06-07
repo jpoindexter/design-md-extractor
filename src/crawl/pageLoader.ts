@@ -112,6 +112,27 @@ async function waitForChallengeClear(
   }
 }
 
+// Bounded scroll-through to trigger lazy-loaded / IntersectionObserver content,
+// then return to the top so first-viewport capture stays correct. Capped at 12
+// screens so infinite-scroll pages cannot hang the load.
+async function scrollThroughPage(page: Page): Promise<void> {
+  await page
+    .evaluate(async () => {
+      const step = window.innerHeight || 800;
+      const maxScroll = Math.min(
+        document.documentElement.scrollHeight,
+        step * 12,
+      );
+      for (let y = step; y <= maxScroll; y += step) {
+        window.scrollTo(0, y);
+        await new Promise((resolve) => setTimeout(resolve, 150));
+      }
+      window.scrollTo(0, 0);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    })
+    .catch(() => undefined);
+}
+
 export async function newLoadedPage(input: {
   context: BrowserContext;
   url: string;
@@ -132,6 +153,7 @@ export async function newLoadedPage(input: {
       .waitForLoadState('load', { timeout: Math.min(input.timeoutMs, 3000) })
       .catch(() => undefined);
     await waitForChallengeClear(page, input.timeoutMs);
+    await scrollThroughPage(page);
     await page.evaluate(() => document.fonts?.ready).catch(() => undefined);
     await waitForVisualSettle(page);
     return page;
