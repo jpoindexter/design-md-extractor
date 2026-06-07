@@ -125,20 +125,6 @@ export function typographySignalScore(item: {
   return score;
 }
 
-export function styleSignature(styles: Record<string, string>): string {
-  return [
-    normalizeStyleValue(styles.color),
-    normalizeStyleValue(styles.backgroundColor),
-    normalizeStyleValue(styles.border),
-    normalizeStyleValue(styles.borderRadius),
-    normalizeStyleValue(styles.padding),
-    normalizeStyleValue(styles.fontFamily),
-    normalizeStyleValue(styles.fontSize),
-    normalizeStyleValue(styles.fontWeight),
-    normalizeStyleValue(styles.boxShadow),
-  ].join('|');
-}
-
 // Viewport-stable component identity: kind + selector + the ONE breakpoint-stable
 // style prop (fontFamily). Deliberately excludes fontSize/padding/borderRadius/
 // border/boxShadow (Webflow/Framer rem-scale these per breakpoint, which would
