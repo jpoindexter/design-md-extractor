@@ -137,6 +137,10 @@ function componentSection(evidence: Evidence): string {
       const sample = component.textSample
         ? `\`${component.textSample}\``
         : 'No text sample captured';
+      const viewportPhrase =
+        component.viewports && component.viewports.length > 0
+          ? `across ${component.viewports.join(', ')}`
+          : `in ${component.viewport}`;
 
       return `### ${component.name}
 
@@ -147,7 +151,7 @@ function componentSection(evidence: Evidence): string {
 - Spacing: padding \`${padding}\`, observed bounds ${component.bounds.width}x${component.bounds.height}px.
 - Radius: \`${radius}\`.
 - Border and shadow: shadow \`${shadow}\`.
-- Observed as \`${component.kind}\` at \`${component.selector}\` in ${component.viewport}; count ${component.count}.
+- Observed as \`${component.kind}\` at \`${component.selector}\` ${viewportPhrase}; count ${component.count}.
 - Confidence: ${component.confidence}.`;
     })
     .join('\n\n');
