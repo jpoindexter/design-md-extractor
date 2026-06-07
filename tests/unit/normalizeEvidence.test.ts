@@ -65,7 +65,7 @@ describe('normalizeEvidence', () => {
 
     expect(evidence.tokens.colors[0]?.value).toBe('#ffffff');
     expect(evidence.tokens.typography[0]?.role).toBe('heading');
-    expect(evidence.components[0]?.name).toBe('Button');
+    expect(evidence.components[0]?.name).toBe('Primary Button');
     expect(evidence.components).toHaveLength(1);
     expect(evidence.components[0]?.count).toBe(2);
     expect(evidence.surfaces[0]?.value).toBe('#ffffff');
