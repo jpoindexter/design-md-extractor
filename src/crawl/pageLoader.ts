@@ -1,4 +1,4 @@
-import type { Browser, Page } from 'playwright';
+import type { BrowserContext, Page } from 'playwright';
 import type { ViewportConfig } from '../config/viewports.js';
 
 type VisualSignature = {
@@ -15,7 +15,9 @@ const visualSettle = {
 
 async function readVisualSignature(page: Page): Promise<VisualSignature> {
   return page.evaluate(() => {
-    const visibleElements = Array.from(document.querySelectorAll('body *')).filter((element) => {
+    const visibleElements = Array.from(
+      document.querySelectorAll('body *'),
+    ).filter((element) => {
       const style = window.getComputedStyle(element);
       const rect = element.getBoundingClientRect();
       return (
@@ -28,12 +30,12 @@ async function readVisualSignature(page: Page): Promise<VisualSignature> {
     }).length;
 
     const finiteRunningAnimations =
-      document.getAnimations
-        ?.()
-        .filter((animation) => {
-          const timing = animation.effect?.getTiming();
-          return animation.playState === 'running' && timing?.iterations !== Infinity;
-        }).length ?? 0;
+      document.getAnimations?.().filter((animation) => {
+        const timing = animation.effect?.getTiming();
+        return (
+          animation.playState === 'running' && timing?.iterations !== Infinity
+        );
+      }).length ?? 0;
 
     return {
       key: JSON.stringify({
@@ -63,7 +65,11 @@ async function waitForVisualSettle(page: Page): Promise<void> {
 
     const waitedLongEnough = now - startedAt >= visualSettle.minMs;
     const stableLongEnough = now - stableSince >= visualSettle.stableMs;
-    if (waitedLongEnough && stableLongEnough && signature.finiteRunningAnimations === 0) {
+    if (
+      waitedLongEnough &&
+      stableLongEnough &&
+      signature.finiteRunningAnimations === 0
+    ) {
       return;
     }
 
@@ -71,17 +77,60 @@ async function waitForVisualSettle(page: Page): Promise<void> {
   }
 }
 
+async function isChallengePage(page: Page): Promise<boolean> {
+  return page
+    .evaluate(() => {
+      const title = document.title.toLowerCase();
+      if (
+        title.includes('just a moment') ||
+        title.includes('attention required') ||
+        title.includes('verifying you are human')
+      ) {
+        return true;
+      }
+      return Boolean(
+        document.querySelector(
+          '#challenge-form, #cf-challenge-running, .cf-turnstile, [id*="cf-chl"]',
+        ),
+      );
+    })
+    .catch(() => false);
+}
+
+// When a session window lands on a Cloudflare/Turnstile interstitial, give the
+// human time to clear it (headed persistent mode) before we read the page. A
+// no-op on normal pages, so CI/none-mode loads are unaffected.
+async function waitForChallengeClear(
+  page: Page,
+  timeoutMs: number,
+): Promise<void> {
+  if (!(await isChallengePage(page))) return;
+  const deadline = Date.now() + Math.max(timeoutMs, 60000);
+  while (Date.now() < deadline) {
+    await page.waitForTimeout(1000);
+    if (!(await isChallengePage(page))) return;
+  }
+}
+
 export async function newLoadedPage(input: {
-  browser: Browser;
+  context: BrowserContext;
   url: string;
   viewport: ViewportConfig;
   timeoutMs: number;
 }): Promise<Page> {
-  const page = await input.browser.newPage({
-    viewport: { width: input.viewport.width, height: input.viewport.height },
+  const page = await input.context.newPage();
+  await page.setViewportSize({
+    width: input.viewport.width,
+    height: input.viewport.height,
   });
-  await page.goto(input.url, { waitUntil: 'domcontentloaded', timeout: input.timeoutMs });
-  await page.waitForLoadState('load', { timeout: Math.min(input.timeoutMs, 3000) }).catch(() => undefined);
+  await page.goto(input.url, {
+    waitUntil: 'domcontentloaded',
+    timeout: input.timeoutMs,
+  });
+  await page
+    .waitForLoadState('load', { timeout: Math.min(input.timeoutMs, 3000) })
+    .catch(() => undefined);
+  await waitForChallengeClear(page, input.timeoutMs);
   await page.evaluate(() => document.fonts?.ready).catch(() => undefined);
   await waitForVisualSettle(page);
   return page;

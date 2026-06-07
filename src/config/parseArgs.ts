@@ -1,4 +1,5 @@
 import { Command } from 'commander';
+import type { SessionConfig } from './sessionConfig.js';
 import { defaultViewports, type ViewportConfig } from './viewports.js';
 
 export type ExtractConfig = {
@@ -9,6 +10,7 @@ export type ExtractConfig = {
   maxComponents: number;
   preview: boolean;
   timeoutMs: number;
+  session?: SessionConfig;
 };
 
 export function parseExtractArgs(argv: string[]): ExtractConfig {
@@ -23,7 +25,11 @@ export function parseExtractArgs(argv: string[]): ExtractConfig {
     .argument('<url>')
     .option('--out <directory>')
     .option('--pages <urls...>', 'additional URLs to inspect', [])
-    .option('--viewports <list>', 'comma-separated viewport names', 'desktop,tablet,mobile')
+    .option(
+      '--viewports <list>',
+      'comma-separated viewport names',
+      'desktop,tablet,mobile',
+    )
     .option('--max-components <number>', 'maximum component samples', '80')
     .option('--no-preview', 'skip preview.html')
     .option('--timeout <ms>', 'page load timeout', '30000')
@@ -36,13 +42,18 @@ export function parseExtractArgs(argv: string[]): ExtractConfig {
         .split(',')
         .map((name) => name.trim())
         .filter(Boolean);
-      const selectedViewports = defaultViewports.filter((viewport) => selectedNames.includes(viewport.name));
+      const selectedViewports = defaultViewports.filter((viewport) =>
+        selectedNames.includes(viewport.name),
+      );
 
       config = {
         url: new URL(url).toString(),
         outDir: String(options.out),
-        pages: Array.isArray(options.pages) ? options.pages.map((page) => new URL(String(page)).toString()) : [],
-        viewports: selectedViewports.length > 0 ? selectedViewports : defaultViewports,
+        pages: Array.isArray(options.pages)
+          ? options.pages.map((page) => new URL(String(page)).toString())
+          : [],
+        viewports:
+          selectedViewports.length > 0 ? selectedViewports : defaultViewports,
         maxComponents: Number.parseInt(String(options.maxComponents), 10),
         preview: options.preview !== false,
         timeoutMs: Number.parseInt(String(options.timeout), 10),

@@ -1,10 +1,14 @@
-import { chromium } from 'playwright';
+import { NO_SESSION, type SessionConfig } from '../config/sessionConfig.js';
+import { withBrowserSession } from './browserSession.js';
 
 const INCLUDE_SCORES: Array<[RegExp, number]> = [
   [/\/docs?(\/|$)|components?|guides?|reference|develop(er|ers)?/i, 100],
   [/pricing|plans|compare/i, 96],
   [/features?|product|platform|solutions?/i, 90],
-  [/blocks?|templates?|showcase|examples?|gallery|customers?|case-studies?/i, 84],
+  [
+    /blocks?|templates?|showcase|examples?|gallery|customers?|case-studies?/i,
+    84,
+  ],
   [/about|company|team/i, 70],
   [/blog|resources?|learn|articles?/i, 58],
 ];
@@ -28,7 +32,11 @@ function candidateScore(url: URL): number {
   return depth === 1 ? 30 : 16;
 }
 
-export function rankStylePageCandidates(primaryUrl: string, hrefs: string[], limit: number): string[] {
+export function rankStylePageCandidates(
+  primaryUrl: string,
+  hrefs: string[],
+  limit: number,
+): string[] {
   const base = new URL(primaryUrl);
   if (base.protocol === 'file:') {
     return [];
@@ -41,7 +49,13 @@ export function rankStylePageCandidates(primaryUrl: string, hrefs: string[], lim
   const seen = new Map<string, { url: string; score: number; depth: number }>();
 
   for (const href of hrefs) {
-    if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) continue;
+    if (
+      !href ||
+      href.startsWith('#') ||
+      href.startsWith('mailto:') ||
+      href.startsWith('tel:')
+    )
+      continue;
 
     let parsed: URL;
     try {
@@ -79,11 +93,15 @@ export async function discoverStylePages(input: {
   url: string;
   limit: number;
   timeoutMs: number;
+  session?: SessionConfig;
 }): Promise<string[]> {
-  const browser = await chromium.launch();
-  try {
-    const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
-    await page.goto(input.url, { waitUntil: 'domcontentloaded', timeout: input.timeoutMs });
+  return withBrowserSession(input.session ?? NO_SESSION, async (context) => {
+    const page = await context.newPage();
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.goto(input.url, {
+      waitUntil: 'domcontentloaded',
+      timeout: input.timeoutMs,
+    });
     const hrefs = await page.evaluate(() =>
       Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href]'))
         .map((anchor) => anchor.href)
@@ -91,7 +109,5 @@ export async function discoverStylePages(input: {
     );
     await page.close();
     return rankStylePageCandidates(input.url, hrefs, input.limit);
-  } finally {
-    await browser.close();
-  }
+  });
 }
