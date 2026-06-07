@@ -58,4 +58,38 @@ describe('generateTailwind', () => {
     expect(config).toContain('spacing:');
     expect(config).toContain('borderRadius:');
   });
+
+  it('produces unique color keys when two colors slug to the same name', () => {
+    const dup: Evidence = {
+      ...evidence,
+      tokens: {
+        ...evidence.tokens,
+        colors: [
+          {
+            name: 'Gray',
+            value: '#888888',
+            cssVariable: '--color-gray',
+            role: 'text',
+            properties: [],
+            frequency: 3,
+            sampleSelectors: [],
+            confidence: 'medium',
+          },
+          {
+            name: 'Gray',
+            value: '#aaaaaa',
+            cssVariable: '--color-gray',
+            role: 'text',
+            properties: [],
+            frequency: 2,
+            sampleSelectors: [],
+            confidence: 'low',
+          },
+        ],
+      },
+    };
+    const config = generateTailwind(dup);
+    expect(config).toContain("'gray': '#888888'");
+    expect(config).toContain("'gray-1': '#aaaaaa'");
+  });
 });

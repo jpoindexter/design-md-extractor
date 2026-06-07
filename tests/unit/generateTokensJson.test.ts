@@ -45,4 +45,39 @@ describe('generateTokensJson', () => {
     expect(parsed.color?.['canvas-white']?.['$type']).toBe('color');
     expect(parsed.spacing?.['space-1']?.['$value']).toBe('16px');
   });
+
+  it('produces unique color keys when two colors slug to the same name', () => {
+    const dup: Evidence = {
+      ...evidence,
+      tokens: {
+        ...evidence.tokens,
+        colors: [
+          {
+            name: 'Gray',
+            value: '#888888',
+            cssVariable: '--color-gray',
+            role: 'text',
+            properties: [],
+            frequency: 3,
+            sampleSelectors: [],
+            confidence: 'medium',
+          },
+          {
+            name: 'Gray',
+            value: '#aaaaaa',
+            cssVariable: '--color-gray',
+            role: 'text',
+            properties: [],
+            frequency: 2,
+            sampleSelectors: [],
+            confidence: 'low',
+          },
+        ],
+      },
+    };
+    const json = generateTokensJson(dup);
+    const parsed = JSON.parse(json);
+    expect(parsed.color?.['gray']?.['$value']).toBe('#888888');
+    expect(parsed.color?.['gray-1']?.['$value']).toBe('#aaaaaa');
+  });
 });

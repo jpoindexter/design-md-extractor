@@ -2,12 +2,16 @@ import type { Evidence } from '../types/evidence.js';
 import { cssVariable } from './generateStyleCss.js';
 
 function colorScale(colors: Evidence['tokens']['colors']): string {
+  const keySeen = new Map<string, number>();
   return colors
     .map((c) => {
-      const key = (c.cssVariable ?? cssVariable('color', c.name)).replace(
+      const base = (c.cssVariable ?? cssVariable('color', c.name)).replace(
         /^--color-/,
         '',
       );
+      const count = keySeen.get(base) ?? 0;
+      keySeen.set(base, count + 1);
+      const key = count === 0 ? base : `${base}-${count}`;
       return `        '${key}': '${c.value}',`;
     })
     .join('\n');

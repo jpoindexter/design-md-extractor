@@ -7,16 +7,25 @@ interface TokenGroup {
 
 export function generateTokensJson(evidence: Evidence): string {
   const tokens: TokenGroup = {
-    color: Object.fromEntries(
-      evidence.tokens.colors.map((c) => [
-        c.name.toLowerCase().replace(/\s+/g, '-'),
-        {
-          $value: c.value,
-          $type: 'color',
-          $description: c.role,
-        } satisfies TokenEntry,
-      ]),
-    ),
+    color: (() => {
+      const keySeen = new Map<string, number>();
+      return Object.fromEntries(
+        evidence.tokens.colors.map((c) => {
+          const base = c.name.toLowerCase().replace(/\s+/g, '-');
+          const count = keySeen.get(base) ?? 0;
+          keySeen.set(base, count + 1);
+          const key = count === 0 ? base : `${base}-${count}`;
+          return [
+            key,
+            {
+              $value: c.value,
+              $type: 'color',
+              $description: c.role,
+            } satisfies TokenEntry,
+          ];
+        }),
+      );
+    })(),
     typography: Object.fromEntries(
       evidence.tokens.typography.map((t, i) => {
         const key = `${t.role}${i > 0 ? `-${i}` : ''}`;
