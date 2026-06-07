@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { resolveSessionConfig } from '../config/sessionConfig.js';
 import { defaultViewports } from '../config/viewports.js';
 import { discoverStylePages } from '../crawl/discoverPages.js';
 import { runExtraction } from '../crawl/runExtraction.js';
@@ -149,6 +150,17 @@ export function summarizeEvidence(
       ...screenshot,
       href: artifactUrl(runId, screenshot.path),
     })),
+    gradients: (evidence.tokens.gradients ?? [])
+      .slice(0, 8)
+      .map((gradient) => ({
+        name: gradient.name,
+        value: gradient.value,
+        confidence: gradient.confidence,
+      })),
+    layout: evidence.layout,
+    imagery: evidence.imagery,
+    motion: evidence.motion,
+    interactionStates: (evidence.interactionStates ?? []).slice(0, 16),
   };
 }
 
@@ -160,10 +172,15 @@ export async function runGuiExtraction(
   const runId = slugForRun(url);
   const outDir = resolve(runsDir, runId);
   const maxPages = Math.max(1, Math.min(input.maxPages, 12));
+  const { session } = resolveSessionConfig({
+    cookies: input.cookies,
+    userAgent: input.userAgent,
+  });
   const discoveredPages = await discoverStylePages({
     url,
     limit: maxPages - 1,
     timeoutMs: 30000,
+    session,
   });
 
   await runExtraction({
@@ -174,6 +191,7 @@ export async function runGuiExtraction(
     maxComponents: 180,
     preview: true,
     timeoutMs: 30000,
+    session,
   });
 
   const evidenceJson = JSON.parse(
@@ -189,6 +207,10 @@ export async function runGuiExtraction(
       designMd: artifactUrl(runId, 'DESIGN.md'),
       evidenceJson: artifactUrl(runId, 'evidence.json'),
       previewHtml: artifactUrl(runId, 'preview.html'),
+      tokensCss: artifactUrl(runId, 'tokens.css'),
+      tailwindTheme: artifactUrl(runId, 'tailwind-theme.js'),
+      designTokens: artifactUrl(runId, 'design-tokens.json'),
+      aiPrompt: artifactUrl(runId, 'ai-prompt.txt'),
     },
     summary: summarizeEvidence(runId, evidenceJson),
   };

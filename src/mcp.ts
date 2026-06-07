@@ -21,7 +21,7 @@ server.registerTool(
   {
     title: 'Extract Design System',
     description:
-      'Extracts colors, typography, spacing, radii, shadows, surfaces, and components from a live website. Returns the full DESIGN.md content plus a structured summary. Artifacts are also written to disk.',
+      'Extracts a live website’s visual system — colors, gradients, typography, spacing, radii, shadows, surfaces, components (semantic names + reuse counts), layout, imagery strategy, motion, and hover/focus interaction states — across desktop/tablet/mobile. Returns the full DESIGN.md content plus a structured summary; all artifacts (DESIGN.md, evidence.json, tokens.css, tailwind-theme.js, design-tokens.json, ai-prompt.txt, preview.html, screenshots) are written to disk. For Cloudflare/login-walled sites, pass a cookies file (and matching User-Agent).',
     inputSchema: {
       url: z.string().url().describe('URL of the website to extract'),
       maxPages: z
@@ -32,12 +32,24 @@ server.registerTool(
         .optional()
         .default(5)
         .describe('Maximum pages to crawl (1–12, default 5)'),
+      cookies: z
+        .string()
+        .optional()
+        .describe(
+          'Path to a cookie file (Playwright JSON or Netscape cookies.txt) to inject for Cloudflare/login-walled sites',
+        ),
+      userAgent: z
+        .string()
+        .optional()
+        .describe(
+          'User-Agent matching the browser that produced the cookies (so cf_clearance validates)',
+        ),
     },
   },
-  async ({ url, maxPages }) => {
+  async ({ url, maxPages, cookies, userAgent }) => {
     try {
       const result = await runGuiExtraction(
-        { url, maxPages: maxPages ?? 5 },
+        { url, maxPages: maxPages ?? 5, cookies, userAgent },
         defaultRunsDir,
       );
       const designMd = await readFile(join(result.outDir, 'DESIGN.md'), 'utf8');

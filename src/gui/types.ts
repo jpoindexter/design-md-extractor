@@ -1,6 +1,10 @@
 export type GuiRunInput = {
   url: string;
   maxPages: number;
+  /** Cookie file (Playwright JSON or Netscape cookies.txt) to inject for Cloudflare/login-walled sites. */
+  cookies?: string;
+  /** User-Agent matching the browser that produced the cookies (so cf_clearance validates). */
+  userAgent?: string;
 };
 
 export type GuiRunResult = {
@@ -12,6 +16,10 @@ export type GuiRunResult = {
     designMd: string;
     evidenceJson: string;
     previewHtml: string;
+    tokensCss?: string;
+    tailwindTheme?: string;
+    designTokens?: string;
+    aiPrompt?: string;
   };
   summary: {
     source: {
@@ -47,7 +55,11 @@ export type GuiRunResult = {
       purpose: string;
       confidence: string;
     }>;
-    warnings: Array<{ code: string; message: string; severity: 'info' | 'warning' | 'error' }>;
+    warnings: Array<{
+      code: string;
+      message: string;
+      severity: 'info' | 'warning' | 'error';
+    }>;
     components: Array<{
       name: string;
       kind: string;
@@ -59,7 +71,26 @@ export type GuiRunResult = {
       bounds?: { width: number; height: number };
       confidence: string;
     }>;
-    screenshots: Array<{ viewport: string; url: string; path: string; href: string }>;
+    screenshots: Array<{
+      viewport: string;
+      url: string;
+      path: string;
+      href: string;
+    }>;
+    gradients?: Array<{ name: string; value: string; confidence: string }>;
+    layout?: {
+      density: string;
+      containerWidths?: number[];
+      sectionGaps?: string[];
+    };
+    imagery?: { strategy: string; notes?: string[] };
+    motion?: { durations: string[]; easings: string[] };
+    interactionStates?: Array<{
+      state: string;
+      selector: string;
+      declarations: Record<string, string>;
+      source?: string;
+    }>;
   };
 };
 
