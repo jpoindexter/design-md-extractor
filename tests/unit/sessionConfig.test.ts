@@ -6,7 +6,7 @@ describe('resolveSessionConfig', () => {
     expect(resolveSessionConfig({}).session).toEqual({ mode: 'none' });
   });
 
-  it('profile takes precedence and is always headed', () => {
+  it('profile takes precedence over cookies', () => {
     const { session } = resolveSessionConfig({
       profile: '/tmp/p',
       cookies: '/tmp/c.json',
@@ -14,7 +14,18 @@ describe('resolveSessionConfig', () => {
     expect(session).toEqual({
       mode: 'persistent',
       profileDir: '/tmp/p',
-      headed: true,
+    });
+  });
+
+  it('persistent session can opt into headless', () => {
+    const { session } = resolveSessionConfig({
+      profile: '/tmp/p',
+      headless: true,
+    });
+    expect(session).toEqual({
+      mode: 'persistent',
+      profileDir: '/tmp/p',
+      headless: true,
     });
   });
 

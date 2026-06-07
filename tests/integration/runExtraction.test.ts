@@ -9,7 +9,9 @@ import { runExtraction } from '../../src/crawl/runExtraction.js';
 describe('runExtraction', () => {
   it('creates output artifacts from a local file URL', async () => {
     const outDir = await mkdtemp(join(tmpdir(), 'design-md-run-'));
-    const fixtureUrl = pathToFileURL(resolve('tests/fixtures/sample-site.html')).toString();
+    const fixtureUrl = pathToFileURL(
+      resolve('tests/fixtures/sample-site.html'),
+    ).toString();
 
     try {
       await runExtraction({
@@ -22,7 +24,10 @@ describe('runExtraction', () => {
         timeoutMs: 30000,
       });
 
-      const evidenceJson = await readFile(join(outDir, 'evidence.json'), 'utf8');
+      const evidenceJson = await readFile(
+        join(outDir, 'evidence.json'),
+        'utf8',
+      );
       const evidence = JSON.parse(evidenceJson) as {
         source: { pages: Array<{ url: string; status: string }> };
         screenshots: Array<{ path: string }>;
@@ -31,10 +36,14 @@ describe('runExtraction', () => {
       expect(evidence.source.pages).toHaveLength(1);
       expect(evidence.source.pages[0]?.status).toBe('success');
       expect(evidence.screenshots).toHaveLength(3);
-      await expect(readFile(join(outDir, 'DESIGN.md'), 'utf8')).resolves.toContain('# Design System:');
-      await expect(readFile(join(outDir, 'preview.html'), 'utf8')).resolves.toContain('Design MD Preview');
+      await expect(
+        readFile(join(outDir, 'DESIGN.md'), 'utf8'),
+      ).resolves.toContain('# Design System:');
+      await expect(
+        readFile(join(outDir, 'preview.html'), 'utf8'),
+      ).resolves.toContain('Design MD Preview');
     } finally {
       await rm(outDir, { recursive: true, force: true });
     }
-  });
+  }, 30000);
 });

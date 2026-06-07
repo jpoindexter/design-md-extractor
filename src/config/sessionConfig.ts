@@ -10,7 +10,7 @@ export const SessionConfigSchema = z.discriminatedUnion('mode', [
   z.object({
     mode: z.literal('persistent'),
     profileDir: z.string().min(1),
-    headed: z.literal(true),
+    headless: z.boolean().optional(),
   }),
 ]);
 
@@ -22,12 +22,15 @@ export type RawSessionOptions = {
   profile?: string;
   cookies?: string;
   userAgent?: string;
+  headless?: boolean;
 };
 
 /**
  * Resolve CLI/GUI session options into a validated SessionConfig.
- * Precedence: --profile (persistent, always headed) beats --cookies beats none.
- * Returns a SessionConfig plus any non-fatal warnings (e.g. cookies without UA).
+ * Precedence: --profile (persistent) beats --cookies beats none.
+ * Persistent mode is headed by default; pass headless: true to suppress the
+ * window once the session is established. Returns a SessionConfig plus any
+ * non-fatal warnings (e.g. cookies without UA).
  */
 export function resolveSessionConfig(options: RawSessionOptions): {
   session: SessionConfig;
@@ -40,7 +43,7 @@ export function resolveSessionConfig(options: RawSessionOptions): {
       session: SessionConfigSchema.parse({
         mode: 'persistent',
         profileDir: options.profile.trim(),
-        headed: true,
+        ...(options.headless ? { headless: true } : {}),
       }),
       warnings,
     };

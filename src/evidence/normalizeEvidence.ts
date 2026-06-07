@@ -338,7 +338,12 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
   // set of declarations so identical hover/focus rules collapse to one entry.
   const interactionStateMap = new Map<
     string,
-    { state: string; selector: string; declarations: Record<string, string> }
+    {
+      state: string;
+      selector: string;
+      declarations: Record<string, string>;
+      source?: string;
+    }
   >();
   for (const page of input.rawPages) {
     for (const entry of page.interactionStates ?? []) {
@@ -350,7 +355,7 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
   }
   const interactionStates = Array.from(interactionStateMap.values()).slice(
     0,
-    16,
+    20,
   );
 
   const evidence: Evidence = {

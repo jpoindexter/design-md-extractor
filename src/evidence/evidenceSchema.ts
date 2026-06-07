@@ -130,6 +130,7 @@ export const EvidenceSchema = z.object({
         state: z.string(),
         selector: z.string(),
         declarations: z.record(z.string(), z.string()),
+        source: z.string().optional(),
       }),
     )
     .optional(),

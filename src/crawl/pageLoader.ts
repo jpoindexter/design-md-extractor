@@ -112,24 +112,46 @@ async function waitForChallengeClear(
   }
 }
 
-// Bounded scroll-through to trigger lazy-loaded / IntersectionObserver content,
-// then return to the top so first-viewport capture stays correct. Capped at 12
-// screens so infinite-scroll pages cannot hang the load.
-async function scrollThroughPage(page: Page): Promise<void> {
+// Adaptive scroll-through to trigger lazy-loaded / IntersectionObserver content,
+// then return to the top so first-viewport capture stays correct. Keeps going as
+// long as lazy-loading keeps growing the page, so long pages fully load — while a
+// time budget plus a height-stabilization check stop infinite-scroll pages from
+// hanging the load. `budgetMs` bounds total time; a hard step cap is the backstop.
+async function scrollThroughPage(page: Page, budgetMs = 8000): Promise<void> {
   await page
-    .evaluate(async () => {
+    .evaluate(async (budget: number) => {
+      const sleep = (ms: number) =>
+        new Promise((resolve) => setTimeout(resolve, ms));
+      const startedAt = Date.now();
       const step = window.innerHeight || 800;
-      const maxScroll = Math.min(
-        document.documentElement.scrollHeight,
-        step * 12,
-      );
-      for (let y = step; y <= maxScroll; y += step) {
+      const hardCap = 200; // backstop: never more than 200 steps
+      let y = step;
+      let steps = 0;
+      let lastHeight = 0;
+      let stablePasses = 0;
+
+      while (steps < hardCap && Date.now() - startedAt < budget) {
         window.scrollTo(0, y);
-        await new Promise((resolve) => setTimeout(resolve, 150));
+        await sleep(150);
+        const height = document.documentElement.scrollHeight;
+        // Stop once we've reached the bottom AND the page height has settled
+        // for two consecutive passes (lazy-loading has stopped extending it).
+        if (y >= height) {
+          if (height === lastHeight) {
+            stablePasses += 1;
+            if (stablePasses >= 2) break;
+          } else {
+            stablePasses = 0;
+          }
+        }
+        lastHeight = height;
+        y += step;
+        steps += 1;
       }
+
       window.scrollTo(0, 0);
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    })
+      await sleep(100);
+    }, budgetMs)
     .catch(() => undefined);
 }
 

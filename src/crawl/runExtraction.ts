@@ -9,6 +9,7 @@ import {
 import { generateDesignMd } from '../generate/generateDesignMd.js';
 import { generatePreviewHtml } from '../generate/generatePreviewHtml.js';
 import { writeArtifacts } from '../io/writeArtifacts.js';
+import { captureLiveInteractions } from '../extract/captureInteractions.js';
 import { NO_SESSION } from '../config/sessionConfig.js';
 import { withBrowserSession } from './browserSession.js';
 import { newLoadedPage } from './pageLoader.js';
@@ -39,6 +40,13 @@ export async function runExtraction(config: ExtractConfig): Promise<void> {
   const screenshotDir = join(config.outDir, 'screenshots');
   await mkdir(screenshotDir, { recursive: true });
 
+  // Live interaction capture is bounded to the widest viewport — hover/focus
+  // states rarely differ by breakpoint, so one pass keeps the cost predictable.
+  const widestViewport = config.viewports.reduce(
+    (widest, v) => (v.width > widest.width ? v : widest),
+    config.viewports[0] ?? { name: '', width: 0, height: 0 },
+  );
+
   await withBrowserSession(config.session ?? NO_SESSION, async (context) => {
     for (const url of urls) {
       for (const viewport of config.viewports) {
@@ -67,6 +75,18 @@ export async function runExtraction(config: ExtractConfig): Promise<void> {
             url,
             path: screenshotPath,
           });
+          if (viewport.name === widestViewport.name) {
+            // Real pointer/focus triggering catches JS-driven hover effects that
+            // CSS-rule parsing misses. Merge into the parsed states before push.
+            const live = await captureLiveInteractions(
+              page,
+              raw.components,
+            ).catch(() => []);
+            // Live states first: the dedup + cap in normalizeEvidence keeps
+            // insertion order, so prepending guarantees observed-live states
+            // survive the slice instead of being truncated behind CSS rules.
+            raw.interactionStates = [...live, ...(raw.interactionStates ?? [])];
+          }
           rawPages.push({ ...raw, viewport: viewport.name });
           const result = pageResults.get(url);
           if (result) {

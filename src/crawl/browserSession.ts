@@ -16,13 +16,13 @@ export async function withBrowserSession<T>(
     try {
       context = await chromium.launchPersistentContext(session.profileDir, {
         channel: 'chrome',
-        headless: false,
+        headless: session.headless === true,
         viewport: null,
       });
     } catch {
-      // Real Chrome not installed — fall back to bundled Chromium (still headed).
+      // Real Chrome not installed — fall back to bundled Chromium (same headed/headless mode).
       context = await chromium.launchPersistentContext(session.profileDir, {
-        headless: false,
+        headless: session.headless === true,
         viewport: null,
       });
     }

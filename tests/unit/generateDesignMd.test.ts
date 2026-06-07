@@ -176,4 +176,31 @@ describe('generateDesignMd', () => {
     const markdown = generateDesignMd(evidence);
     expect(markdown).toContain('in desktop; count 2.');
   });
+
+  it('marks live-observed interaction states distinctly from CSS-parsed ones', () => {
+    const withStates: Evidence = {
+      ...evidence,
+      interactionStates: [
+        {
+          state: 'hover',
+          selector: '.button',
+          declarations: { backgroundColor: 'rgb(255, 0, 0)' },
+          source: 'live',
+        },
+        {
+          state: 'focus',
+          selector: '.input',
+          declarations: { outline: '2px solid blue' },
+        },
+      ],
+    };
+    const markdown = generateDesignMd(withStates);
+    expect(markdown).toContain(
+      '- **hover** _(observed live)_ on `.button`: `backgroundColor: rgb(255, 0, 0)`',
+    );
+    expect(markdown).toContain(
+      '- **focus** on `.input`: `outline: 2px solid blue`',
+    );
+    expect(markdown).not.toContain('- **focus** _(observed live)_');
+  });
 });

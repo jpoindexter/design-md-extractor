@@ -46,6 +46,7 @@ export type RawPageEvidence = {
     state: 'hover' | 'focus' | 'active' | 'disabled';
     selector: string;
     declarations: Record<string, string>;
+    source?: string;
   }>;
 };
 

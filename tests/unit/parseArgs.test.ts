@@ -68,7 +68,23 @@ describe('parseExtractArgs', () => {
     expect(config.session).toEqual({
       mode: 'persistent',
       profileDir: './.chrome',
-      headed: true,
+    });
+  });
+
+  it('--headless makes the persistent session headless', () => {
+    const config = parseExtractArgs([
+      'extract',
+      'https://example.com',
+      '--out',
+      './out',
+      '--profile',
+      './.chrome',
+      '--headless',
+    ]);
+    expect(config.session).toEqual({
+      mode: 'persistent',
+      profileDir: './.chrome',
+      headless: true,
     });
   });
 
