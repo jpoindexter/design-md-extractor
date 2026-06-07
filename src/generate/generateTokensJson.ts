@@ -26,21 +26,27 @@ export function generateTokensJson(evidence: Evidence): string {
         }),
       );
     })(),
-    typography: Object.fromEntries(
-      evidence.tokens.typography.map((t, i) => {
-        const key = `${t.role}${i > 0 ? `-${i}` : ''}`;
-        return [
-          key,
-          {
-            'font-family': { $value: t.fontFamily, $type: 'fontFamily' },
-            'font-size': { $value: t.fontSize, $type: 'dimension' },
-            'font-weight': { $value: t.fontWeight, $type: 'fontWeight' },
-            'line-height': { $value: t.lineHeight, $type: 'dimension' },
-            'letter-spacing': { $value: t.letterSpacing, $type: 'dimension' },
-          } as TokenGroup,
-        ];
-      }),
-    ),
+    typography: (() => {
+      const keySeen = new Map<string, number>();
+      return Object.fromEntries(
+        evidence.tokens.typography.map((t) => {
+          const base = t.role;
+          const count = keySeen.get(base) ?? 0;
+          keySeen.set(base, count + 1);
+          const key = count === 0 ? base : `${base}-${count}`;
+          return [
+            key,
+            {
+              'font-family': { $value: t.fontFamily, $type: 'fontFamily' },
+              'font-size': { $value: t.fontSize, $type: 'dimension' },
+              'font-weight': { $value: t.fontWeight, $type: 'fontWeight' },
+              'line-height': { $value: t.lineHeight, $type: 'dimension' },
+              'letter-spacing': { $value: t.letterSpacing, $type: 'dimension' },
+            } as TokenGroup,
+          ];
+        }),
+      );
+    })(),
     spacing: Object.fromEntries(
       evidence.tokens.spacing.map((s, i) => [
         `space-${i + 1}`,

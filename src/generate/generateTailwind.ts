@@ -18,10 +18,14 @@ function colorScale(colors: Evidence['tokens']['colors']): string {
 }
 
 function fontScale(typography: Evidence['tokens']['typography']): string {
+  const keySeen = new Map<string, number>();
   return typography
-    .map((t, i) => {
-      const name = `${t.role.replace(/\s+/g, '-')}${i > 0 ? `-${i}` : ''}`;
-      return `        '${name}': ['${t.fontSize}', { lineHeight: '${t.lineHeight}', letterSpacing: '${t.letterSpacing}', fontWeight: '${t.fontWeight}' }],`;
+    .map((t) => {
+      const base = t.role.replace(/\s+/g, '-');
+      const count = keySeen.get(base) ?? 0;
+      keySeen.set(base, count + 1);
+      const key = count === 0 ? base : `${base}-${count}`;
+      return `        '${key}': ['${t.fontSize}', { lineHeight: '${t.lineHeight}', letterSpacing: '${t.letterSpacing}', fontWeight: '${t.fontWeight}' }],`;
     })
     .join('\n');
 }

@@ -46,6 +46,42 @@ describe('generateTokensJson', () => {
     expect(parsed.spacing?.['space-1']?.['$value']).toBe('16px');
   });
 
+  it('emits unique font keys for distinct roles without spurious suffixes', () => {
+    const multi: Evidence = {
+      ...evidence,
+      tokens: {
+        ...evidence.tokens,
+        typography: [
+          {
+            role: 'heading',
+            fontFamily: 'Inter',
+            fontSize: '32px',
+            fontWeight: '700',
+            lineHeight: '40px',
+            letterSpacing: '0px',
+            sampleSelectors: [],
+            confidence: 'high',
+          },
+          {
+            role: 'body',
+            fontFamily: 'Inter',
+            fontSize: '16px',
+            fontWeight: '400',
+            lineHeight: '24px',
+            letterSpacing: '0px',
+            sampleSelectors: [],
+            confidence: 'high',
+          },
+        ],
+      },
+    };
+    const json = generateTokensJson(multi);
+    const parsed = JSON.parse(json);
+    expect(parsed.typography?.['heading']).toBeDefined();
+    expect(parsed.typography?.['body']).toBeDefined();
+    expect(parsed.typography?.['body-1']).toBeUndefined();
+  });
+
   it('produces unique color keys when two colors slug to the same name', () => {
     const dup: Evidence = {
       ...evidence,

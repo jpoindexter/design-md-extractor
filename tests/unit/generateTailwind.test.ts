@@ -59,6 +59,53 @@ describe('generateTailwind', () => {
     expect(config).toContain('borderRadius:');
   });
 
+  it('emits unique font keys for distinct roles without spurious suffixes', () => {
+    const multi: Evidence = {
+      ...evidence,
+      tokens: {
+        ...evidence.tokens,
+        typography: [
+          {
+            role: 'heading',
+            fontFamily: 'Inter',
+            fontSize: '32px',
+            fontWeight: '700',
+            lineHeight: '40px',
+            letterSpacing: '0px',
+            sampleSelectors: [],
+            confidence: 'high',
+          },
+          {
+            role: 'body',
+            fontFamily: 'Inter',
+            fontSize: '16px',
+            fontWeight: '400',
+            lineHeight: '24px',
+            letterSpacing: '0px',
+            sampleSelectors: [],
+            confidence: 'high',
+          },
+          {
+            role: 'caption',
+            fontFamily: 'Inter',
+            fontSize: '12px',
+            fontWeight: '400',
+            lineHeight: '16px',
+            letterSpacing: '0px',
+            sampleSelectors: [],
+            confidence: 'medium',
+          },
+        ],
+      },
+    };
+    const config = generateTailwind(multi);
+    expect(config).toContain("'heading':");
+    expect(config).toContain("'body':");
+    expect(config).toContain("'caption':");
+    expect(config).not.toContain("'body-1':");
+    expect(config).not.toContain("'caption-2':");
+  });
+
   it('produces unique color keys when two colors slug to the same name', () => {
     const dup: Evidence = {
       ...evidence,
