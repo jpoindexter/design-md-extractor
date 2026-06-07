@@ -518,6 +518,69 @@ describe('normalizeEvidence', () => {
     expect(btn?.viewports).toContain('mobile');
   });
 
+  it('aggregates repeated gradients across pages into ranked tokens', () => {
+    const evidence = normalizeEvidence({
+      primaryUrl: 'https://example.com',
+      pages: [{ url: 'https://example.com', status: 'success' as const }],
+      capturedAt: '2026-05-28T10:00:00.000Z',
+      viewports: [{ name: 'desktop', width: 1440, height: 1000 }],
+      screenshots: [],
+      rawPages: [
+        {
+          viewport: 'desktop',
+          colors: [],
+          typography: [],
+          components: [],
+          gradients: [
+            {
+              value: 'linear-gradient(90deg, #ff0000, #0000ff)',
+              selector: '.hero',
+            },
+          ],
+        },
+        {
+          viewport: 'mobile',
+          colors: [],
+          typography: [],
+          components: [],
+          gradients: [
+            {
+              value: 'linear-gradient(90deg, #ff0000, #0000ff)',
+              selector: '.hero',
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(evidence.tokens.gradients?.[0]?.value).toContain('linear-gradient');
+    expect(evidence.tokens.gradients?.[0]?.name).toBe('Gradient 1');
+    expect(evidence.tokens.gradients?.[0]?.confidence).toBeDefined();
+    expect(evidence.tokens.gradients).toHaveLength(1);
+  });
+
+  it('aggregates motion durations and easings across pages', () => {
+    const evidence = normalizeEvidence({
+      primaryUrl: 'https://example.com',
+      pages: [{ url: 'https://example.com', status: 'success' as const }],
+      capturedAt: '2026-05-28T10:00:00.000Z',
+      viewports: [{ name: 'desktop', width: 1440, height: 1000 }],
+      screenshots: [],
+      rawPages: [
+        {
+          viewport: 'desktop',
+          colors: [],
+          typography: [],
+          components: [],
+          motion: { durations: ['0.3s'], easings: ['ease-out'] },
+        },
+      ],
+    });
+
+    expect(evidence.motion?.durations).toContain('0.3s');
+    expect(evidence.motion?.easings).toContain('ease-out');
+  });
+
   it('populates layout containerWidths and derives density from section gaps', () => {
     const evidence = normalizeEvidence({
       primaryUrl: 'https://example.com',
@@ -539,5 +602,60 @@ describe('normalizeEvidence', () => {
 
     expect(evidence.layout.containerWidths).toContain(1120);
     expect(evidence.layout.density).toBe('spacious');
+  });
+
+  it('derives a photography-led imagery strategy from photo-heavy signals', () => {
+    const evidence = normalizeEvidence({
+      primaryUrl: 'https://example.com',
+      pages: [{ url: 'https://example.com', status: 'success' as const }],
+      capturedAt: '2026-05-28T10:00:00.000Z',
+      viewports: [{ name: 'desktop', width: 1440, height: 1000 }],
+      screenshots: [],
+      rawPages: [
+        {
+          viewport: 'desktop',
+          colors: [],
+          typography: [],
+          components: [],
+          imagery: {
+            images: 6,
+            photos: 5,
+            icons: 2,
+            videos: 0,
+            backgroundImages: 1,
+          },
+        },
+      ],
+    });
+
+    expect(evidence.imagery.strategy).toBe('photography-led');
+    expect(evidence.imagery.notes?.length ?? 0).toBeGreaterThan(0);
+  });
+
+  it('falls back to text-led when no imagery signals are present', () => {
+    const evidence = normalizeEvidence({
+      primaryUrl: 'https://example.com',
+      pages: [{ url: 'https://example.com', status: 'success' as const }],
+      capturedAt: '2026-05-28T10:00:00.000Z',
+      viewports: [{ name: 'desktop', width: 1440, height: 1000 }],
+      screenshots: [],
+      rawPages: [
+        {
+          viewport: 'desktop',
+          colors: [],
+          typography: [],
+          components: [],
+          imagery: {
+            images: 0,
+            photos: 0,
+            icons: 0,
+            videos: 0,
+            backgroundImages: 0,
+          },
+        },
+      ],
+    });
+
+    expect(evidence.imagery.strategy).toBe('text-led (minimal imagery)');
   });
 });

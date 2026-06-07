@@ -31,8 +31,17 @@ export type RawPageEvidence = {
     style: string;
     src: string;
   }>;
+  gradients?: Array<{ value: string; selector: string }>;
+  motion?: { durations: string[]; easings: string[] };
   containerWidths?: number[];
   sectionGaps?: number[];
+  imagery?: {
+    images: number;
+    photos: number;
+    icons: number;
+    videos: number;
+    backgroundImages: number;
+  };
 };
 
 export async function collectPageEvidence(
@@ -381,6 +390,7 @@ export async function collectPageEvidence(
     }
 
     const colors: RawPageEvidence['colors'] = [];
+    const gradients: RawPageEvidence['gradients'] = [];
     const typography: RawPageEvidence['typography'] = [];
     const componentCandidates: Array<
       RawPageEvidence['components'][number] & { score: number; order: number }
@@ -398,6 +408,10 @@ export async function collectPageEvidence(
       });
     }
 
+    const motionDurations = new Set<string>();
+    const motionEasings = new Set<string>();
+    let backgroundImageCount = 0;
+
     const elements = Array.from(
       document.querySelectorAll('body, body *'),
     ).filter(isVisible);
@@ -406,6 +420,33 @@ export async function collectPageEvidence(
       const style = window.getComputedStyle(element);
       const selector = selectorPath(element);
       const rect = element.getBoundingClientRect();
+
+      if (
+        style.backgroundImage &&
+        style.backgroundImage !== 'none' &&
+        style.backgroundImage.includes('url(')
+      ) {
+        backgroundImageCount += 1;
+      }
+
+      const transitionDuration = style.transitionDuration;
+      const animationDuration = style.animationDuration;
+      const hasMotion =
+        /[1-9]/.test(transitionDuration) || /[1-9]/.test(animationDuration);
+      if (hasMotion) {
+        for (const dur of `${transitionDuration}, ${animationDuration}`.split(
+          ',',
+        )) {
+          const d = dur.trim();
+          if (d && d !== '0s' && d !== '0ms') motionDurations.add(d);
+        }
+        for (const ease of `${style.transitionTimingFunction}, ${style.animationTimingFunction}`.split(
+          /,(?![^(]*\))/, // split on commas NOT inside cubic-bezier(...)
+        )) {
+          const e = ease.trim();
+          if (e && e !== 'ease') motionEasings.add(e);
+        }
+      }
 
       for (const property of ['color', 'backgroundColor', 'borderColor']) {
         const value = (style as CSSStyleDeclaration & Record<string, string>)[
@@ -420,6 +461,14 @@ export async function collectPageEvidence(
             aboveFold: rect.top < window.innerHeight,
           });
         }
+      }
+
+      const bgImage = style.backgroundImage;
+      if (bgImage && bgImage !== 'none' && /gradient\(/i.test(bgImage)) {
+        gradients.push({
+          value: normalizeColorsInCssValue(bgImage),
+          selector,
+        });
       }
 
       typography.push({
@@ -552,13 +601,38 @@ export async function collectPageEvidence(
       if (gap > 8 && gap < 400) sectionGaps.push(gap);
     }
 
+    const imgElements = Array.from(document.querySelectorAll('img'));
+    let photos = 0;
+    let smallImages = 0;
+    for (const img of imgElements) {
+      const rect = img.getBoundingClientRect();
+      const area = rect.width * rect.height;
+      if (area >= 200 * 200) photos += 1;
+      else if (area > 0) smallImages += 1;
+    }
+    const svgCount = document.querySelectorAll('svg').length;
+    const videoCount = document.querySelectorAll('video').length;
+    const imagery = {
+      images: imgElements.length,
+      photos,
+      icons: smallImages + svgCount,
+      videos: videoCount,
+      backgroundImages: backgroundImageCount,
+    };
+
     return {
       colors,
+      gradients,
       typography,
       components,
       fontFaces,
+      motion: {
+        durations: Array.from(motionDurations).slice(0, 16),
+        easings: Array.from(motionEasings).slice(0, 16),
+      },
       containerWidths,
       sectionGaps,
+      imagery,
       rootBackground: rootBackground || undefined,
     };
   }, options);

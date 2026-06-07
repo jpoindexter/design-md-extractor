@@ -114,6 +114,8 @@ describe('generateDesignMd', () => {
     expect(markdown).toContain('| Space 1 | `8px` | high |');
     expect(markdown).toContain('### Radii');
     expect(markdown).toContain('### Shadows');
+    expect(markdown).toContain('### Gradients');
+    expect(markdown).toContain('No gradients detected.');
     expect(markdown).toContain('### Button');
     expect(markdown).toContain(
       '- Color: background `#111111`, text `#ffffff`.',
@@ -124,6 +126,32 @@ describe('generateDesignMd', () => {
     expect(markdown).toContain('Container widths: `1120px`.');
     expect(markdown).toContain('- Preserve the comfortable density');
     expect(markdown).toContain('## 11. Known Gaps');
+    expect(markdown).toContain('## Motion');
+    expect(markdown).toContain(
+      'No motion (transitions or animations) detected.',
+    );
+  });
+
+  it('renders gradient tokens when present in evidence', () => {
+    const withGradients: Evidence = {
+      ...evidence,
+      tokens: {
+        ...evidence.tokens,
+        gradients: [
+          {
+            name: 'Gradient 1',
+            value: 'linear-gradient(90deg, #ff0000, #0000ff)',
+            confidence: 'high',
+          },
+        ],
+      },
+    };
+    const markdown = generateDesignMd(withGradients);
+    expect(markdown).toContain('### Gradients');
+    expect(markdown).toContain(
+      '| Gradient 1 | `linear-gradient(90deg, #ff0000, #0000ff)` | high |',
+    );
+    expect(markdown).not.toContain('No gradients detected.');
   });
 
   it('renders the viewport list when a component carries viewports[]', () => {

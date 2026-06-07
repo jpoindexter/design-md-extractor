@@ -76,6 +76,15 @@ export const EvidenceSchema = z.object({
         confidence: ConfidenceSchema,
       }),
     ),
+    gradients: z
+      .array(
+        z.object({
+          name: z.string(),
+          value: z.string(),
+          confidence: ConfidenceSchema,
+        }),
+      )
+      .optional(),
   }),
   surfaces: z.array(
     z.object({
@@ -114,6 +123,12 @@ export const EvidenceSchema = z.object({
         src: z.string(),
       }),
     )
+    .optional(),
+  motion: z
+    .object({
+      durations: z.array(z.string()),
+      easings: z.array(z.string()),
+    })
     .optional(),
   layout: z.object({
     density: z.string(),

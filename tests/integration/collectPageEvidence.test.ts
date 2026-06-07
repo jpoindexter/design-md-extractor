@@ -102,6 +102,56 @@ describe('collectPageEvidence', () => {
     expect(button?.styles.boxShadow).not.toMatch(/oklab\(/);
   });
 
+  it('captures CSS gradients and normalizes their color stops to hex', async () => {
+    const browser = await chromium.launch();
+    const page = await browser.newPage({
+      viewport: { width: 1440, height: 1000 },
+    });
+    await page.setContent(
+      '<div style="width:300px;height:200px;background:linear-gradient(90deg,#ff0000,#0000ff)">x</div>',
+    );
+
+    const evidence = await collectPageEvidence(page, {
+      viewport: 'desktop',
+      maxComponents: 20,
+    });
+    await browser.close();
+
+    const gradient = evidence.gradients?.find((g) =>
+      /linear-gradient/.test(g.value),
+    );
+    expect(gradient).toBeDefined();
+    // The browser renders hex stops back as rgb(); normalization must convert
+    // them to hex so gradient tokens stay consistent with the color palette.
+    expect(gradient?.value).toContain('#ff0000');
+    expect(gradient?.value).toContain('#0000ff');
+    expect(gradient?.value).not.toMatch(/rgb\(/);
+  });
+
+  it('captures transition/animation durations and keeps cubic-bezier easings intact', async () => {
+    const browser = await chromium.launch();
+    const page = await browser.newPage({
+      viewport: { width: 1440, height: 1000 },
+    });
+    await page.setContent(
+      '<button style="transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)">Hover me</button>',
+    );
+
+    const evidence = await collectPageEvidence(page, {
+      viewport: 'desktop',
+      maxComponents: 20,
+    });
+    await browser.close();
+
+    expect(evidence.motion?.durations.includes('0.3s')).toBe(true);
+    const cubicEasing = evidence.motion?.easings.find((easing) =>
+      easing.includes('cubic-bezier'),
+    );
+    expect(cubicEasing).toBeDefined();
+    // The bezier's internal commas must NOT split it into fragments.
+    expect(cubicEasing).toBe('cubic-bezier(0.4, 0, 0.2, 1)');
+  });
+
   it('prioritizes styled controls and cards over unstyled wrappers when capped', async () => {
     const browser = await chromium.launch();
     const page = await browser.newPage({
@@ -181,5 +231,26 @@ describe('collectPageEvidence', () => {
     expect(card?.styles.padding).toBe('24px');
     expect(card?.styles.border).toBe('1px solid #d9e2ef');
     expect(card?.styles.boxShadow).toContain('rgba(29, 36, 51, 0.18)');
+  });
+
+  it('counts SVG icons and url() background images for imagery signals', async () => {
+    const browser = await chromium.launch();
+    const page = await browser.newPage({
+      viewport: { width: 1440, height: 1000 },
+    });
+    await page.setContent(`
+      <div style="width:300px;height:200px;background:url(data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==)">x</div>
+      <svg width="24" height="24"></svg>
+      <svg width="24" height="24"></svg>
+    `);
+
+    const evidence = await collectPageEvidence(page, {
+      viewport: 'desktop',
+      maxComponents: 20,
+    });
+    await browser.close();
+
+    expect(evidence.imagery?.icons ?? 0).toBeGreaterThanOrEqual(2);
+    expect(evidence.imagery?.backgroundImages ?? 0).toBeGreaterThanOrEqual(1);
   });
 });
