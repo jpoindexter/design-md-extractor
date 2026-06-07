@@ -166,6 +166,31 @@ Or in your MCP config:
 }
 ```
 
+## Bypassing Cloudflare and login walls
+
+Sites behind Cloudflare or a login wall serve a challenge page to a fresh browser. Two ways to reuse your real session:
+
+### Cookie file (non-interactive)
+Export your cookies from a browser where the site already loads (DevTools → Application → Cookies, or a "Get cookies.txt" / EditThisCookie extension) and copy your browser's User-Agent (`navigator.userAgent` in the console):
+
+```bash
+node dist/cli.js extract https://site.com \
+  --cookies ./cookies.json \
+  --user-agent "Mozilla/5.0 ..." \
+  --out ./out/site
+```
+
+Cloudflare binds `cf_clearance` to the IP **and** User-Agent that solved the challenge. The extractor runs on your machine (same IP), so a matching `--user-agent` is required for the cookies to validate. Cookie files (Playwright JSON or Netscape `cookies.txt`) are accepted.
+
+### Persistent Chrome profile (most reliable)
+Opens a real, visible Chrome window with an on-disk profile. Clear the challenge / log in once; the session persists and is reused on later runs:
+
+```bash
+node dist/cli.js extract https://site.com --profile ./.chrome-profile --out ./out/site
+```
+
+The first run is interactive (a window opens — solve the challenge); re-running the same command reuses the profile until the session expires. Requires Google Chrome installed; this mode runs **headed** (a visible window) because headless browsers are detectable.
+
 ## Use with an AI coding agent (Claude Code skill)
 
 This repo ships a Claude Code skill in [`skill/`](skill/SKILL.md) so an agent can consume a `DESIGN.md` and rebuild or extend a site's styles faithfully. Point your agent at `skill/SKILL.md` and the generated `DESIGN.md`.

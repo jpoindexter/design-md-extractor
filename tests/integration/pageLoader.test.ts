@@ -5,6 +5,7 @@ import { newLoadedPage } from '../../src/crawl/pageLoader.js';
 describe('newLoadedPage', () => {
   it('waits for delayed visible content before returning the page', async () => {
     const browser = await chromium.launch();
+    const context = await browser.newContext();
     const html = `
       <main>
         <h1 id="hero" style="display: none; color: rgb(255, 59, 21)">Delayed Hero</h1>
@@ -19,17 +20,20 @@ describe('newLoadedPage', () => {
 
     try {
       const page = await newLoadedPage({
-        browser,
+        context,
         url,
         viewport: { name: 'desktop', width: 1440, height: 1000 },
         timeoutMs: 5000,
       });
 
-      const display = await page.evaluate(() => getComputedStyle(document.getElementById('hero')!).display);
+      const display = await page.evaluate(
+        () => getComputedStyle(document.getElementById('hero')!).display,
+      );
       await page.close();
 
       expect(display).toBe('block');
     } finally {
+      await context.close();
       await browser.close();
     }
   });
