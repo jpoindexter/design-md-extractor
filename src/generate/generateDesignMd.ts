@@ -179,7 +179,8 @@ function interactionStatesSection(evidence: Evidence): string {
       const decls = Object.entries(entry.declarations)
         .map(([prop, value]) => `\`${prop}: ${value}\``)
         .join(', ');
-      return `- **${entry.state}** on \`${entry.selector}\`: ${decls}`;
+      const origin = entry.source === 'live' ? ' _(observed live)_' : '';
+      return `- **${entry.state}**${origin} on \`${entry.selector}\`: ${decls}`;
     })
     .join('\n');
 }
