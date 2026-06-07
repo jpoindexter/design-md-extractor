@@ -43,6 +43,18 @@ async function readStyles(
     .catch(() => null);
 }
 
+// A state change only matters if it's visible. Filter out invisible churn
+// (a focus ring of width 0 / style none, opacity returning to 1, transform none)
+// so the captured states are real visual effects, not computed-style noise.
+function isMeaningful(prop: string, value: string): boolean {
+  if (!value || value === 'none' || value === 'normal') return false;
+  if (prop === 'outline' && (value.includes('none') || /\b0px\b/.test(value))) {
+    return false;
+  }
+  if (prop === 'opacity' && value === '1') return false;
+  return true;
+}
+
 function diff(
   base: Record<string, string>,
   next: Record<string, string>,
@@ -51,8 +63,7 @@ function diff(
   for (const prop of STATE_PROPS) {
     const before = base[prop] ?? '';
     const after = next[prop] ?? '';
-    // Ignore no-ops and the 'none'->'none' / empty churn.
-    if (after && after !== before && after !== 'none' && after !== 'normal') {
+    if (after !== before && isMeaningful(prop, after)) {
       changes[prop] = after;
     }
   }
@@ -60,23 +71,30 @@ function diff(
 }
 
 /**
- * Trigger real hover (and focus for inputs/buttons) on up to `limit` components
- * and record the computed-style changes. Catches JS-driven hover that CSS-rule
+ * Trigger real hover (and focus for inputs/buttons) on detected components and
+ * record the visible computed-style changes. Catches JS-driven hover that CSS-rule
  * parsing misses. Fully defensive: any selector/timeout failure skips that
- * component without failing the run. Settles ~250ms after the trigger so CSS
- * transitions reach their target state before reading.
+ * component without failing the run. Bounded by `limit` elements AND a total
+ * `budgetMs` wall-clock budget so a slow page can't blow up extraction time;
+ * actionability waits are kept short for the same reason. Settles briefly after
+ * each trigger so CSS transitions reach their target before the read.
  */
 export async function captureLiveInteractions(
   page: Page,
   components: ComponentRef[],
-  limit = 12,
+  options: { limit?: number; budgetMs?: number } = {},
 ): Promise<LiveInteractionState[]> {
+  const limit = options.limit ?? 10;
+  const budgetMs = options.budgetMs ?? 8000;
+  const deadline = Date.now() + budgetMs;
+  const actionTimeout = 350;
+
   const results: LiveInteractionState[] = [];
   const seen = new Set<string>();
   let processed = 0;
 
   for (const component of components) {
-    if (processed >= limit) break;
+    if (processed >= limit || Date.now() > deadline) break;
     const selector = component.selector;
     if (!selector || seen.has(selector)) continue;
     seen.add(selector);
@@ -95,8 +113,8 @@ export async function captureLiveInteractions(
 
     // HOVER
     try {
-      await locator.hover({ timeout: 800 });
-      await page.waitForTimeout(250);
+      await locator.hover({ timeout: actionTimeout });
+      await page.waitForTimeout(180);
       const hovered = await readStyles(page, selector);
       if (hovered) {
         const changes = diff(base, hovered);
@@ -110,7 +128,6 @@ export async function captureLiveInteractions(
         }
       }
       await page.mouse.move(0, 0); // reset hover
-      await page.waitForTimeout(50);
     } catch {
       // not hoverable — skip hover for this element
     }
@@ -118,8 +135,8 @@ export async function captureLiveInteractions(
     // FOCUS (inputs and buttons mainly)
     if (component.kind === 'input' || component.kind === 'button') {
       try {
-        await locator.focus({ timeout: 800 });
-        await page.waitForTimeout(150);
+        await locator.focus({ timeout: actionTimeout });
+        await page.waitForTimeout(100);
         const focused = await readStyles(page, selector);
         if (focused) {
           const changes = diff(base, focused);
