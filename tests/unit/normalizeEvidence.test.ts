@@ -306,7 +306,43 @@ describe('normalizeEvidence', () => {
     ).toBe(true);
   });
 
-  it('adds AMBIGUOUS_CANVAS warning and caps confidence when top-2 page backgrounds are close', () => {
+  it('adds AMBIGUOUS_CANVAS warning and caps confidence from high to medium', () => {
+    // Each rawPage contributes backgroundCount to its rootBackground color.
+    // 6 viewport observations of '#ffffff' → backgroundCount=6 → normally 'high' confidence.
+    // 5 viewport observations of '#fafafa' → pageBackgroundCount=5 → ratio=5/6=0.83 ≥ 0.75 → ambiguous.
+    const rawPages = [
+      ...Array.from({ length: 6 }, (_, i) => ({
+        viewport: i % 2 === 0 ? 'desktop' : 'mobile',
+        rootBackground: '#ffffff' as const,
+        colors: [
+          {
+            value: '#ffffff',
+            property: 'backgroundColor' as const,
+            selector: 'body',
+            area: 1440 * 900,
+            aboveFold: true,
+          },
+        ],
+        typography: [] as never[],
+        components: [] as never[],
+      })),
+      ...Array.from({ length: 5 }, (_, i) => ({
+        viewport: i % 2 === 0 ? 'desktop' : 'mobile',
+        rootBackground: '#fafafa' as const,
+        colors: [
+          {
+            value: '#fafafa',
+            property: 'backgroundColor' as const,
+            selector: 'body',
+            area: 1440 * 900,
+            aboveFold: true,
+          },
+        ],
+        typography: [] as never[],
+        components: [] as never[],
+      })),
+    ];
+
     const evidence = normalizeEvidence({
       primaryUrl: 'https://example.com',
       pages: [
@@ -314,47 +350,23 @@ describe('normalizeEvidence', () => {
         { url: 'https://example.com/about', status: 'success' as const },
       ],
       capturedAt: '2026-05-28T10:00:00.000Z',
-      viewports: [{ name: 'desktop', width: 1440, height: 1000 }],
-      screenshots: [],
-      rawPages: [
-        {
-          viewport: 'desktop',
-          rootBackground: '#ffffff',
-          colors: [
-            {
-              value: '#ffffff',
-              property: 'backgroundColor' as const,
-              selector: 'body',
-              area: 1440 * 900,
-              aboveFold: true,
-            },
-          ],
-          typography: [],
-          components: [],
-        },
-        {
-          viewport: 'desktop',
-          rootBackground: '#fafafa',
-          colors: [
-            {
-              value: '#fafafa',
-              property: 'backgroundColor' as const,
-              selector: 'body',
-              area: 1440 * 900,
-              aboveFold: true,
-            },
-          ],
-          typography: [],
-          components: [],
-        },
+      viewports: [
+        { name: 'desktop', width: 1440, height: 1000 },
+        { name: 'mobile', width: 375, height: 812 },
       ],
+      screenshots: [],
+      rawPages,
     });
 
+    // Ambiguity warning must be present
     const ambiguous = evidence.warnings.find(
       (w) => w.code === 'AMBIGUOUS_CANVAS',
     );
     expect(ambiguous).toBeDefined();
-    expect(evidence.surfaces[0]?.confidence).not.toBe('high');
+
+    // surfaces[0] would have 'high' confidence from backgroundCount=6,
+    // but the ambiguity cap must have downgraded it to 'medium'
+    expect(evidence.surfaces[0]?.confidence).toBe('medium');
   });
 
   it('does NOT emit AMBIGUOUS_CANVAS when one page background is clearly dominant', () => {
