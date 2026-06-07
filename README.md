@@ -127,10 +127,12 @@ node /absolute/path/to/design-md-extractor/dist/mcp.js
 
 **`extract_design` input:**
 
-| Parameter  | Type           | Default  | Description        |
-| ---------- | -------------- | -------- | ------------------ |
-| `url`      | `string` (URL) | required | Website to extract |
-| `maxPages` | `integer` 1–12 | `5`      | Max pages to crawl |
+| Parameter   | Type           | Default  | Description                                                                                         |
+| ----------- | -------------- | -------- | --------------------------------------------------------------------------------------------------- |
+| `url`       | `string` (URL) | required | Website to extract                                                                                  |
+| `maxPages`  | `integer` 1–12 | `5`      | Max pages to crawl                                                                                  |
+| `cookies`   | `string`       | —        | Path to a cookie file (Playwright JSON or Netscape `cookies.txt`) for Cloudflare/login-walled sites |
+| `userAgent` | `string`       | —        | User-Agent matching the browser that produced the cookies (so `cf_clearance` validates)             |
 
 **`extract_design` response includes:**
 
@@ -138,8 +140,10 @@ node /absolute/path/to/design-md-extractor/dist/mcp.js
 - `url` — canonical URL extracted
 - `outDir` — absolute path to all artifacts on disk
 - `discoveredPages` — pages that were crawled
-- `summary` — structured data: colors, typography, spacing, radii, shadows, surfaces, components, warnings, style thesis
+- `summary` — structured data: style thesis, colors, gradients, typography, spacing, radii, shadows, surfaces, components, layout, imagery, motion, interaction states, warnings
 - `designMd` — full `DESIGN.md` content, ready to pass to an LLM
+
+All artifacts (`DESIGN.md`, `evidence.json`, `tokens.css`, `tailwind-theme.js`, `design-tokens.json`, `ai-prompt.txt`, `preview.html`, `screenshots/`) are written under `outDir`.
 
 #### Wire it into Claude Code
 
