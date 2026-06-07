@@ -53,7 +53,7 @@ describe('normalizeComponents', () => {
     expect(buttons[0]?.styles.borderRadius).toBe('80px');
   });
 
-  it('does not over-merge components with different selectors', () => {
+  it('merges identical-style instances at different selectors into one type', () => {
     const mk = (selector: string) => ({
       kind: 'button',
       selector,
@@ -68,6 +68,29 @@ describe('normalizeComponents', () => {
     });
     const result = normalizeComponents(
       [rawPage('desktop', [mk('a.one'), mk('a.two')])],
+      viewports,
+    );
+    const buttons = result.filter((c) => c.kind === 'button');
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0]?.count).toBe(2);
+  });
+
+  it('keeps size-distinct components separate (pill vs sharp)', () => {
+    const mk = (selector: string, radius: string) => ({
+      kind: 'button',
+      selector,
+      textSample: 'go',
+      styles: {
+        fontFamily: 'Inter',
+        color: '#fff',
+        backgroundColor: '#000',
+        borderRadius: radius,
+        padding: '8px 16px',
+      },
+      bounds: { width: 120, height: 44 },
+    });
+    const result = normalizeComponents(
+      [rawPage('desktop', [mk('a.pill', '160px'), mk('a.sharp', '8px')])],
       viewports,
     );
     expect(result.filter((c) => c.kind === 'button')).toHaveLength(2);

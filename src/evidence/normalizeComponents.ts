@@ -4,10 +4,31 @@ import {
   cleanFontFamily,
   cleanSelector,
   componentName,
+  normalizeStyleValue,
   structuralSignature,
   styleSignalScore,
 } from './normalizeHelpers.js';
-import { roundStyleValues } from './normalizeValues.js';
+import { roundPxValue, roundStyleValues } from './normalizeValues.js';
+
+// Visual component-TYPE identity, computed from a component's desktop-representative
+// styles (after stage-1 viewport collapse, so size props are stable rather than
+// breakpoint-scaled). Two instances of the same component at different DOM
+// locations share this signature and merge into one row with a real reuse count.
+// Size props (fontSize/padding/borderRadius/shadow) ARE in the key, so a pill
+// button (radius 160px) and a sharp button (radius 8px) stay distinct.
+function visualSignature(kind: string, styles: Record<string, string>): string {
+  return [
+    kind,
+    normalizeStyleValue(styles.color),
+    normalizeStyleValue(styles.backgroundColor),
+    normalizeStyleValue(styles.fontFamily),
+    roundPxValue(normalizeStyleValue(styles.fontSize)),
+    roundPxValue(normalizeStyleValue(styles.padding)),
+    roundPxValue(normalizeStyleValue(styles.borderRadius)),
+    normalizeStyleValue(styles.border),
+    normalizeStyleValue(styles.boxShadow),
+  ].join('|');
+}
 
 type NormalizedComponent = {
   name: string;
@@ -35,13 +56,15 @@ type ComponentEntry = {
   instancesByViewport: Map<string, number>;
 };
 
-// Collapse the per-viewport component samples into one row per structural
-// identity (kind + selector + fontFamily). Webflow/Framer rem-scale fontSize/
-// padding/borderRadius per breakpoint, so keying on those scaled values splits
-// one logical element into N near-duplicate rows. structuralSignature ignores
-// them; we keep the widest (desktop) viewport's values as the representative,
-// track which viewports each was seen in, and set count to the max instances in
-// any single viewport (not the cross-viewport total).
+// Two-stage component normalization:
+//   Stage 1 — collapse per-viewport samples into one row per structural identity
+//     (kind + selector + fontFamily). Webflow/Framer rem-scale fontSize/padding/
+//     borderRadius per breakpoint, so keying on those scaled values would split
+//     one element into N near-duplicate rows; structuralSignature ignores them.
+//     The widest (desktop) viewport's values become the representative.
+//   Stage 2 — regroup those per-element representatives into component TYPES by
+//     visualSignature (desktop values, size props included), so the same button/
+//     card appearing in many places becomes one row with a real reuse count.
 export function normalizeComponents(
   rawPages: Array<RawPageEvidence & { viewport: string }>,
   viewports: Array<{ name: string; width: number; height: number }>,
@@ -113,20 +136,62 @@ export function normalizeComponents(
     }
   }
 
-  return Array.from(componentMap.values())
+  // Per-element representatives that survived stage 1 (one row per DOM element,
+  // viewports already collapsed). count = instances of that element in any single
+  // viewport; viewportSet = where it was seen.
+  const elements = Array.from(componentMap.values())
     .filter(
       (entry) => entry.signalScore > 0 || entry.textSample.trim().length > 0,
     )
+    .map((entry) => ({
+      ...entry,
+      count: Math.max(...entry.instancesByViewport.values()),
+      viewportSet: new Set(entry.instancesByViewport.keys()),
+    }));
+
+  // Stage 2: regroup elements into component TYPES by visual signature, summing
+  // instance counts. A type seen N times across the page becomes one row, count N.
+  type TypeEntry = (typeof elements)[number];
+  const typeMap = new Map<string, TypeEntry>();
+  for (const element of elements) {
+    const key = visualSignature(element.kind, element.styles);
+    const existing = typeMap.get(key);
+    if (!existing) {
+      typeMap.set(key, {
+        ...element,
+        viewportSet: new Set(element.viewportSet),
+      });
+      continue;
+    }
+    existing.count += element.count;
+    for (const viewport of element.viewportSet)
+      existing.viewportSet.add(viewport);
+    if (element.textSample.length > existing.textSample.length) {
+      existing.textSample = element.textSample;
+    }
+    // Representative sample = widest viewport, then highest signal score.
+    if (
+      element.representativeWidth > existing.representativeWidth ||
+      (element.representativeWidth === existing.representativeWidth &&
+        element.signalScore > existing.signalScore)
+    ) {
+      existing.selector = element.selector;
+      existing.viewport = element.viewport;
+      existing.bounds = element.bounds;
+      existing.styles = element.styles;
+      existing.signalScore = element.signalScore;
+      existing.representativeWidth = element.representativeWidth;
+    }
+  }
+
+  return Array.from(typeMap.values())
     .sort((a, b) => {
       if (b.signalScore !== a.signalScore) return b.signalScore - a.signalScore;
-      const aCount = Math.max(...a.instancesByViewport.values());
-      const bCount = Math.max(...b.instancesByViewport.values());
-      return bCount - aCount;
+      return b.count - a.count;
     })
     .slice(0, 80)
     .map((entry) => {
-      const count = Math.max(...entry.instancesByViewport.values());
-      const viewportNames = [...entry.instancesByViewport.keys()].sort(
+      const viewportNames = [...entry.viewportSet].sort(
         (a, b) => widthFor(b) - widthFor(a),
       );
       return {
@@ -137,10 +202,10 @@ export function normalizeComponents(
         viewport: entry.viewport,
         viewports: viewportNames,
         selector: entry.selector,
-        count,
+        count: entry.count,
         styles: roundStyleValues(entry.styles),
         bounds: entry.bounds,
-        confidence: confidenceFromFrequency(count),
+        confidence: confidenceFromFrequency(entry.count),
       };
     });
 }
