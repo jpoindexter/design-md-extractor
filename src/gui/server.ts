@@ -104,14 +104,14 @@ export function friendlyExtractionError(message: string): string {
 // pattern is restricted to safe filename chars, and the resolved run directory
 // is confirmed to sit inside runsDir before any filesystem work (same guard as
 // serveRunFile) to block path traversal.
-async function serveRunBundle(
+export async function serveRunBundle(
   res: ServerResponse,
   runsDir: string,
   runId: string,
 ): Promise<void> {
   const root = resolve(runsDir);
   const runDir = resolve(root, runId);
-  if (runDir !== root && !runDir.startsWith(`${root}${sep}`)) {
+  if (!runDir.startsWith(`${root}${sep}`)) {
     res.writeHead(403);
     res.end('Forbidden');
     return;

@@ -316,4 +316,57 @@ describe('GET /runs/:id/bundle.zip', () => {
       });
     }
   });
+
+  it('blocks runId "." path-traversal at the HTTP layer (returns non-200)', async () => {
+    // Note: new URL(req.url, base) in the server normalises /runs/./bundle.zip
+    // to /runs/bundle.zip before routing, so the bundle-route regex never
+    // matches and the request returns 404 — not 403. The 403 guard in
+    // serveRunBundle is exercised directly in tests/unit/serveRunBundle.test.ts.
+    // This test verifies that the HTTP endpoint never returns 200 for the
+    // traversal path, confirming no data leaks regardless of which layer blocks.
+    runsDir = join(tmpdir(), `gui-runs-${process.pid}-${Date.now()}`);
+    await mkdir(runsDir, { recursive: true });
+
+    const server = createGuiServer({
+      runsDir,
+      runExtraction: async (input) => ({
+        runId: 'unused',
+        url: input.url,
+        outDir: runsDir,
+        discoveredPages: [],
+        artifacts: { designMd: '', evidenceJson: '', previewHtml: '' },
+        summary: {
+          source: { primaryUrl: input.url, capturedAt: '' },
+          styleThesis: '',
+          bestScreenshotHref: null,
+          pages: [],
+          colors: [],
+          typography: [],
+          spacing: [],
+          radii: [],
+          shadows: [],
+          surfaces: [],
+          warnings: [],
+          components: [],
+          screenshots: [],
+        },
+      }),
+    });
+
+    await new Promise<void>((resolve) => {
+      server.listen(0, '127.0.0.1', resolve);
+    });
+
+    try {
+      const address = server.address();
+      const port = typeof address === 'object' && address ? address.port : 0;
+      // Use getRaw so the raw path string is sent without client-side normalisation.
+      const res = await getRaw(port, '/runs/./bundle.zip');
+      expect(res.status).not.toBe(200);
+    } finally {
+      await new Promise<void>((resolve, reject) => {
+        server.close((error) => (error ? reject(error) : resolve()));
+      });
+    }
+  });
 });
