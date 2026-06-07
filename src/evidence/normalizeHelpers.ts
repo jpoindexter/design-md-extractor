@@ -139,6 +139,20 @@ export function styleSignature(styles: Record<string, string>): string {
   ].join('|');
 }
 
+// Viewport-stable component identity: kind + selector + the ONE breakpoint-stable
+// style prop (fontFamily). Deliberately excludes fontSize/padding/borderRadius/
+// border/boxShadow (Webflow/Framer rem-scale these per breakpoint, which would
+// split one element into N rows) and color/backgroundColor (can change per
+// breakpoint via sticky/theme rules). fontFamily guards against truncated-selector
+// collisions without re-splitting on scaled values.
+export function structuralSignature(
+  kind: string,
+  selector: string,
+  styles: Record<string, string>,
+): string {
+  return [kind, selector, normalizeStyleValue(styles.fontFamily)].join('|');
+}
+
 // Recover the human-readable family from framework-hashed font tokens (Next.js
 // `next/font` emits `__polySans_c5b537` + a `__polySans_Fallback_c5b537` / quoted
 // `"Geist Fallback"` duplicate). Maps the former to `polySans`, drops the latter.
