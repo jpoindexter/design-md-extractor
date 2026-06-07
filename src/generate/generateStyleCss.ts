@@ -59,6 +59,10 @@ function cssLines(evidence: Evidence): string[] {
     lines.push(`  ${cssVariable('shadow', shadow.name)}: ${shadow.value};`);
   }
 
+  for (const [index, gradient] of (evidence.tokens.gradients ?? []).entries()) {
+    lines.push(`  --gradient-${index + 1}: ${gradient.value};`);
+  }
+
   lines.push('}');
   return lines;
 }

@@ -102,6 +102,32 @@ describe('collectPageEvidence', () => {
     expect(button?.styles.boxShadow).not.toMatch(/oklab\(/);
   });
 
+  it('captures CSS gradients and normalizes their color stops to hex', async () => {
+    const browser = await chromium.launch();
+    const page = await browser.newPage({
+      viewport: { width: 1440, height: 1000 },
+    });
+    await page.setContent(
+      '<div style="width:300px;height:200px;background:linear-gradient(90deg,#ff0000,#0000ff)">x</div>',
+    );
+
+    const evidence = await collectPageEvidence(page, {
+      viewport: 'desktop',
+      maxComponents: 20,
+    });
+    await browser.close();
+
+    const gradient = evidence.gradients?.find((g) =>
+      /linear-gradient/.test(g.value),
+    );
+    expect(gradient).toBeDefined();
+    // The browser renders hex stops back as rgb(); normalization must convert
+    // them to hex so gradient tokens stay consistent with the color palette.
+    expect(gradient?.value).toContain('#ff0000');
+    expect(gradient?.value).toContain('#0000ff');
+    expect(gradient?.value).not.toMatch(/rgb\(/);
+  });
+
   it('prioritizes styled controls and cards over unstyled wrappers when capped', async () => {
     const browser = await chromium.launch();
     const page = await browser.newPage({

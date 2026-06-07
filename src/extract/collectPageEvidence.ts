@@ -31,6 +31,7 @@ export type RawPageEvidence = {
     style: string;
     src: string;
   }>;
+  gradients?: Array<{ value: string; selector: string }>;
   containerWidths?: number[];
   sectionGaps?: number[];
 };
@@ -381,6 +382,7 @@ export async function collectPageEvidence(
     }
 
     const colors: RawPageEvidence['colors'] = [];
+    const gradients: RawPageEvidence['gradients'] = [];
     const typography: RawPageEvidence['typography'] = [];
     const componentCandidates: Array<
       RawPageEvidence['components'][number] & { score: number; order: number }
@@ -420,6 +422,14 @@ export async function collectPageEvidence(
             aboveFold: rect.top < window.innerHeight,
           });
         }
+      }
+
+      const bgImage = style.backgroundImage;
+      if (bgImage && bgImage !== 'none' && /gradient\(/i.test(bgImage)) {
+        gradients.push({
+          value: normalizeColorsInCssValue(bgImage),
+          selector,
+        });
       }
 
       typography.push({
@@ -554,6 +564,7 @@ export async function collectPageEvidence(
 
     return {
       colors,
+      gradients,
       typography,
       components,
       fontFaces,

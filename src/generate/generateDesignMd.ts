@@ -70,6 +70,18 @@ function tokenRows(
   ].join('\n');
 }
 
+function gradientRows(evidence: Evidence): string {
+  const gradients = evidence.tokens.gradients ?? [];
+  if (gradients.length === 0) {
+    return 'No gradients detected.';
+  }
+  return [
+    '| Name | Value | Confidence |',
+    '|------|-------|------------|',
+    ...gradients.map((g) => `| ${g.name} | \`${g.value}\` | ${g.confidence} |`),
+  ].join('\n');
+}
+
 function surfaceRows(evidence: Evidence): string {
   if (evidence.surfaces.length === 0) {
     return '| Level | Name | Value | Purpose | Confidence |\n|-------|------|-------|---------|------------|';
@@ -241,6 +253,10 @@ ${tokenRows(evidence.tokens.radii)}
 ### Shadows
 
 ${tokenRows(evidence.tokens.shadows)}
+
+### Gradients
+
+${gradientRows(evidence)}
 
 ## 4. Surfaces
 

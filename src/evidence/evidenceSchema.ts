@@ -76,6 +76,15 @@ export const EvidenceSchema = z.object({
         confidence: ConfidenceSchema,
       }),
     ),
+    gradients: z
+      .array(
+        z.object({
+          name: z.string(),
+          value: z.string(),
+          confidence: ConfidenceSchema,
+        }),
+      )
+      .optional(),
   }),
   surfaces: z.array(
     z.object({

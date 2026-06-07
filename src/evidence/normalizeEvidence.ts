@@ -171,6 +171,34 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
     'none',
   ]);
 
+  // Count identical gradient strings across all pages; keep a sample selector
+  // and rank by frequency so the most-repeated gradients surface as tokens.
+  const gradientCounts = new Map<string, { count: number; selector: string }>();
+  for (const page of input.rawPages) {
+    for (const gradient of page.gradients ?? []) {
+      const value = gradient.value.trim();
+      if (!value) continue;
+      const current = gradientCounts.get(value);
+      if (current) {
+        current.count += 1;
+      } else {
+        gradientCounts.set(value, {
+          count: 1,
+          selector: cleanSelector(gradient.selector),
+        });
+      }
+    }
+  }
+
+  const gradients = Array.from(gradientCounts.entries())
+    .sort((a, b) => b[1].count - a[1].count)
+    .slice(0, 8)
+    .map(([value, data], index) => ({
+      name: `Gradient ${index + 1}`,
+      value,
+      confidence: confidenceFromFrequency(data.count),
+    }));
+
   const surfaces = buildSurfaces(colorCounts, colors);
 
   const top1 = surfaces[0];
@@ -264,6 +292,7 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
       spacing,
       radii,
       shadows,
+      gradients,
     },
     surfaces,
     components,
