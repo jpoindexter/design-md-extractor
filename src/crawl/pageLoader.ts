@@ -119,19 +119,26 @@ export async function newLoadedPage(input: {
   timeoutMs: number;
 }): Promise<Page> {
   const page = await input.context.newPage();
-  await page.setViewportSize({
-    width: input.viewport.width,
-    height: input.viewport.height,
-  });
-  await page.goto(input.url, {
-    waitUntil: 'domcontentloaded',
-    timeout: input.timeoutMs,
-  });
-  await page
-    .waitForLoadState('load', { timeout: Math.min(input.timeoutMs, 3000) })
-    .catch(() => undefined);
-  await waitForChallengeClear(page, input.timeoutMs);
-  await page.evaluate(() => document.fonts?.ready).catch(() => undefined);
-  await waitForVisualSettle(page);
-  return page;
+  try {
+    await page.setViewportSize({
+      width: input.viewport.width,
+      height: input.viewport.height,
+    });
+    await page.goto(input.url, {
+      waitUntil: 'domcontentloaded',
+      timeout: input.timeoutMs,
+    });
+    await page
+      .waitForLoadState('load', { timeout: Math.min(input.timeoutMs, 3000) })
+      .catch(() => undefined);
+    await waitForChallengeClear(page, input.timeoutMs);
+    await page.evaluate(() => document.fonts?.ready).catch(() => undefined);
+    await waitForVisualSettle(page);
+    return page;
+  } catch (error) {
+    // A goto/challenge/settle failure must not leave an open page in the
+    // shared context (gated sites hit this path often).
+    await page.close().catch(() => undefined);
+    throw error;
+  }
 }

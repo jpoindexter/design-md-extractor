@@ -42,8 +42,9 @@ export async function runExtraction(config: ExtractConfig): Promise<void> {
   await withBrowserSession(config.session ?? NO_SESSION, async (context) => {
     for (const url of urls) {
       for (const viewport of config.viewports) {
+        let page: Awaited<ReturnType<typeof newLoadedPage>> | undefined;
         try {
-          const page = await newLoadedPage({
+          page = await newLoadedPage({
             context,
             url,
             viewport,
@@ -67,7 +68,6 @@ export async function runExtraction(config: ExtractConfig): Promise<void> {
             path: screenshotPath,
           });
           rawPages.push({ ...raw, viewport: viewport.name });
-          await page.close();
           const result = pageResults.get(url);
           if (result) {
             result.success = true;
@@ -79,6 +79,10 @@ export async function runExtraction(config: ExtractConfig): Promise<void> {
               error instanceof Error ? error.message : String(error),
             );
           }
+        } finally {
+          // Close on every path so a collect/screenshot failure can't leave an
+          // open page in the shared context across the rest of the run.
+          await page?.close().catch(() => undefined);
         }
       }
     }

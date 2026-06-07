@@ -1,16 +1,18 @@
 import { readFile } from 'node:fs/promises';
 import { z } from 'zod';
 
-export type ParsedCookie = {
-  name: string;
-  value: string;
-  domain: string;
-  path: string;
-  expires?: number;
-  httpOnly?: boolean;
-  secure?: boolean;
-  sameSite?: 'Strict' | 'Lax' | 'None';
-};
+const ParsedCookieSchema = z.object({
+  name: z.string(),
+  value: z.string(),
+  domain: z.string(),
+  path: z.string(),
+  expires: z.number().optional(),
+  httpOnly: z.boolean().optional(),
+  secure: z.boolean().optional(),
+  sameSite: z.enum(['Strict', 'Lax', 'None']).optional(),
+});
+
+export type ParsedCookie = z.infer<typeof ParsedCookieSchema>;
 
 const JsonCookieSchema = z.object({
   name: z.string(),
@@ -73,14 +75,16 @@ function fromNetscape(text: string): ParsedCookie[] {
     const parts = line.split('\t');
     if (parts.length < 7) continue;
     const [domain, , path, secure, expires, name, value] = parts;
-    cookies.push({
-      name: name ?? '',
-      value: value ?? '',
-      domain: domain ?? '',
-      path: path || '/',
-      ...(expires && Number(expires) > 0 ? { expires: Number(expires) } : {}),
-      secure: (secure ?? '').toUpperCase() === 'TRUE',
-    });
+    cookies.push(
+      ParsedCookieSchema.parse({
+        name: name ?? '',
+        value: value ?? '',
+        domain: domain ?? '',
+        path: path || '/',
+        ...(expires && Number(expires) > 0 ? { expires: Number(expires) } : {}),
+        secure: (secure ?? '').toUpperCase() === 'TRUE',
+      }),
+    );
   }
   return cookies;
 }
