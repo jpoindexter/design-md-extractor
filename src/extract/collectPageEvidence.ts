@@ -42,6 +42,11 @@ export type RawPageEvidence = {
     videos: number;
     backgroundImages: number;
   };
+  interactionStates?: Array<{
+    state: 'hover' | 'focus' | 'active' | 'disabled';
+    selector: string;
+    declarations: Record<string, string>;
+  }>;
 };
 
 export async function collectPageEvidence(
@@ -574,6 +579,68 @@ export async function collectPageEvidence(
       if (fontFaces.length >= 24) break;
     }
 
+    // A SECOND, independent stylesheet pass — distinct from the @font-face loop
+    // above — captures :hover/:focus/:active/:disabled rules so a rebuild knows
+    // how interactive elements respond. No interaction is triggered; we read the
+    // authored rules straight from the cascade.
+    const interactionStates: NonNullable<RawPageEvidence['interactionStates']> =
+      [];
+    const STATE_PROPS = [
+      'color',
+      'background-color',
+      'background',
+      'border',
+      'border-color',
+      'box-shadow',
+      'transform',
+      'opacity',
+      'outline',
+      'filter',
+      'text-decoration',
+    ];
+    const STATE_RE = /:(hover|focus|active|disabled)\b/;
+
+    function collectStateRule(rule: CSSRule): void {
+      if (rule.type !== 1) return; // CSSRule.STYLE_RULE
+      const styleRule = rule as CSSStyleRule;
+      const selectorText = styleRule.selectorText ?? '';
+      const match = selectorText.match(STATE_RE);
+      if (!match) return;
+      const state = match[1] as 'hover' | 'focus' | 'active' | 'disabled';
+      const declarations: Record<string, string> = {};
+      for (const prop of STATE_PROPS) {
+        const raw = styleRule.style.getPropertyValue(prop);
+        if (!raw || !raw.trim()) continue;
+        declarations[prop] = normalizeColorsInCssValue(raw.trim());
+      }
+      if (Object.keys(declarations).length === 0) return;
+      if (interactionStates.length < 40) {
+        interactionStates.push({ state, selector: selectorText, declarations });
+      }
+    }
+
+    for (const sheet of Array.from(document.styleSheets)) {
+      let rules: CSSRuleList | null = null;
+      try {
+        rules = sheet.cssRules;
+      } catch {
+        continue; // cross-origin sheet
+      }
+      if (!rules) continue;
+      for (const rule of Array.from(rules)) {
+        if (rule.type === 4) {
+          // CSSRule.MEDIA_RULE — descend one level
+          for (const inner of Array.from((rule as CSSMediaRule).cssRules)) {
+            collectStateRule(inner);
+          }
+        } else {
+          collectStateRule(rule);
+        }
+        if (interactionStates.length >= 40) break;
+      }
+      if (interactionStates.length >= 40) break;
+    }
+
     const layoutSections = Array.from(
       document.querySelectorAll(
         'section, main, article, header, footer, [class*="section"], [class*="container"], [class*="wrapper"]',
@@ -633,6 +700,7 @@ export async function collectPageEvidence(
       containerWidths,
       sectionGaps,
       imagery,
+      interactionStates,
       rootBackground: rootBackground || undefined,
     };
   }, options);

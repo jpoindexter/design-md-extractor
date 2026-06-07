@@ -334,6 +334,25 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
 
   const imagery = deriveImagery(imageryTotals);
 
+  // Aggregate interaction-state rules across pages, deduping on state + the exact
+  // set of declarations so identical hover/focus rules collapse to one entry.
+  const interactionStateMap = new Map<
+    string,
+    { state: string; selector: string; declarations: Record<string, string> }
+  >();
+  for (const page of input.rawPages) {
+    for (const entry of page.interactionStates ?? []) {
+      const key = `${entry.state}|${JSON.stringify(entry.declarations)}`;
+      if (!interactionStateMap.has(key)) {
+        interactionStateMap.set(key, entry);
+      }
+    }
+  }
+  const interactionStates = Array.from(interactionStateMap.values()).slice(
+    0,
+    16,
+  );
+
   const evidence: Evidence = {
     version: '0.1.0',
     source: {
@@ -354,6 +373,7 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
     surfaces,
     components,
     fontFaces,
+    interactionStates,
     motion,
     layout: {
       density,

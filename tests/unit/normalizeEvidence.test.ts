@@ -632,6 +632,45 @@ describe('normalizeEvidence', () => {
     expect(evidence.imagery.notes?.length ?? 0).toBeGreaterThan(0);
   });
 
+  it('deduplicates identical interaction states across pages', () => {
+    const interactionStates = [
+      {
+        state: 'hover' as const,
+        selector: '.btn:hover',
+        declarations: { 'background-color': '#ff0000' },
+      },
+    ];
+    const evidence = normalizeEvidence({
+      primaryUrl: 'https://example.com',
+      pages: [{ url: 'https://example.com', status: 'success' as const }],
+      capturedAt: '2026-05-28T10:00:00.000Z',
+      viewports: [{ name: 'desktop', width: 1440, height: 1000 }],
+      screenshots: [],
+      rawPages: [
+        {
+          viewport: 'desktop',
+          colors: [],
+          typography: [],
+          components: [],
+          interactionStates,
+        },
+        {
+          viewport: 'mobile',
+          colors: [],
+          typography: [],
+          components: [],
+          interactionStates,
+        },
+      ],
+    });
+
+    expect(evidence.interactionStates).toHaveLength(1);
+    expect(evidence.interactionStates?.[0]?.state).toBe('hover');
+    expect(
+      evidence.interactionStates?.[0]?.declarations['background-color'],
+    ).toBe('#ff0000');
+  });
+
   it('falls back to text-led when no imagery signals are present', () => {
     const evidence = normalizeEvidence({
       primaryUrl: 'https://example.com',

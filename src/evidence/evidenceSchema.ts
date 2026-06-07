@@ -124,6 +124,15 @@ export const EvidenceSchema = z.object({
       }),
     )
     .optional(),
+  interactionStates: z
+    .array(
+      z.object({
+        state: z.string(),
+        selector: z.string(),
+        declarations: z.record(z.string(), z.string()),
+      }),
+    )
+    .optional(),
   motion: z
     .object({
       durations: z.array(z.string()),

@@ -233,6 +233,40 @@ describe('collectPageEvidence', () => {
     expect(card?.styles.boxShadow).toContain('rgba(29, 36, 51, 0.18)');
   });
 
+  it('captures hover/focus interaction states from stylesheets and normalizes their colors', async () => {
+    const browser = await chromium.launch();
+    const page = await browser.newPage({
+      viewport: { width: 1440, height: 1000 },
+    });
+    await page.setContent(`
+      <style>
+        .btn { color: #000; }
+        .btn:hover { background-color: #ff0000; transform: scale(1.05); }
+        .field:focus { outline: 2px solid #0000ff; }
+      </style>
+      <button class="btn">Hover me</button>
+      <input class="field" />
+    `);
+
+    const evidence = await collectPageEvidence(page, {
+      viewport: 'desktop',
+      maxComponents: 20,
+    });
+    await browser.close();
+
+    const hover = evidence.interactionStates?.find(
+      (s) =>
+        s.state === 'hover' && /scale/.test(s.declarations.transform ?? ''),
+    );
+    expect(hover).toBeDefined();
+    // The browser serializes #ff0000 back as rgb(); normalization must restore hex.
+    expect(hover?.declarations['background-color']).toBe('#ff0000');
+
+    expect(evidence.interactionStates?.some((s) => s.state === 'focus')).toBe(
+      true,
+    );
+  });
+
   it('counts SVG icons and url() background images for imagery signals', async () => {
     const browser = await chromium.launch();
     const page = await browser.newPage({

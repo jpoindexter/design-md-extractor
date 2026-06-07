@@ -169,6 +169,21 @@ function componentSection(evidence: Evidence): string {
     .join('\n\n');
 }
 
+function interactionStatesSection(evidence: Evidence): string {
+  const states = evidence.interactionStates ?? [];
+  if (states.length === 0) {
+    return 'No interaction states (hover/focus/active/disabled) were found in the stylesheets.';
+  }
+  return states
+    .map((entry) => {
+      const decls = Object.entries(entry.declarations)
+        .map(([prop, value]) => `\`${prop}: ${value}\``)
+        .join(', ');
+      return `- **${entry.state}** on \`${entry.selector}\`: ${decls}`;
+    })
+    .join('\n');
+}
+
 function motionSection(evidence: Evidence): string {
   const motion = evidence.motion;
   if (
@@ -326,6 +341,10 @@ Use the color, typography, surface, and component tables above as the source of 
 \`\`\`css
 ${generateStyleCss(evidence).trim()}
 \`\`\`
+
+## Interaction States
+
+${interactionStatesSection(evidence)}
 
 ## Motion
 
