@@ -78,4 +78,43 @@ describe('generateStyleCss', () => {
     expect(css).toContain('--font-size-text-1:');
     expect(css).toContain('--font-heading:');
   });
+
+  it('emits no duplicate CSS variable names when colors map to the same HSL bucket', () => {
+    const evidence: Evidence = {
+      ...base,
+      tokens: {
+        ...base.tokens,
+        colors: [
+          {
+            name: 'Gray',
+            value: '#888888',
+            cssVariable: '--color-gray',
+            role: 'text',
+            properties: ['color'],
+            frequency: 5,
+            sampleSelectors: [],
+            confidence: 'high',
+          },
+          {
+            name: 'Gray',
+            value: '#aaaaaa',
+            cssVariable: '--color-gray',
+            role: 'text',
+            properties: ['color'],
+            frequency: 3,
+            sampleSelectors: [],
+            confidence: 'medium',
+          },
+        ],
+      },
+    };
+
+    const css = generateStyleCss(evidence);
+    const varNames = [...css.matchAll(/--([a-z][a-z0-9-]*)\s*:/g)].map(
+      (m) => m[1],
+    );
+    expect(new Set(varNames).size).toBe(varNames.length);
+    expect(css).toContain('--color-gray: #888888');
+    expect(css).toContain('--color-gray-1: #aaaaaa');
+  });
 });

@@ -21,10 +21,13 @@ export function cssVariable(prefix: string, name: string): string {
 function cssLines(evidence: Evidence): string[] {
   const lines = [':root {'];
 
+  const varSeen = new Map<string, number>();
   for (const color of evidence.tokens.colors) {
-    lines.push(
-      `  ${color.cssVariable ?? cssVariable('color', color.name)}: ${color.value};`,
-    );
+    const base = color.cssVariable ?? cssVariable('color', color.name);
+    const count = varSeen.get(base) ?? 0;
+    varSeen.set(base, count + 1);
+    const varName = count === 0 ? base : `${base}-${count}`;
+    lines.push(`  ${varName}: ${color.value};`);
   }
 
   for (const surface of evidence.surfaces) {
