@@ -126,6 +126,10 @@ describe('generateDesignMd', () => {
     expect(markdown).toContain('Container widths: `1120px`.');
     expect(markdown).toContain('- Preserve the comfortable density');
     expect(markdown).toContain('## 11. Known Gaps');
+    expect(markdown).toContain('## Interaction States');
+    expect(markdown).toContain(
+      'No interaction states (hover/focus/active/disabled) were found in the stylesheets.',
+    );
     expect(markdown).toContain('## Motion');
     expect(markdown).toContain(
       'No motion (transitions or animations) detected.',

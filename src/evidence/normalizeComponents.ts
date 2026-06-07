@@ -30,6 +30,61 @@ function visualSignature(kind: string, styles: Record<string, string>): string {
   ].join('|');
 }
 
+function pxNum(value: string | undefined): number {
+  const n = Number.parseFloat(value ?? '');
+  return Number.isFinite(n) ? n : 0;
+}
+
+function isTransparentBg(value: string | undefined): boolean {
+  const v = (value ?? '').trim().toLowerCase();
+  return (
+    v === '' ||
+    v === 'transparent' ||
+    v === 'rgba(0, 0, 0, 0)' ||
+    v.startsWith('#00000000')
+  );
+}
+
+function hasRealBorder(value: string | undefined): boolean {
+  const v = (value ?? '').trim().toLowerCase();
+  if (!v || v === 'none') return false;
+  if (/^0(?:px)?(?:\s|$)/.test(v)) return false;
+  return !v.includes('transparent');
+}
+
+// Descriptive component name from style signals, e.g. "Primary Pill Button",
+// "Outline Button", "Icon Button", "Elevated Card", "Outlined Card".
+function describeComponent(
+  kind: string,
+  styles: Record<string, string>,
+  bounds: { width: number; height: number },
+  textSample: string,
+): string {
+  const radius = pxNum(styles.borderRadius);
+  const isPill = bounds.height > 0 && radius >= bounds.height / 2 - 1;
+
+  if (kind === 'button') {
+    const noText = textSample.trim().length === 0;
+    const small = bounds.width <= 64 && bounds.height <= 64;
+    if (noText && small) return 'Icon Button';
+    let variant: string;
+    if (!isTransparentBg(styles.backgroundColor)) variant = 'Primary';
+    else if (hasRealBorder(styles.border)) variant = 'Outline';
+    else variant = 'Text';
+    return `${variant}${isPill ? ' Pill' : ''} Button`;
+  }
+
+  if (kind === 'card') {
+    if (styles.boxShadow && styles.boxShadow !== 'none') return 'Elevated Card';
+    if (hasRealBorder(styles.border)) return 'Outlined Card';
+    return 'Surface Card';
+  }
+
+  if (kind === 'badge') return isPill ? 'Pill Badge' : 'Badge';
+
+  return componentName(kind);
+}
+
 type NormalizedComponent = {
   name: string;
   kind: string;
@@ -194,10 +249,16 @@ export function normalizeComponents(
       const viewportNames = [...entry.viewportSet].sort(
         (a, b) => widthFor(b) - widthFor(a),
       );
+      const name = describeComponent(
+        entry.kind,
+        entry.styles,
+        entry.bounds,
+        entry.textSample,
+      );
       return {
-        name: componentName(entry.kind),
+        name,
         kind: entry.kind,
-        role: `${componentName(entry.kind)} component`,
+        role: `${name} component`,
         textSample: entry.textSample,
         viewport: entry.viewport,
         viewports: viewportNames,

@@ -145,6 +145,58 @@ describe('normalizeComponents', () => {
     expect(btn?.confidence).toBe('low');
   });
 
+  it('derives descriptive component names from style signals', () => {
+    const result = normalizeComponents(
+      [
+        rawPage('desktop', [
+          {
+            kind: 'button',
+            selector: 'a.primary',
+            textSample: 'Buy',
+            styles: {
+              fontFamily: 'Inter',
+              backgroundColor: '#000',
+              color: '#fff',
+              borderRadius: '160px',
+              border: 'none',
+            },
+            bounds: { width: 140, height: 48 },
+          },
+          {
+            kind: 'button',
+            selector: 'a.ghost',
+            textSample: 'Learn',
+            styles: {
+              fontFamily: 'Inter',
+              backgroundColor: 'transparent',
+              color: '#000',
+              borderRadius: '0px',
+              border: 'none',
+            },
+            bounds: { width: 100, height: 40 },
+          },
+          {
+            kind: 'card',
+            selector: 'div.c',
+            textSample: 'Feature text here',
+            styles: {
+              fontFamily: 'Inter',
+              backgroundColor: '#fff',
+              borderRadius: '12px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            },
+            bounds: { width: 300, height: 200 },
+          },
+        ]),
+      ],
+      viewports,
+    );
+    const names = result.map((c) => c.name);
+    expect(names).toContain('Primary Pill Button');
+    expect(names).toContain('Text Button');
+    expect(names).toContain('Elevated Card');
+  });
+
   it('prefers the widest viewport even when a narrower one scores higher', () => {
     // mobile sample has a shadow (higher signalScore) but desktop is wider → desktop wins
     const result = normalizeComponents(
