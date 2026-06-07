@@ -5,6 +5,7 @@ import { EvidenceSchema } from './evidenceSchema.js';
 import {
   buildFontFaces,
   buildSurfaces,
+  type ColorCountData,
   cleanFontFamily,
   cleanSelector,
   componentName,
@@ -25,31 +26,37 @@ type NormalizeInput = {
 };
 
 export function normalizeEvidence(input: NormalizeInput): Evidence {
-  const colorCounts = new Map<
-    string,
-    {
-      frequency: number;
-      backgroundCount: number;
-      properties: Set<string>;
-      selectors: Set<string>;
-    }
-  >();
+  const colorCounts = new Map<string, ColorCountData>();
 
   for (const page of input.rawPages) {
     for (const color of page.colors) {
       const current = colorCounts.get(color.value) ?? {
         frequency: 0,
         backgroundCount: 0,
+        pageBackgroundCount: 0,
+        aboveFoldArea: 0,
+        totalArea: 0,
         properties: new Set<string>(),
         selectors: new Set<string>(),
       };
       current.frequency += 1;
       if (color.property === 'backgroundColor') {
         current.backgroundCount += 1;
+        const area = color.area ?? 0;
+        if (color.aboveFold && area > current.aboveFoldArea) {
+          current.aboveFoldArea = area;
+        }
+        if (area > current.totalArea) {
+          current.totalArea = area;
+        }
       }
       current.properties.add(color.property);
       current.selectors.add(cleanSelector(color.selector));
       colorCounts.set(color.value, current);
+    }
+    if (page.rootBackground) {
+      const bgData = colorCounts.get(page.rootBackground);
+      if (bgData) bgData.pageBackgroundCount += 1;
     }
   }
 

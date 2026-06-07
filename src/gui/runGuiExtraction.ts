@@ -50,7 +50,8 @@ function generateStyleThesis(
   evidence: ReturnType<typeof EvidenceSchema.parse>,
 ): string {
   const density = evidence.layout.density;
-  const dominantColor = evidence.tokens.colors[0]?.value;
+  const dominantColor =
+    evidence.surfaces[0]?.value ?? evidence.tokens.colors[0]?.value;
   const accentColor = evidence.tokens.colors[1]?.value;
   const primaryFont = evidence.tokens.typography[0]?.fontFamily;
   const surfaceCount = evidence.surfaces.length;

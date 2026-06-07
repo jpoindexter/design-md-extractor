@@ -213,9 +213,12 @@ export function styleTokensFromComponents(
     }));
 }
 
-type ColorCountData = {
+export type ColorCountData = {
   frequency: number;
   backgroundCount: number;
+  pageBackgroundCount: number;
+  aboveFoldArea: number;
+  totalArea: number;
   properties: Set<string>;
   selectors: Set<string>;
 };
@@ -241,11 +244,17 @@ export function buildSurfaces(
 ): SurfaceToken[] {
   const candidates = Array.from(colorCounts.entries())
     .filter(([, data]) => data.backgroundCount > 0)
-    .sort((a, b) =>
-      b[1].backgroundCount !== a[1].backgroundCount
-        ? b[1].backgroundCount - a[1].backgroundCount
-        : b[1].frequency - a[1].frequency,
-    )
+    .sort((a, b) => {
+      const [, ad] = a;
+      const [, bd] = b;
+      if (bd.pageBackgroundCount !== ad.pageBackgroundCount)
+        return bd.pageBackgroundCount - ad.pageBackgroundCount;
+      if (bd.aboveFoldArea !== ad.aboveFoldArea)
+        return bd.aboveFoldArea - ad.aboveFoldArea;
+      if (bd.backgroundCount !== ad.backgroundCount)
+        return bd.backgroundCount - ad.backgroundCount;
+      return bd.frequency - ad.frequency;
+    })
     .slice(0, 4)
     .map(([value, data], index) => ({
       level: index,

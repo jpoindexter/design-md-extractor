@@ -1,7 +1,14 @@
 import type { Page } from 'playwright';
 
 export type RawPageEvidence = {
-  colors: Array<{ value: string; property: string; selector: string }>;
+  rootBackground?: string;
+  colors: Array<{
+    value: string;
+    property: string;
+    selector: string;
+    area?: number;
+    aboveFold?: boolean;
+  }>;
   typography: Array<{
     selector: string;
     role: string;
@@ -24,6 +31,8 @@ export type RawPageEvidence = {
     style: string;
     src: string;
   }>;
+  containerWidths?: number[];
+  sectionGaps?: number[];
 };
 
 export async function collectPageEvidence(
@@ -287,6 +296,17 @@ export async function collectPageEvidence(
       return score;
     }
 
+    function rootBgColor(): string {
+      const bodyBg = normalizeColor(
+        window.getComputedStyle(document.body).backgroundColor,
+      );
+      if (bodyBg && bodyBg !== 'transparent') return bodyBg;
+      return normalizeColor(
+        window.getComputedStyle(document.documentElement).backgroundColor,
+      );
+    }
+    const rootBackground = rootBgColor();
+
     const elements = Array.from(
       document.querySelectorAll('body, body *'),
     ).filter(isVisible);
@@ -299,13 +319,20 @@ export async function collectPageEvidence(
     for (const [order, element] of elements.entries()) {
       const style = window.getComputedStyle(element);
       const selector = selectorPath(element);
+      const rect = element.getBoundingClientRect();
 
       for (const property of ['color', 'backgroundColor', 'borderColor']) {
         const value = (style as CSSStyleDeclaration & Record<string, string>)[
           property
         ];
         if (value && value !== 'rgba(0, 0, 0, 0)' && value !== 'transparent') {
-          colors.push({ value: normalizeColor(value), property, selector });
+          colors.push({
+            value: normalizeColor(value),
+            property,
+            selector,
+            area: Math.round(rect.width * rect.height),
+            aboveFold: rect.top < window.innerHeight,
+          });
         }
       }
 
@@ -319,7 +346,6 @@ export async function collectPageEvidence(
         letterSpacing: style.letterSpacing,
       });
 
-      const rect = element.getBoundingClientRect();
       const kind = componentKind(element, style, rect);
       if (kind) {
         const textSample = textSampleFor(element);
@@ -413,6 +439,41 @@ export async function collectPageEvidence(
       if (fontFaces.length >= 24) break;
     }
 
-    return { colors, typography, components, fontFaces };
+    const layoutSections = Array.from(
+      document.querySelectorAll(
+        'section, main, article, header, footer, [class*="section"], [class*="container"], [class*="wrapper"]',
+      ),
+    ).filter(isVisible);
+
+    const containerWidths: number[] = [];
+    const sectionTops: number[] = [];
+
+    for (const el of layoutSections) {
+      const elStyle = window.getComputedStyle(el);
+      const elRect = el.getBoundingClientRect();
+      const mw = numericPx(elStyle.maxWidth);
+      const cw = mw > 200 && mw < window.innerWidth - 1 ? mw : elRect.width;
+      if (cw > 200 && cw < window.innerWidth - 1) {
+        containerWidths.push(Math.round(cw));
+      }
+      sectionTops.push(Math.round(elRect.top + window.scrollY));
+    }
+
+    const sortedTops = sectionTops.slice().sort((a, b) => a - b);
+    const sectionGaps: number[] = [];
+    for (let i = 1; i < sortedTops.length; i++) {
+      const gap = (sortedTops[i] ?? 0) - (sortedTops[i - 1] ?? 0);
+      if (gap > 8 && gap < 400) sectionGaps.push(gap);
+    }
+
+    return {
+      colors,
+      typography,
+      components,
+      fontFaces,
+      containerWidths,
+      sectionGaps,
+      rootBackground: rootBackground || undefined,
+    };
   }, options);
 }

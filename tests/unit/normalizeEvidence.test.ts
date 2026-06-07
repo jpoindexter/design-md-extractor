@@ -71,6 +71,51 @@ describe('normalizeEvidence', () => {
     expect(evidence.surfaces[0]?.value).toBe('#ffffff');
   });
 
+  it('ranks white page background above dark footer despite more footer occurrences', () => {
+    const evidence = normalizeEvidence({
+      primaryUrl: 'https://example.com',
+      pages: [{ url: 'https://example.com', status: 'success' as const }],
+      capturedAt: '2026-05-28T10:00:00.000Z',
+      viewports: [{ name: 'desktop', width: 1440, height: 1000 }],
+      screenshots: [],
+      rawPages: [
+        {
+          viewport: 'desktop',
+          rootBackground: '#ffffff',
+          colors: [
+            // Dark footer — 10 small below-fold elements
+            ...Array.from({ length: 10 }, (_, i) => ({
+              value: '#0a0a0a',
+              property: 'backgroundColor' as const,
+              selector: `.footer-item-${i}`,
+              area: 200,
+              aboveFold: false,
+            })),
+            // White hero — 2 large above-fold elements
+            {
+              value: '#ffffff',
+              property: 'backgroundColor' as const,
+              selector: 'body',
+              area: 1440 * 900,
+              aboveFold: true,
+            },
+            {
+              value: '#ffffff',
+              property: 'backgroundColor' as const,
+              selector: 'section.hero',
+              area: 1440 * 600,
+              aboveFold: true,
+            },
+          ],
+          typography: [],
+          components: [],
+        },
+      ],
+    });
+
+    expect(evidence.surfaces[0]?.value).toBe('#ffffff');
+  });
+
   it('strips framework-hashed font tokens and selector classes from evidence', () => {
     const evidence = normalizeEvidence({
       primaryUrl: 'https://example.com',

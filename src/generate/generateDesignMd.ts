@@ -27,11 +27,16 @@ function colorRows(evidence: Evidence): string {
   ].join('\n');
 }
 
-function compactList(values: Array<string | number> | undefined, unit = ''): string {
+function compactList(
+  values: Array<string | number> | undefined,
+  unit = '',
+): string {
   if (!values || values.length === 0) {
     return 'No strong evidence.';
   }
-  return values.map((value) => `\`${value}${typeof value === 'number' ? unit : ''}\``).join(', ');
+  return values
+    .map((value) => `\`${value}${typeof value === 'number' ? unit : ''}\``)
+    .join(', ');
 }
 
 function typographyRows(evidence: Evidence): string {
@@ -49,7 +54,9 @@ function typographyRows(evidence: Evidence): string {
   ].join('\n');
 }
 
-function tokenRows(tokens: Array<{ name: string; value: string; confidence: string }>): string {
+function tokenRows(
+  tokens: Array<{ name: string; value: string; confidence: string }>,
+): string {
   if (tokens.length === 0) {
     return '| Name | Value | Confidence |\n|------|-------|------------|';
   }
@@ -57,7 +64,9 @@ function tokenRows(tokens: Array<{ name: string; value: string; confidence: stri
   return [
     '| Name | Value | Confidence |',
     '|------|-------|------------|',
-    ...tokens.map((token) => `| ${token.name} | \`${token.value}\` | ${token.confidence} |`),
+    ...tokens.map(
+      (token) => `| ${token.name} | \`${token.value}\` | ${token.confidence} |`,
+    ),
   ].join('\n');
 }
 
@@ -77,15 +86,21 @@ function surfaceRows(evidence: Evidence): string {
 }
 
 function primaryColor(evidence: Evidence, fallbackRole: string): string {
-  return evidence.tokens.colors.find((color) => color.role.toLowerCase().includes(fallbackRole))?.value ?? 'unconfirmed';
+  return (
+    evidence.tokens.colors.find((color) =>
+      color.role.toLowerCase().includes(fallbackRole),
+    )?.value ?? 'unconfirmed'
+  );
 }
 
 function styleThesis(evidence: Evidence, name: string): string {
   const typography = evidence.tokens.typography[0];
+  const canvas =
+    evidence.surfaces[0]?.value ?? primaryColor(evidence, 'background');
   const colorSummary =
     evidence.tokens.colors.length === 0
       ? 'an unconfirmed palette'
-      : `${primaryColor(evidence, 'background')} canvas cues and ${primaryColor(evidence, 'text')} text cues`;
+      : `${canvas} canvas cues and ${primaryColor(evidence, 'text')} text cues`;
   const typeSummary = typography
     ? `${typography.fontFamily} for ${typography.role} at ${typography.fontSize}/${typography.lineHeight}`
     : 'an unconfirmed type system';
@@ -108,7 +123,10 @@ function componentSection(evidence: Evidence): string {
 
   return evidence.components
     .map((component) => {
-      const background = component.styles.backgroundColor ?? component.styles.background ?? 'unconfirmed';
+      const background =
+        component.styles.backgroundColor ??
+        component.styles.background ??
+        'unconfirmed';
       const color = component.styles.color ?? 'unconfirmed';
       const font = component.styles.fontFamily ?? 'unconfirmed';
       const fontSize = component.styles.fontSize ?? 'unconfirmed';
@@ -116,7 +134,9 @@ function componentSection(evidence: Evidence): string {
       const radius = component.styles.borderRadius ?? 'unconfirmed';
       const shadow = component.styles.boxShadow ?? 'unconfirmed';
       const padding = component.styles.padding ?? 'unconfirmed';
-      const sample = component.textSample ? `\`${component.textSample}\`` : 'No text sample captured';
+      const sample = component.textSample
+        ? `\`${component.textSample}\``
+        : 'No text sample captured';
 
       return `### ${component.name}
 
@@ -137,7 +157,9 @@ function warningsSection(evidence: Evidence): string {
   const warnings =
     evidence.warnings.length === 0
       ? ['- No extraction warnings recorded.']
-      : evidence.warnings.map((warning) => `- ${warning.severity}: ${warning.message}`);
+      : evidence.warnings.map(
+          (warning) => `- ${warning.severity}: ${warning.message}`,
+        );
 
   if (evidence.screenshots.length === 0) {
     warnings.push('- No screenshots were included in this artifact set.');
@@ -157,14 +179,20 @@ function warningsSection(evidence: Evidence): string {
 
 export function generateDesignMd(evidence: Evidence): string {
   const name = siteName(evidence.source.primaryUrl);
-  const inspectedPages = evidence.source.pages.map((page) => `- ${page.url}: ${page.status}`).join('\n');
+  const inspectedPages = evidence.source.pages
+    .map((page) => `- ${page.url}: ${page.status}`)
+    .join('\n');
   const viewportList = evidence.viewports
-    .map((viewport) => `- ${viewport.name}: ${viewport.width}x${viewport.height}`)
+    .map(
+      (viewport) => `- ${viewport.name}: ${viewport.width}x${viewport.height}`,
+    )
     .join('\n');
   const screenshots =
     evidence.screenshots.length === 0
       ? '- No screenshots captured.'
-      : evidence.screenshots.map((screenshot) => `- ${screenshot.viewport}: ${screenshot.path}`).join('\n');
+      : evidence.screenshots
+          .map((screenshot) => `- ${screenshot.viewport}: ${screenshot.path}`)
+          .join('\n');
 
   return `# Design System: ${name}
 
