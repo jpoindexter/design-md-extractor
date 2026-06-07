@@ -35,10 +35,13 @@
   ],
   "bin": {
     "design-md-extractor": "./dist/cli.js",
-    "design-md-extractor-gui": "./dist/gui.js"
+    "design-md-extractor-gui": "./dist/gui.js",
+    "design-md-extractor-mcp": "./dist/mcp.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "dev": "npm run build && node dist/gui.js",
+    "mcp": "npm run build && node dist/mcp.js",
     "gui": "npm run build && node dist/gui.js",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -47,6 +50,7 @@
     "check": "npm run build && npm run lint && npm test"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "commander": "^14.0.1",
     "playwright": "^1.54.0",
     "zod": "^4.0.15"

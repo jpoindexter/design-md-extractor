@@ -2,7 +2,7 @@
 
 Capture a website's **usable visual system** — colors, typography, spacing, radii, shadows, surfaces, and components — and turn it into a structured `DESIGN.md`, ready-to-use design tokens, and AI-ready prompts.
 
-Point it at a URL. It loads the site in a real browser across desktop/tablet/mobile, reads computed styles, ranks the evidence into confident tokens, and writes everything to disk. Use it from the **CLI** or a **local GUI**.
+Point it at a URL. It loads the site in a real browser across desktop, tablet, and mobile, reads computed styles, ranks the evidence into confident tokens, and writes everything to disk. Use it from the **CLI**, a **local GUI**, or an **MCP server** so any AI agent can call it directly.
 
 > Fully local. It never calls an AI or needs an API key — the "AI Assistant" picker only chooses which prompt template you copy into your own agent.
 
@@ -15,13 +15,19 @@ Every run produces:
 | File | What it is |
 |---|---|
 | `DESIGN.md` | Human + LLM readable style reference (thesis, tokens, guidelines) |
-| `evidence.json` | The full structured, schema-validated evidence (source of truth) |
-| `style-variables.css` | CSS custom properties (`:root { --color-… }`) |
-| `tailwind-theme.css` | Tailwind v4 `@theme` block |
-| `design-tokens.json` | Tokens as JSON |
-| `ai-prompt.txt` | A prompt tailored to your assistant (Codex / Claude / ChatGPT / generic) |
-| `preview.html` | A standalone visual preview of the extracted system |
+| `evidence.json` | Full structured, schema-validated evidence (source of truth) |
+| `tokens.css` | CSS custom properties (`:root { --color-… }`) |
+| `preview.html` | Standalone visual preview of the extracted system |
 | `screenshots/` | Desktop / tablet / mobile captures |
+
+The GUI and MCP server also offer on-demand exports:
+
+| Export | Format |
+|---|---|
+| Style variables | CSS custom properties |
+| Tailwind theme | Tailwind v4 `@theme` block |
+| Design tokens | JSON |
+| AI prompt | Prompt tailored to Codex / Claude / ChatGPT / generic |
 
 ## How it works
 
@@ -53,14 +59,14 @@ npm run build
 
 ## Usage
 
-### GUI (recommended)
+### GUI
 
 ```bash
-npm run gui
+npm run dev
 # open http://127.0.0.1:4317
 ```
 
-Paste a URL, hit **Extract Style**, and browse the result: color palette, type scale, components, and copy/download for each export format (or the whole bundle as a `.zip`).
+Paste a URL, hit **Extract Style**, and browse the result: color palette, type scale, spacing, components, and copy/download for each export format (or the whole bundle as a `.zip`).
 
 ### CLI
 
@@ -70,15 +76,108 @@ node dist/cli.js extract https://example.com --out ./out/example
 
 Outputs land in the `--out` directory.
 
+### MCP Server
+
+The MCP server exposes the full extraction pipeline as tools so any MCP-compatible AI agent can call it — no GUI, no shell commands.
+
+```bash
+npm run mcp
+```
+
+Or run the compiled binary directly (useful in MCP config files):
+
+```bash
+node /absolute/path/to/design-md-extractor/dist/mcp.js
+```
+
+#### Tools
+
+| Tool | Description |
+|---|---|
+| `extract_design` | Extract the design system from a URL. Returns the full `DESIGN.md` inline plus a structured summary. Artifacts are written to disk. |
+| `list_runs` | List previously completed extractions, sorted newest first. |
+| `get_run` | Retrieve the `DESIGN.md` and summary for a past run by `runId`. |
+
+**`extract_design` input:**
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `url` | `string` (URL) | required | Website to extract |
+| `maxPages` | `integer` 1–12 | `5` | Max pages to crawl |
+
+**`extract_design` response includes:**
+
+- `runId` — unique identifier for this run
+- `url` — canonical URL extracted
+- `outDir` — absolute path to all artifacts on disk
+- `discoveredPages` — pages that were crawled
+- `summary` — structured data: colors, typography, spacing, radii, shadows, surfaces, components, warnings, style thesis
+- `designMd` — full `DESIGN.md` content, ready to pass to an LLM
+
+#### Wire it into Claude Code
+
+Add to `.claude/settings.json` (project) or `~/.claude/settings.json` (global):
+
+```json
+{
+  "mcpServers": {
+    "design-md-extractor": {
+      "command": "node",
+      "args": ["/absolute/path/to/design-md-extractor/dist/mcp.js"]
+    }
+  }
+}
+```
+
+#### Wire it into Cursor / other MCP clients
+
+```json
+{
+  "mcpServers": {
+    "design-md-extractor": {
+      "command": "node",
+      "args": ["/absolute/path/to/design-md-extractor/dist/mcp.js"]
+    }
+  }
+}
+```
+
+#### Custom artifacts directory
+
+By default, runs are stored at `<package-root>/out/gui-runs/`. Override with the `DESIGN_MD_RUNS_DIR` environment variable:
+
+```bash
+DESIGN_MD_RUNS_DIR=/tmp/my-runs node dist/mcp.js
+```
+
+Or in your MCP config:
+
+```json
+{
+  "mcpServers": {
+    "design-md-extractor": {
+      "command": "node",
+      "args": ["/absolute/path/to/design-md-extractor/dist/mcp.js"],
+      "env": {
+        "DESIGN_MD_RUNS_DIR": "/path/to/shared/runs"
+      }
+    }
+  }
+}
+```
+
 ## Use with an AI coding agent (Claude Code skill)
 
-This repo ships a Claude Code skill in [`skill/`](skill/SKILL.md) so an agent can consume a `DESIGN.md` and rebuild or extend the style faithfully. Point your agent at `skill/SKILL.md` and the generated `DESIGN.md`.
+This repo ships a Claude Code skill in [`skill/`](skill/SKILL.md) so an agent can consume a `DESIGN.md` and rebuild or extend a site's styles faithfully. Point your agent at `skill/SKILL.md` and the generated `DESIGN.md`.
+
+The MCP server and the skill work well together: use `extract_design` to generate the `DESIGN.md`, then use the skill to guide implementation.
 
 ## Development
 
 ```bash
 npm run build        # tsc → dist/
-npm run gui          # build + launch the GUI
+npm run dev          # build + launch GUI at http://127.0.0.1:4317
+npm run mcp          # build + start MCP server (stdio)
 npm test             # vitest (unit + integration)
 npm run lint         # eslint
 npm run format       # prettier
@@ -88,20 +187,23 @@ npm run check        # build + lint + test (pre-merge gate)
 npx vitest run tests/unit/
 ```
 
-Integration tests launch a real Playwright browser, so they're slower than the unit suite.
+Integration tests launch a real Playwright browser and are slower than the unit suite.
 
 ## Project layout
 
 ```
-src/config/    CLI arg parsing, viewport presets
-src/crawl/     browser lifecycle, page loading, discovery, orchestration
-src/extract/   collectPageEvidence — runs inside the browser (page.evaluate)
-src/evidence/  Zod schema, normalization/ranking, confidence
-src/generate/  DESIGN.md, preview HTML, CSS generators
-src/io/        artifact writing, path safety
-src/gui/       local HTTP server + inline SPA shell
-skill/         Claude Code skill + references
-docs/          architecture, schema, and system notes
+src/cli.ts         CLI entry point
+src/gui.ts         GUI server entry point
+src/mcp.ts         MCP server entry point
+src/config/        CLI arg parsing, viewport presets
+src/crawl/         browser lifecycle, page loading, discovery, orchestration
+src/extract/       collectPageEvidence — runs inside the browser (page.evaluate)
+src/evidence/      Zod schema, normalization/ranking, confidence
+src/generate/      DESIGN.md, preview HTML, CSS generators
+src/io/            artifact writing, path safety
+src/gui/           local HTTP server + inline SPA shell
+skill/             Claude Code skill + references
+docs/              architecture, schema, and system notes
 ```
 
 See [`docs/architecture`](docs/architecture) and [`docs/schema`](docs/schema) for deeper reference.
