@@ -31,13 +31,17 @@ function cssLines(evidence: Evidence): string[] {
     lines.push(`  ${cssVariable('surface', surface.name)}: ${surface.value};`);
   }
 
+  const roleSeen = new Map<string, number>();
   for (const typography of evidence.tokens.typography) {
     const role = slug(typography.role);
-    lines.push(`  --font-${role}: ${typography.fontFamily};`);
-    lines.push(`  --font-size-${role}: ${typography.fontSize};`);
-    lines.push(`  --font-weight-${role}: ${typography.fontWeight};`);
-    lines.push(`  --line-height-${role}: ${typography.lineHeight};`);
-    lines.push(`  --letter-spacing-${role}: ${typography.letterSpacing};`);
+    const count = roleSeen.get(role) ?? 0;
+    roleSeen.set(role, count + 1);
+    const varRole = count === 0 ? role : `${role}-${count}`;
+    lines.push(`  --font-${varRole}: ${typography.fontFamily};`);
+    lines.push(`  --font-size-${varRole}: ${typography.fontSize};`);
+    lines.push(`  --font-weight-${varRole}: ${typography.fontWeight};`);
+    lines.push(`  --line-height-${varRole}: ${typography.lineHeight};`);
+    lines.push(`  --letter-spacing-${varRole}: ${typography.letterSpacing};`);
   }
 
   for (const spacing of evidence.tokens.spacing) {
