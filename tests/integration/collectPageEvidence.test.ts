@@ -232,4 +232,25 @@ describe('collectPageEvidence', () => {
     expect(card?.styles.border).toBe('1px solid #d9e2ef');
     expect(card?.styles.boxShadow).toContain('rgba(29, 36, 51, 0.18)');
   });
+
+  it('counts SVG icons and url() background images for imagery signals', async () => {
+    const browser = await chromium.launch();
+    const page = await browser.newPage({
+      viewport: { width: 1440, height: 1000 },
+    });
+    await page.setContent(`
+      <div style="width:300px;height:200px;background:url(data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==)">x</div>
+      <svg width="24" height="24"></svg>
+      <svg width="24" height="24"></svg>
+    `);
+
+    const evidence = await collectPageEvidence(page, {
+      viewport: 'desktop',
+      maxComponents: 20,
+    });
+    await browser.close();
+
+    expect(evidence.imagery?.icons ?? 0).toBeGreaterThanOrEqual(2);
+    expect(evidence.imagery?.backgroundImages ?? 0).toBeGreaterThanOrEqual(1);
+  });
 });

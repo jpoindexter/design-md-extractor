@@ -295,6 +295,45 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
     easings: topByCount(easingCounts, 8),
   };
 
+  const imageryTotals = input.rawPages.reduce(
+    (acc, page) => {
+      const m = page.imagery;
+      if (m) {
+        acc.images += m.images;
+        acc.photos += m.photos;
+        acc.icons += m.icons;
+        acc.videos += m.videos;
+        acc.backgroundImages += m.backgroundImages;
+      }
+      return acc;
+    },
+    { images: 0, photos: 0, icons: 0, videos: 0, backgroundImages: 0 },
+  );
+
+  function deriveImagery(t: typeof imageryTotals): {
+    strategy: string;
+    notes: string[];
+  } {
+    const total = t.images + t.videos + t.backgroundImages;
+    if (total === 0 && t.icons === 0) {
+      return { strategy: 'text-led (minimal imagery)', notes: [] };
+    }
+    const notes = [
+      `${t.images} images (${t.photos} large/photographic), ${t.icons} icons/SVGs, ${t.videos} videos, ${t.backgroundImages} background images.`,
+    ];
+    if (t.videos >= 1) notes.push('Uses video media.');
+    let strategy: string;
+    if (t.photos >= 4) strategy = 'photography-led';
+    else if (t.icons >= 8 && t.photos <= 1) strategy = 'icon-driven';
+    else if (t.backgroundImages >= 4 && t.photos < 4)
+      strategy = 'background-imagery';
+    else if (t.videos >= 1 && t.photos < 4) strategy = 'video-forward';
+    else strategy = 'mixed media';
+    return { strategy, notes };
+  }
+
+  const imagery = deriveImagery(imageryTotals);
+
   const evidence: Evidence = {
     version: '0.1.0',
     source: {
@@ -321,10 +360,7 @@ export function normalizeEvidence(input: NormalizeInput): Evidence {
       containerWidths: containerWidths.length > 0 ? containerWidths : undefined,
       sectionGaps: sectionGapTokens.length > 0 ? sectionGapTokens : undefined,
     },
-    imagery: {
-      strategy: 'unknown',
-      notes: [],
-    },
+    imagery,
     responsive: {
       notes: input.viewports.map(
         (viewport) =>

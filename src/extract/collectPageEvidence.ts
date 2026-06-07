@@ -35,6 +35,13 @@ export type RawPageEvidence = {
   motion?: { durations: string[]; easings: string[] };
   containerWidths?: number[];
   sectionGaps?: number[];
+  imagery?: {
+    images: number;
+    photos: number;
+    icons: number;
+    videos: number;
+    backgroundImages: number;
+  };
 };
 
 export async function collectPageEvidence(
@@ -403,6 +410,7 @@ export async function collectPageEvidence(
 
     const motionDurations = new Set<string>();
     const motionEasings = new Set<string>();
+    let backgroundImageCount = 0;
 
     const elements = Array.from(
       document.querySelectorAll('body, body *'),
@@ -412,6 +420,14 @@ export async function collectPageEvidence(
       const style = window.getComputedStyle(element);
       const selector = selectorPath(element);
       const rect = element.getBoundingClientRect();
+
+      if (
+        style.backgroundImage &&
+        style.backgroundImage !== 'none' &&
+        style.backgroundImage.includes('url(')
+      ) {
+        backgroundImageCount += 1;
+      }
 
       const transitionDuration = style.transitionDuration;
       const animationDuration = style.animationDuration;
@@ -585,6 +601,25 @@ export async function collectPageEvidence(
       if (gap > 8 && gap < 400) sectionGaps.push(gap);
     }
 
+    const imgElements = Array.from(document.querySelectorAll('img'));
+    let photos = 0;
+    let smallImages = 0;
+    for (const img of imgElements) {
+      const rect = img.getBoundingClientRect();
+      const area = rect.width * rect.height;
+      if (area >= 200 * 200) photos += 1;
+      else if (area > 0) smallImages += 1;
+    }
+    const svgCount = document.querySelectorAll('svg').length;
+    const videoCount = document.querySelectorAll('video').length;
+    const imagery = {
+      images: imgElements.length,
+      photos,
+      icons: smallImages + svgCount,
+      videos: videoCount,
+      backgroundImages: backgroundImageCount,
+    };
+
     return {
       colors,
       gradients,
@@ -597,6 +632,7 @@ export async function collectPageEvidence(
       },
       containerWidths,
       sectionGaps,
+      imagery,
       rootBackground: rootBackground || undefined,
     };
   }, options);
