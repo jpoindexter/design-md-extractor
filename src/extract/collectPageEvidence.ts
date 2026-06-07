@@ -329,7 +329,7 @@ export async function collectPageEvidence(
       return score;
     }
 
-    function rootBgColor(): string {
+    function bodyOrHtmlBg(): string {
       const bodyBg = normalizeColor(
         window.getComputedStyle(document.body).backgroundColor,
       );
@@ -338,13 +338,55 @@ export async function collectPageEvidence(
         window.getComputedStyle(document.documentElement).backgroundColor,
       );
     }
+
+    // The canvas is whatever is actually PAINTED across the first viewport, not
+    // the computed body background. Dark-themed pages (e.g. Framer) set body to a
+    // dark color but render a full-bleed light section on top of it; sampling the
+    // topmost painted background at a grid of points respects that stacking/
+    // occlusion via elementFromPoint, where reading body's computed style cannot.
+    function bgAtPoint(x: number, y: number): string {
+      let element = document.elementFromPoint(x, y);
+      while (element && element !== document.documentElement) {
+        const bg = normalizeColor(
+          window.getComputedStyle(element).backgroundColor,
+        );
+        if (bg && bg !== 'transparent') return bg;
+        element = element.parentElement;
+      }
+      return bodyOrHtmlBg();
+    }
+
+    function sampledCanvasColor(): string {
+      const counts = new Map<string, number>();
+      const cols = 9;
+      const rows = 6;
+      for (let i = 1; i <= cols; i += 1) {
+        for (let j = 1; j <= rows; j += 1) {
+          const x = (window.innerWidth * i) / (cols + 1);
+          const y = (window.innerHeight * j) / (rows + 1);
+          const bg = bgAtPoint(x, y);
+          if (!bg || bg === 'transparent') continue;
+          counts.set(bg, (counts.get(bg) ?? 0) + 1);
+        }
+      }
+      let best = '';
+      let bestHits = 0;
+      for (const [color, hits] of counts) {
+        if (hits > bestHits) {
+          best = color;
+          bestHits = hits;
+        }
+      }
+      return best || bodyOrHtmlBg();
+    }
+
     const colors: RawPageEvidence['colors'] = [];
     const typography: RawPageEvidence['typography'] = [];
     const componentCandidates: Array<
       RawPageEvidence['components'][number] & { score: number; order: number }
     > = [];
 
-    const rootBackground = rootBgColor();
+    const rootBackground = sampledCanvasColor();
 
     if (rootBackground && rootBackground !== 'transparent') {
       colors.push({
