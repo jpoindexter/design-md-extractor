@@ -38,7 +38,7 @@ async function readStyles(
         }
         return out;
       },
-      { selector, props: STATE_PROPS as unknown as string[] },
+      { selector, props: [...STATE_PROPS] },
     )
     .catch(() => null);
 }
