@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en" data-theme="studio">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>design-md-extractor — remaining gaps</title>
+<style>
+:root{
+  --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:20px;--s-6:28px;--s-7:40px;--s-8:64px;
+  --r-xs:5px;--r-sm:8px;--r:11px;--r-lg:16px;--r-pill:999px;
+  --t-xl:21px;--t-lg:16px;--t-name:14px;--t-body:13.5px;--t-meta:12px;--t-label:11px;--t-micro:10.5px;
+  --maxw:940px;
+  --font:-apple-system,"SF Pro Text","SF Pro Display",system-ui,"Segoe UI",Roboto,sans-serif;
+  --mono:"SF Mono",ui-monospace,"Geist Mono",Menlo,monospace;
+}
+:root[data-theme="studio"]{
+  --app-bg:oklch(.966 .007 305);--canvas:#fff;--panel-2:oklch(.982 .006 305);
+  --fill:oklch(.955 .012 305);--line:oklch(.922 .009 305);--line-2:oklch(.952 .006 305);
+  --ink:oklch(.245 .012 300);--text:oklch(.40 .013 300);--muted:oklch(.575 .013 300);--soft:oklch(.71 .011 300);
+  --brand:oklch(.52 .20 300);--brand-2:oklch(.45 .20 300);--brand-soft:oklch(.952 .035 305);
+  --grad:linear-gradient(135deg,oklch(.56 .21 298),oklch(.58 .23 348));
+  --red:oklch(.55 .19 25);--red-soft:oklch(.95 .04 25);
+  --amber:oklch(.66 .14 70);--amber-soft:oklch(.95 .05 75);
+  --green:oklch(.55 .12 150);--green-soft:oklch(.93 .05 150);
+  --soft-soft:oklch(.96 .004 285);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{overflow-x:clip}
+body{background:var(--app-bg);color:var(--text);font-family:var(--font);font-size:var(--t-body);
+  line-height:1.6;-webkit-font-smoothing:antialiased;letter-spacing:-.005em}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:var(--s-7) var(--s-5) var(--s-8)}
+code{font-family:var(--mono);font-size:.84em;background:var(--fill);color:var(--brand-2);padding:1px 6px;border-radius:5px}
+strong{color:var(--ink);font-weight:650}
+.kicker{font-family:var(--mono);font-size:var(--t-label);font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--soft)}
+
+.head{display:flex;align-items:center;gap:var(--s-3);margin-bottom:var(--s-4)}
+.mk{width:40px;height:40px;border-radius:var(--r);background:var(--grad);color:#fff;display:grid;place-items:center;font-weight:800;font-size:19px;flex:none}
+.head h1{font-size:var(--t-xl);font-weight:700;color:var(--ink);letter-spacing:-.02em;line-height:1.1}
+.head .sub{font-size:var(--t-meta);color:var(--muted);margin-top:2px}
+.lede{font-size:var(--t-lg);color:var(--ink);line-height:1.55;margin:var(--s-4) 0;font-weight:500;letter-spacing:-.01em}
+.rule{height:1px;background:var(--line);border:0;margin:var(--s-5) 0}
+
+/* root cause callout */
+.callout{display:flex;gap:var(--s-3);background:var(--brand-soft);border:1px solid transparent;border-left:3px solid var(--brand);border-radius:var(--r);padding:var(--s-4) var(--s-5);margin-bottom:var(--s-6)}
+.callout .ic{font-family:var(--mono);font-weight:700;color:var(--brand-2)}
+.callout .cc h3{font-size:var(--t-name);font-weight:700;color:var(--ink);margin-bottom:4px}
+.callout .cc p{font-size:var(--t-meta);color:var(--text)}
+
+.band{font-family:var(--mono);font-size:var(--t-label);font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin:var(--s-6) 0 var(--s-3);display:flex;align-items:center;gap:var(--s-2)}
+.band .dot{width:9px;height:9px;border-radius:3px}
+.band.must .dot{background:var(--red)} .band.high .dot{background:var(--amber)} .band.med .dot{background:var(--brand)} .band.low .dot{background:var(--soft)}
+.band .x{color:var(--soft);font-weight:500;letter-spacing:0;text-transform:none;font-size:var(--t-micro)}
+
+.gap{background:var(--canvas);border:1px solid var(--line);border-radius:var(--r);padding:var(--s-4) var(--s-5);margin-bottom:var(--s-3)}
+.gap.must{border-left:3px solid var(--red)} .gap.high{border-left:3px solid var(--amber)} .gap.med{border-left:3px solid var(--brand)} .gap.low{border-left:3px solid var(--line)}
+.gap .top{display:flex;align-items:baseline;justify-content:space-between;gap:var(--s-3);margin-bottom:5px}
+.gap h3{font-size:var(--t-name);font-weight:700;color:var(--ink);letter-spacing:-.01em}
+.gap .rec{font-family:var(--mono);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border-radius:var(--r-pill);white-space:nowrap;flex:none}
+.rec.fold{background:var(--red-soft);color:var(--red)} .rec.add{background:var(--amber-soft);color:var(--amber)} .rec.opt{background:var(--soft-soft);color:var(--muted)}
+.gap p{font-size:var(--t-body);color:var(--text);margin:3px 0}
+.gap .where{font-family:var(--mono);font-size:var(--t-micro);color:var(--soft);margin-top:6px}
+
+table{width:100%;border-collapse:collapse;font-size:var(--t-meta);margin-top:var(--s-3)}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line-2)}
+th{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--soft);font-weight:600}
+td b{color:var(--ink)}
+.pri{font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 7px;border-radius:var(--r-pill)}
+.pri.m{background:var(--red-soft);color:var(--red)}.pri.h{background:var(--amber-soft);color:var(--amber)}.pri.d{background:var(--brand-soft);color:var(--brand-2)}.pri.l{background:var(--soft-soft);color:var(--muted)}
+
+.foot{margin-top:var(--s-7);padding-top:var(--s-5);border-top:1px solid var(--line);font-family:var(--mono);font-size:var(--t-label);color:var(--soft);line-height:1.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="head">
+    <span class="mk">!</span>
+    <div>
+      <h1>Remaining gaps — extractor audit</h1>
+      <div class="sub">beyond the canvas / confidence / exports fixes already planned</div>
+    </div>
+  </header>
+
+  <p class="lede">Yes — a handful, and three of them matter. One is a trap <em>inside</em> the canvas fix itself, so it has to be handled now. Several share one root cause.</p>
+
+  <div class="callout">
+    <span class="ic">⌖</span>
+    <div class="cc">
+      <h3>Shared root cause: per-viewport scaled values, matched by exact string</h3>
+      <p>The pipeline records every value at desktop/tablet/mobile and counts by exact string. So one <code>80px</code> radius becomes three tokens (<code>80px</code>, <code>65.067px</code>, <code>67.16px</code>); spacing becomes <code>4.88002px 19.5201px</code>. A single <strong>value-normalization layer</strong> (round px · prefer the desktop value · cluster near-equal · normalize units) fixes gaps 1, 6 &amp; 7 at once and de-noises 4 &amp; 5.</p>
+    </div>
+  </div>
+
+  <!-- MUST -->
+  <div class="band must"><span class="dot"></span> Must handle inside the current fix <span class="x">— correctness of what we're building</span></div>
+  <div class="gap must">
+    <div class="top"><h3>0 · Area double-counting (nested elements)</h3><span class="rec fold">Fold into Fix 1</span></div>
+    <p>Fix 1 adds per-element <code>area = w×h</code> and sums it per colour. But a <code>&lt;section&gt;</code> and its same-coloured children <em>both</em> report that background — a naive sum over-counts (480k px² becomes 780k). Use the <strong>largest single element</strong> per colour, or skip a colour when an ancestor already reported it (de-nest). The rect is already available.</p>
+    <p class="where">src/extract/collectPageEvidence.ts · element loop iterates <code>body, body *</code> (parents + children)</p>
+  </div>
+
+  <!-- HIGH -->
+  <div class="band high"><span class="dot"></span> High — junk / invalid output <span class="x">— worth adding to the plan</span></div>
+  <div class="gap high">
+    <div class="top"><h3>1 · Responsive-scaled spacing &amp; radii pollute the tokens</h3><span class="rec add">Add to plan</span></div>
+    <p>Real exports had radii <code>67.1635px</code>, <code>130.134px</code>, <code>134.327px</code> and spacing <code>4.88002px 19.5201px</code> — the same token at three viewport scales, emitted as distinct. Counted by exact string with no rounding or clustering; the top 12 are mostly garbage. (Shadows have the same flaw, lower stakes.)</p>
+    <p class="where">src/evidence/normalizeHelpers.ts · <code>styleTokensFromComponents()</code> (exact-string count, slice 12)</p>
+  </div>
+  <div class="gap high">
+    <div class="top"><h3>2 · Generated token CSS has colliding variable names</h3><span class="rec add">Add to plan</span></div>
+    <p>Typography roles slug to the same name, so <code>--font-size-text</code> / <code>--font-text</code> are declared multiple times with different values — later ones silently overwrite earlier. The emitted token set is invalid as-is. Needs unique role names (or dedupe roles before emit).</p>
+    <p class="where">src/generate/generateStyleCss.ts (lines 34-41) + the DESIGN.md "CSS Token Starter" block</p>
+  </div>
+
+  <!-- MEDIUM -->
+  <div class="band med"><span class="dot"></span> Medium — quality / noise <span class="x">— your call</span></div>
+  <div class="gap med">
+    <div class="top"><h3>3 · Typography units not normalized → duplicate type rows</h3><span class="rec opt">Optional</span></div>
+    <p><code>line-height: normal</code> vs <code>1.5</code> vs <code>24px</code>, and <code>em</code>/<code>rem</code> vs <code>px</code>, create separate rows for the same style. Normalize line-height/size to px before the dedup key.</p>
+    <p class="where">src/extract/collectPageEvidence.ts (raw values) · normalizeEvidence.ts (dedup key)</p>
+  </div>
+  <div class="gap med">
+    <div class="top"><h3>4 · Component dedup across viewports is weak</h3><span class="rec opt">Optional</span></div>
+    <p>The same Card/Button appears once per viewport with inflated counts; only the highest-signal viewport survives. Dedup key includes scaled CSS, so variants split. Track <code>viewports[]</code> instead of a scalar.</p>
+    <p class="where">src/evidence/normalizeEvidence.ts (component map, ~167-208)</p>
+  </div>
+  <div class="gap med">
+    <div class="top"><h3>5 · Layout system never extracted</h3><span class="rec opt">Optional (feature)</span></div>
+    <p>"Container widths / Section rhythm: No strong evidence" on every run — <code>density</code> is hardcoded <code>'comfortable'</code> and container/gap detection is unimplemented. A feature-add, not a bug.</p>
+    <p class="where">src/evidence/normalizeEvidence.ts (layout block, ~264-266)</p>
+  </div>
+
+  <!-- LOW -->
+  <div class="band low"><span class="dot"></span> Low — polish</div>
+  <table>
+    <tr><th>Gap</th><th>Pri</th><th>Where</th></tr>
+    <tr><td><b>6 · Generic colour naming</b> — only #fff/#000 named; the rest are "Color 3…". Add hue/saturation heuristics (Red / Blue / Gray).</td><td><span class="pri l">Low</span></td><td><code>normalizeHelpers.ts:3-7</code></td></tr>
+    <tr><td><b>7 · Shadow string not normalized</b> — <code>rgba(0,0,0,0.12)</code> vs <code>rgba(0, 0, 0, 0.12)</code> split. Fixed by the same normalization layer.</td><td><span class="pri l">Low</span></td><td><code>normalizeEvidence.ts:236</code></td></tr>
+    <tr><td><b>8 · Transparent edge cases</b> — named-colour values skip <code>CSS.supports()</code> validation.</td><td><span class="pri l">Low</span></td><td><code>collectPageEvidence.ts:59-104</code></td></tr>
+  </table>
+
+  <hr class="rule" />
+
+  <div class="callout" style="background:var(--green-soft);border-left-color:var(--green)">
+    <span class="ic" style="color:var(--green)">→</span>
+    <div class="cc">
+      <h3>Recommendation</h3>
+      <p><strong>Must:</strong> fold gap 0 (de-nest area) into Fix 1 — non-negotiable for the canvas fix to be correct.<br/>
+      <strong>Add:</strong> gaps 1 &amp; 2 (value-normalization layer + unique token names) — they're the next-most-impactful after the canvas, and the normalization layer also nets 7. <br/>
+      <strong>Defer unless you want them:</strong> 3, 4 (noise), 5 (feature), 6 &amp; 8 (polish).</p>
+    </div>
+  </div>
+
+  <p class="foot">
+    Source audit: read-only pass over src/extract, src/evidence, src/generate.<br/>
+    Say which tier to fold in and I'll update the plan (still no code until you greenlight).
+  </p>
+
+</div>
+</body>
+</html>
