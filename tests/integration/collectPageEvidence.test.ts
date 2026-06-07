@@ -7,21 +7,65 @@ import { collectPageEvidence } from '../../src/extract/collectPageEvidence.js';
 describe('collectPageEvidence', () => {
   it('collects visible colors, typography, and components from a rendered page', async () => {
     const browser = await chromium.launch();
-    const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
-    const html = await readFile(resolve('tests/fixtures/sample-site.html'), 'utf8');
+    const page = await browser.newPage({
+      viewport: { width: 1440, height: 1000 },
+    });
+    const html = await readFile(
+      resolve('tests/fixtures/sample-site.html'),
+      'utf8',
+    );
     await page.setContent(html);
 
-    const evidence = await collectPageEvidence(page, { viewport: 'desktop', maxComponents: 20 });
+    const evidence = await collectPageEvidence(page, {
+      viewport: 'desktop',
+      maxComponents: 20,
+    });
     await browser.close();
 
-    expect(evidence.colors.some((color) => color.value === '#ff5900')).toBe(true);
-    expect(evidence.typography.some((type) => type.fontSize === '48px')).toBe(true);
-    expect(evidence.components.some((component) => component.kind === 'button')).toBe(true);
+    expect(evidence.colors.some((color) => color.value === '#ff5900')).toBe(
+      true,
+    );
+    expect(evidence.typography.some((type) => type.fontSize === '48px')).toBe(
+      true,
+    );
+    expect(
+      evidence.components.some((component) => component.kind === 'button'),
+    ).toBe(true);
+  });
+
+  it('samples the painted canvas, not the body bg, when a light hero covers a dark body', async () => {
+    const browser = await chromium.launch();
+    const page = await browser.newPage({
+      viewport: { width: 1440, height: 1000 },
+    });
+    // Dark body with a full-bleed white hero painted on top — the Framer/Webflow
+    // pattern that made the ranker pick a dark canvas for a visually-white page.
+    await page.setContent(`
+      <style>
+        html, body { margin: 0; }
+        body { background: rgb(17, 17, 17); }
+        .hero { width: 100vw; height: 100vh; background: #ffffff; }
+        .footer { width: 100vw; height: 600px; background: rgb(17, 17, 17); }
+      </style>
+      <section class="hero"><h1>Visually white</h1></section>
+      <section class="footer"></section>
+    `);
+
+    const evidence = await collectPageEvidence(page, {
+      viewport: 'desktop',
+      maxComponents: 20,
+    });
+    await browser.close();
+
+    // Body computed bg is #111111, but the first viewport is painted white.
+    expect(evidence.rootBackground).toBe('#ffffff');
   });
 
   it('normalizes modern browser color functions into reusable CSS colors', async () => {
     const browser = await chromium.launch();
-    const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+    const page = await browser.newPage({
+      viewport: { width: 1440, height: 1000 },
+    });
     await page.setContent(`
       <style>
         button {
@@ -34,10 +78,15 @@ describe('collectPageEvidence', () => {
       <button>Extract style</button>
     `);
 
-    const evidence = await collectPageEvidence(page, { viewport: 'desktop', maxComponents: 20 });
+    const evidence = await collectPageEvidence(page, {
+      viewport: 'desktop',
+      maxComponents: 20,
+    });
     await browser.close();
 
-    const button = evidence.components.find((component) => component.kind === 'button');
+    const button = evidence.components.find(
+      (component) => component.kind === 'button',
+    );
     const extractedValues = [
       ...evidence.colors.map((color) => color.value),
       button?.styles.color,
@@ -46,14 +95,18 @@ describe('collectPageEvidence', () => {
 
     expect(extractedValues).not.toContain('oklab(0.46 0.09 -0.12)');
     expect(extractedValues).not.toContain('lab(82 -20 28)');
-    expect(extractedValues.every((value) => /^#[0-9a-f]{6}$/i.test(value))).toBe(true);
+    expect(
+      extractedValues.every((value) => /^#[0-9a-f]{6}$/i.test(value)),
+    ).toBe(true);
     expect(button?.styles.border).not.toMatch(/color\(/);
     expect(button?.styles.boxShadow).not.toMatch(/oklab\(/);
   });
 
   it('prioritizes styled controls and cards over unstyled wrappers when capped', async () => {
     const browser = await chromium.launch();
-    const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+    const page = await browser.newPage({
+      viewport: { width: 1440, height: 1000 },
+    });
     await page.setContent(`
       <style>
         .card-shell {
@@ -95,11 +148,20 @@ describe('collectPageEvidence', () => {
       </main>
     `);
 
-    const evidence = await collectPageEvidence(page, { viewport: 'desktop', maxComponents: 2 });
+    const evidence = await collectPageEvidence(page, {
+      viewport: 'desktop',
+      maxComponents: 2,
+    });
     await browser.close();
 
-    const button = evidence.components.find((component) => component.kind === 'button');
-    const card = evidence.components.find((component) => component.kind === 'card' && component.selector.includes('product-card'));
+    const button = evidence.components.find(
+      (component) => component.kind === 'button',
+    );
+    const card = evidence.components.find(
+      (component) =>
+        component.kind === 'card' &&
+        component.selector.includes('product-card'),
+    );
 
     expect(button?.textSample).toBe('Start audit');
     expect(button?.styles).toMatchObject({
