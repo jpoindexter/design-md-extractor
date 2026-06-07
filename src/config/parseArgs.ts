@@ -47,6 +47,10 @@ export function parseExtractArgs(argv: string[]): ExtractConfig {
       '--profile <dir>',
       'persistent Chrome profile dir; opens a real headed window so you can clear Cloudflare/login once, then reuses the session',
     )
+    .option(
+      '--headless',
+      'run the persistent --profile session headless (only after the session is established)',
+    )
     .action((url: string, options: Record<string, unknown>) => {
       if (!String(options.out ?? '').trim()) {
         throw new Error('--out is required');
@@ -64,6 +68,7 @@ export function parseExtractArgs(argv: string[]): ExtractConfig {
         profile: options.profile as string | undefined,
         cookies: options.cookies as string | undefined,
         userAgent: options.userAgent as string | undefined,
+        headless: options.headless as boolean | undefined,
       });
 
       config = {

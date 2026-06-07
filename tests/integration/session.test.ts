@@ -73,3 +73,49 @@ describe('cookies session', () => {
     expect(heading).toBe('blocked');
   });
 });
+
+describe('persistent session', () => {
+  it('persists cookies across two launches with the same profile dir', async () => {
+    // server: sets sess=1 on first visit (no cookie), reports presence otherwise
+    const persistServer = createServer((req, res) => {
+      const hasCookie = (req.headers.cookie ?? '').includes('sess=1');
+      const headers: Record<string, string> = { 'content-type': 'text/html' };
+      if (!hasCookie) headers['set-cookie'] = 'sess=1; Path=/; Max-Age=3600';
+      res.writeHead(200, headers);
+      res.end(
+        `<html><body><h1 id="r">${hasCookie ? 'has-cookie' : 'no-cookie'}</h1></body></html>`,
+      );
+    });
+    await new Promise<void>((resolve) =>
+      persistServer.listen(0, '127.0.0.1', resolve),
+    );
+    const addr = persistServer.address();
+    const persistPort = typeof addr === 'object' && addr ? addr.port : 0;
+    const profileDir = await mkdtemp(join(tmpdir(), 'persist-'));
+    const visit = () =>
+      withBrowserSession(
+        { mode: 'persistent', profileDir, headless: true },
+        async (context) => {
+          const page = await context.newPage();
+          await page.goto(`http://127.0.0.1:${persistPort}/`, {
+            waitUntil: 'domcontentloaded',
+          });
+          return page.evaluate(
+            () => document.getElementById('r')?.textContent ?? '',
+          );
+        },
+      );
+
+    try {
+      const first = await visit();
+      const second = await visit();
+      expect(first).toBe('no-cookie');
+      expect(second).toBe('has-cookie'); // profile persisted the cookie across launches
+    } finally {
+      await new Promise<void>((resolve) =>
+        persistServer.close(() => resolve()),
+      );
+      await rm(profileDir, { recursive: true, force: true });
+    }
+  }, 30000);
+});

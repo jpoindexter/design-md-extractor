@@ -191,6 +191,8 @@ node dist/cli.js extract https://site.com --profile ./.chrome-profile --out ./ou
 
 The first run is interactive (a window opens — solve the challenge); re-running the same command reuses the profile until the session expires. Requires Google Chrome installed; this mode runs **headed** (a visible window) because headless browsers are detectable.
 
+Add `--headless` to run the persistent profile without a window — only useful **after** the session is already established (the first challenge-solving run must be headed so you can interact). Note: solving a live CAPTCHA is inherently a one-time human step; the tool waits for the challenge to clear, it cannot solve it for you.
+
 ## Use with an AI coding agent (Claude Code skill)
 
 This repo ships a Claude Code skill in [`skill/`](skill/SKILL.md) so an agent can consume a `DESIGN.md` and rebuild or extend a site's styles faithfully. Point your agent at `skill/SKILL.md` and the generated `DESIGN.md`.
